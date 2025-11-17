@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 0 0% 97%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 97%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 97%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 94%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 94%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 89%;
+    --input: 214.3 31.8% 89%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 228 45% 7%;
+    --foreground: 0 0% 98%;
+    --card: 228 45% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 228 45% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 228 45% 7%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 250 60% 65%;
+    --secondary-foreground: 228 45% 7%;
+    --muted: 228 45% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 160 100% 50%;
+    --accent-foreground: 228 45% 7%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 228 45% 15%;
+    --input: 228 45% 15%;
+    --ring: 160 100% 50%;
+  }
+}
+
+/* Base Styles */
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Animations */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 3s ease infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+  margin-left: -8rem !important;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Accent Colors */
+.bg-accent {
+  background-color: hsl(160 100% 50%) !important;
+}
+
+.text-accent {
+  color: hsl(160 100% 50%) !important;
+}
+
+.text-accent-foreground {
+  color: hsl(228 45% 7%) !important;
+}
+
+.border-accent {
+  border-color: hsl(160 100% 50%) !important;
+}
+
+/* Gradients */
+.bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops)) !important;
+}
+
+.from-accent {
+  --tw-gradient-from: hsl(160 100% 50%);
+  --tw-gradient-to: hsl(160 100% 50% / 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.to-secondary {
+  --tw-gradient-to: hsl(250 60% 65%);
+}
+
+.via-secondary {
+  --tw-gradient-to: hsl(250 60% 65% / 0);
+  --tw-gradient-stops: var(--tw-gradient-from), hsl(250 60% 65%), var(--tw-gradient-to);
+}
+
+.bg-clip-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Lock TRAINING SYSTEM gradient (no animation) */
+.animate-gradient-shift.bg-clip-text {
+  animation: none !important;
+  background-image: linear-gradient(to right, hsl(160 100% 50%), hsl(250 60% 65%)) !important;
+  background-size: 100% !important;
+}
+
+/* Hero Section Layout */
+section.flex.flex-col.md\:flex-row.items-center {
+  gap: 1rem !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure VR - MEDICAL text is white and visible */
+h2.text-5xl.md\:text-7xl span:first-child {
+  color: white !important;
+  background: none !important;
+  -webkit-text-fill-color: white !important;
+}
+
+/* Additional utility classes for login page */
+.bg-300\% {
+  background-size: 300% 300%;
+}
+
+.shadow-glow {
+  box-shadow: 0 0 40px hsl(160 100% 50% / 0.3), 0 0 80px hsl(160 100% 50% / 0.1);
+}
+
+.shadow-elegant {
+  box-shadow: 0 4px 24px hsl(160 100% 50% / 0.15);
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out;
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .animate-float {
+    margin-left: 0 !important;
+  }
+  
+  section.flex.flex-col.md\:flex-row {
+    gap: 2rem !important;
+  }
+}

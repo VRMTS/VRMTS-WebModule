@@ -1,0 +1,46 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./hooks/useTheme";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import StudentDashboard from "./pages/StudentDashboard";
+import InstructorDashboard from "./pages/InstructorDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import InstructorManageStudents from "./pages/InstructorManageStudents";
+import StudentSettings from "./pages/StudentSettings";
+import StudentAnalytics from "./pages/StudentAnalytics";
+import ModuleExploration from "./pages/ModuleExploration";
+import ModulesList from "./pages/ModulesList";
+import QuizSelection from "./pages/QuizSelection";
+import QuizTaking from "./pages/QuizTaking";
+import QuizResult from "./pages/QuizResult";
+import TestModelPage from "./pages/testmodel";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <ThemeProvider defaultTheme="dark" storageKey="vrmts-theme">
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/studentdashboard" element={<StudentDashboard />} />
+          <Route path="/instructordashboard" element={<InstructorDashboard />} />
+          <Route path="/admindashboard" element={<AdminDashboard />} />
+          <Route path="/instructor/students" element={<InstructorManageStudents />} />
+          <Route path="/settings" element={<StudentSettings />} />
+          <Route path="/studentanalytics" element={<StudentAnalytics />} />
+          <Route path="/modules" element={<ModulesList />} />
+          <Route path="/module/:id" element={<ModuleExploration />} />
+          <Route path="/quizselection" element={<QuizSelection />} />
+          <Route path="/quizattempt/:attemptId" element={<QuizTaking />} />
+          <Route path="/quizresult/:attemptId" element={<QuizResult />} />
+          <Route path="/testmodel" element={<TestModelPage />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </ThemeProvider>
+);
+
+export default App;
