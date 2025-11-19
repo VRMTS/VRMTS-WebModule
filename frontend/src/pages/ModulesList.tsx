@@ -155,6 +155,26 @@ export default function ModulesPage() {
     }
   };
 
+  const handleTakeQuiz = async (moduleId: number) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/quiz/module/${moduleId}/start`, {}, {
+        withCredentials: true
+      });
+
+      if (response.data.success) {
+        const { attemptId } = response.data.data;
+        navigate(`/quizattempt/${attemptId}`);
+      }
+    } catch (error: any) {
+      console.error('Error starting quiz:', error);
+      if (error.response?.status === 404) {
+        alert('No quiz available for this module yet.');
+      } else {
+        alert('Failed to start quiz. Please try again.');
+      }
+    }
+  };
+
   const navigateToDashboard = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/auth/check`, { withCredentials: true });
@@ -500,7 +520,7 @@ function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number)
             </div>
           )}
 
-          <button className="w-full py-2.5 px-4 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium text-sm hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-cyan-500/50">
+          <button className="w-full py-2 px-3 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium text-sm hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2">
             {module.status === 'completed' ? (
               <>Review Module</>
             ) : module.status === 'in_progress' ? (

@@ -99,7 +99,7 @@ The following frontend pages need to be connected to backend APIs (currently usi
 - **QuizResult** - Connect to `/api/quiz/attempt/:attemptId` for attempt details
 
 ### Instructor Screens
-- **InstructorDashboard** - Connect to `/api/dashboard` endpoints (may require role-specific data)
+- **InstructorDashboard** - Connect to `/api/dashboard` endpoints 
 - **InstructorManageStudents** - Connect to `/api/user` endpoints for student management (may require additional instructor-specific APIs)
 
 ### Admin Screens
@@ -107,3 +107,39 @@ The following frontend pages need to be connected to backend APIs (currently usi
 
 ### Additional Pages (Not Routed)
 - **AssignModule** - Implement backend connection for module assignment functionality (likely requires new API endpoints)
+
+## 3D Model Viewing Progress
+
+The 3D model viewing functionality has been implemented with the following features:
+
+### ThreeViewer Component (`frontend/src/pages/ThreeViewer.tsx`)
+- **3D Rendering**: Uses Three.js library for WebGL-based 3D rendering
+- **Model Loading**: Supports FBX format models (e.g., SkeletalSystem100.fbx in `frontend/public/models/`)
+- **Interactive Controls**:
+  - Mouse drag to rotate the model
+  - Mouse wheel to zoom in/out (with bounds: 50-800 units)
+  - Click on model parts to select/highlight them
+  - Hover over parts to display part names in a tooltip
+- **Loading & Error Handling**:
+  - Loading progress indicator with percentage
+  - Error display for failed model loads
+- **Performance Optimizations**:
+  - Script loading caching to avoid redundant downloads
+  - Pixel ratio limiting for better performance
+  - Memory cleanup for geometries, materials, and renderer
+
+### Test Page (`frontend/src/pages/testmodel.tsx`)
+- Dedicated page for testing 3D model viewing functionality
+- Integrates the ThreeViewer component with sample model path
+
+### Current Status
+- Basic 3D model loading and rendering
+- Interactive rotation and zooming
+- Part selection and highlighting
+- Hover tooltips for part names
+
+### Next Steps
+- Add camera presets or viewpoints
+- more interactivity
+- Connect to backend for dynamic model loading based on modules
+- expanding and manipulating using physics
