@@ -1,120 +1,131 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Trophy, Target, Clock, TrendingUp, ChevronRight, ChevronDown, ChevronUp, RotateCcw, Home, BarChart3, CheckCircle2, XCircle, AlertCircle, Award, Brain, Zap, BookOpen, Share2, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Trophy, Target, Clock, TrendingUp, ChevronRight, ChevronDown, ChevronUp, RotateCcw, Home, BarChart3, CheckCircle2, XCircle, AlertCircle, Award, Brain, Zap, BookOpen, Share2, Download, Loader2 } from 'lucide-react';
+
+const API_BASE_URL = 'http://localhost:8080/api';
 
 export default function QuizResults() {
   const navigate = useNavigate();
+  const { attemptId } = useParams<{ attemptId: string }>();
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [resultsData, setResultsData] = useState<any>(null);
 
-  const resultsData = {
-    score: 85,
-    passingScore: 70,
-    totalQuestions: 15,
-    correctAnswers: 13,
-    incorrectAnswers: 2,
-    skippedQuestions: 0,
-    timeSpent: '18:45',
-    timeTaken: 1125,
-    attemptDate: 'October 30, 2025 at 2:45 PM',
-    quizTitle: 'Cardiovascular System Quiz',
-    module: 'Cardiovascular System',
-    passed: true,
-    previousAttempts: [
-      { date: 'Oct 15, 2025', score: 78 },
-      { date: 'Oct 8, 2025', score: 72 },
-      { date: 'Sep 28, 2025', score: 65 }
-    ],
-    averageScore: 75,
-    classAverage: 72,
-    topScore: 95,
-    rank: 12,
-    totalStudents: 45,
-    questionBreakdown: [
-      { type: 'MCQ', total: 10, correct: 9 },
-      { type: 'Labeling', total: 3, correct: 2 },
-      { type: 'Drag & Drop', total: 2, correct: 2 }
-    ],
-    detailedQuestions: [
-      {
-        id: 1,
-        question: 'Which chamber of the heart receives oxygenated blood from the lungs?',
-        yourAnswer: 'Left Atrium',
-        correctAnswer: 'Left Atrium',
-        isCorrect: true,
-        type: 'MCQ',
-        explanation: 'The left atrium receives oxygenated blood from the pulmonary veins after gas exchange in the lungs.'
-      },
-      {
-        id: 2,
-        question: 'What is the largest artery in the human body?',
-        yourAnswer: 'Aorta',
-        correctAnswer: 'Aorta',
-        isCorrect: true,
-        type: 'MCQ',
-        explanation: 'The aorta is the main and largest artery in the human body, carrying oxygenated blood from the left ventricle to the rest of the body.'
-      },
-      {
-        id: 3,
-        question: 'Label the following parts of the heart on the diagram below:',
-        yourAnswer: 'Partially correct (3/4 labels)',
-        correctAnswer: 'All labels correct',
-        isCorrect: false,
-        type: 'Labeling',
-        explanation: 'You correctly identified the Aorta, Left Atrium, and Right Ventricle, but incorrectly labeled the Pulmonary Artery.',
-        relatedTopics: ['Heart Anatomy', 'Major Blood Vessels']
-      },
-      {
-        id: 4,
-        question: 'What is the normal resting heart rate for adults?',
-        yourAnswer: '60-100 bpm',
-        correctAnswer: '60-100 bpm',
-        isCorrect: true,
-        type: 'MCQ',
-        explanation: 'The normal resting heart rate for adults ranges from 60 to 100 beats per minute.'
-      },
-      {
-        id: 5,
-        question: 'Match the blood vessels to their descriptions',
-        yourAnswer: 'All correct',
-        correctAnswer: 'All correct',
-        isCorrect: true,
-        type: 'Drag & Drop',
-        explanation: 'Excellent work! You correctly matched all blood vessel types with their functions.'
-      },
-      {
-        id: 6,
-        question: 'Which valve prevents backflow from the left ventricle?',
-        yourAnswer: 'Aortic Valve',
-        correctAnswer: 'Mitral Valve',
-        isCorrect: false,
-        type: 'MCQ',
-        explanation: 'The mitral valve (bicuspid valve) prevents backflow from the left ventricle into the left atrium. The aortic valve prevents backflow from the aorta into the left ventricle.',
-        relatedTopics: ['Heart Valves', 'Cardiac Cycle']
+  // Fetch quiz results
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!attemptId) {
+        setError('No attempt ID provided');
+        setLoading(false);
+        return;
       }
-    ],
-    weakAreas: [
-      { topic: 'Heart Valves', accuracy: 60, questionsCount: 3 },
-      { topic: 'Blood Vessel Types', accuracy: 75, questionsCount: 2 }
-    ],
-    strongAreas: [
-      { topic: 'Heart Chambers', accuracy: 100, questionsCount: 4 },
-      { topic: 'Blood Flow', accuracy: 90, questionsCount: 3 }
-    ],
-    recommendations: [
-      'Review the anatomy and function of heart valves',
-      'Practice labeling major blood vessels',
-      'Study the cardiac cycle in more detail'
-    ],
-    badges: [
-      { name: 'First Try Pass', icon: '🎯', earned: true },
-      { name: 'Speed Demon', icon: '⚡', earned: false },
-      { name: 'Perfect Score', icon: '💯', earned: false }
-    ]
-  };
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // First, get the attempt details (which includes all the results after finishing)
+        const response = await fetch(`${API_BASE_URL}/quiz/attempt/${attemptId}`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch quiz results');
+        }
+
+        const data = await response.json();
+        if (data.success && data.data) {
+          const attempt = data.data;
+          
+          // If quiz is completed, use results data, otherwise use attempt data
+          const results = attempt.results || attempt;
+          
+          // Format the data to match the expected structure
+          const formattedData = {
+            score: results.score || attempt.score || 0,
+            passingScore: results.passingScore || attempt.passingScore || 60,
+            totalQuestions: results.totalQuestions || attempt.totalQuestions || 0,
+            correctAnswers: results.correctAnswers || 0,
+            incorrectAnswers: results.incorrectAnswers || 0,
+            skippedQuestions: results.skippedQuestions || 0,
+            timeSpent: results.timeSpent || '0:00',
+            timeTaken: results.timeTaken || 0,
+            attemptDate: results.attemptDate || (attempt.endTime 
+              ? new Date(attempt.endTime).toLocaleString()
+              : new Date().toLocaleString()),
+            quizTitle: results.quizTitle || attempt.moduleTitle || attempt.title || 'Quiz',
+            module: results.module || attempt.moduleTitle || attempt.module || 'Module',
+            passed: results.passed !== undefined 
+              ? results.passed 
+              : (results.score || attempt.score || 0) >= (results.passingScore || attempt.passingScore || 60),
+            questionBreakdown: results.questionBreakdown || [],
+            detailedQuestions: results.detailedQuestions || attempt.questions || [],
+            previousAttempts: [], // Can be fetched separately if needed
+            averageScore: results.score || attempt.score || 0,
+            classAverage: 0, // Not available from current API
+            topScore: 0, // Not available from current API
+            rank: 0, // Not available from current API
+            totalStudents: 0, // Not available from current API
+            weakAreas: [],
+            strongAreas: [],
+            recommendations: attempt.feedback?.improvementSuggestions 
+              ? [attempt.feedback.improvementSuggestions]
+              : [],
+            badges: []
+          };
+
+          setResultsData(formattedData);
+        } else {
+          throw new Error(data.message || 'Failed to load quiz results');
+        }
+      } catch (err) {
+        console.error('Error fetching quiz results:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load quiz results');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [attemptId]);
 
   const toggleQuestion = (questionId: number) => {
     setExpandedQuestion(expandedQuestion === questionId ? null : questionId);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-cyan-400 mx-auto mb-4" />
+          <p className="text-slate-400">Loading quiz results...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !resultsData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Error Loading Results</h2>
+          <p className="text-slate-400 mb-4">{error || 'Quiz results not available'}</p>
+          <button
+            onClick={() => navigate('/quizselection')}
+            className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-medium transition-colors"
+          >
+            Back to Quiz Selection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">

@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Brain, Clock, Zap, Target, ChevronRight, ChevronLeft, Trophy, TrendingUp, Calendar, Filter, Search, Play, BarChart3, CheckCircle2, XCircle, Award, Loader2 } from 'lucide-react';
 
-const USE_DUMMY_DATA = true; // Always use dummy data, no backend
-
 interface Module {
   moduleId: number;
   name: string;
@@ -31,29 +29,8 @@ interface QuizStats {
   totalTime: number;
 }
 
-// Dummy data for development
-const dummyModules: Module[] = [
-  { moduleId: 1, name: "Cardiovascular System", description: "Heart and blood vessels", difficulty: "intermediate", estimatedTime: 20, quizCount: 5, totalQuestions: 50, avgDifficulty: 3.2 },
-  { moduleId: 2, name: "Respiratory System", description: "Lungs and breathing", difficulty: "beginner", estimatedTime: 15, quizCount: 3, totalQuestions: 30, avgDifficulty: 2.8 },
-  { moduleId: 3, name: "Nervous System", description: "Brain and nerves", difficulty: "advanced", estimatedTime: 25, quizCount: 4, totalQuestions: 40, avgDifficulty: 4.1 },
-  { moduleId: 4, name: "Digestive System", description: "Stomach and intestines", difficulty: "intermediate", estimatedTime: 18, quizCount: 3, totalQuestions: 35, avgDifficulty: 3.5 },
-  { moduleId: 5, name: "Muscular System", description: "Muscles and movement", difficulty: "beginner", estimatedTime: 12, quizCount: 2, totalQuestions: 25, avgDifficulty: 2.5 }
-];
-
-const dummyStats: QuizStats = {
-  quizzesTaken: 12,
-  averageScore: 78,
-  passRate: 85,
-  totalTime: 8
-};
-
-const dummyAttempts: QuizAttempt[] = [
-  { date: "2024-01-15", type: "Module Quiz", module: "Cardiovascular System", score: 85, time: "18m", status: "passed" },
-  { date: "2024-01-14", type: "Timed Exam", module: "Multiple Modules", score: 72, time: "25m", status: "passed" },
-  { date: "2024-01-13", type: "Adaptive Test", module: "Dynamic", score: 68, time: "22m", status: "failed" },
-  { date: "2024-01-12", type: "Module Quiz", module: "Respiratory System", score: 92, time: "15m", status: "passed" },
-  { date: "2024-01-11", type: "Timed Exam", module: "Multiple Modules", score: 76, time: "30m", status: "passed" }
-];
+// API base URL
+const API_BASE_URL = 'http://localhost:8080/api';
 
 export default function QuizSelection() {
   const navigate = useNavigate();
@@ -62,41 +39,212 @@ export default function QuizSelection() {
   const [timeLimit, setTimeLimit] = useState('30');
   const [showFilters, setShowFilters] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState('all');
-  const [loading, setLoading] = useState(!USE_DUMMY_DATA);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [modules, setModules] = useState<Module[]>(USE_DUMMY_DATA ? dummyModules : []);
-  const [stats, setStats] = useState<QuizStats>(USE_DUMMY_DATA ? dummyStats : {
+  const [modules, setModules] = useState<Module[]>([]);
+  const [stats, setStats] = useState<QuizStats>({
     quizzesTaken: 0,
     averageScore: 0,
     passRate: 0,
     totalTime: 0
   });
-  const [previousAttempts, setPreviousAttempts] = useState<QuizAttempt[]>(USE_DUMMY_DATA ? dummyAttempts : []);
+  const [previousAttempts, setPreviousAttempts] = useState<QuizAttempt[]>([]);
   const [startingQuiz, setStartingQuiz] = useState(false);
 
-  // Initialize with dummy data
+  // Fetch data from API on component mount
   useEffect(() => {
-    setSelectedModule(dummyModules[0]);
-    setLoading(false);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        // Fetch modules
+        const modulesResponse = await fetch(`${API_BASE_URL}/modules`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!modulesResponse.ok) {
+          throw new Error('Failed to fetch modules');
+        }
+
+        const modulesData = await modulesResponse.json();
+        setModules(modulesData.data || []);
+
+        // Set first module as selected if available
+        if (modulesData.data && modulesData.data.length > 0) {
+          setSelectedModule(modulesData.data[0]);
+        }
+
+        // Fetch stats
+        const statsResponse = await fetch(`${API_BASE_URL}/quiz/stats`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData.data || {
+            quizzesTaken: 0,
+            averageScore: 0,
+            passRate: 0,
+            totalTime: 0
+          });
+        }
+
+        // Fetch attempts
+        const attemptsResponse = await fetch(`${API_BASE_URL}/quiz/attempts`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (attemptsResponse.ok) {
+          const attemptsData = await attemptsResponse.json();
+          setPreviousAttempts(attemptsData.data || []);
+        }
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        console.error('Error fetching quiz data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const handleStartModuleQuiz = () => {
+  const handleStartModuleQuiz = async () => {
     if (!selectedModule) return;
-    navigate(`/quizattempt/${Date.now()}`);
+    setStartingQuiz(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/quiz/module/${selectedModule.moduleId}/start`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start quiz');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        navigate(`/quizattempt/${data.data.attemptId}`);
+      } else {
+        throw new Error(data.message || 'Failed to start quiz');
+      }
+    } catch (err) {
+      console.error('Error starting quiz:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start quiz');
+    } finally {
+      setStartingQuiz(false);
+    }
   };
 
   // Start a module quiz directly by moduleId (used when selecting from dropdown)
-  const startQuizForModule = (moduleId: number) => {
-    navigate(`/quizattempt/${Date.now()}`);
+  const startQuizForModule = async (moduleId: number) => {
+    setStartingQuiz(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/quiz/module/${moduleId}/start`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start quiz');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        navigate(`/quizattempt/${data.data.attemptId}`);
+      } else {
+        throw new Error(data.message || 'Failed to start quiz');
+      }
+    } catch (err) {
+      console.error('Error starting quiz:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start quiz');
+    } finally {
+      setStartingQuiz(false);
+    }
   };
 
-  const handleStartTimedExam = () => {
+  const handleStartTimedExam = async () => {
     if (selectedModules.length === 0) return;
-    navigate(`/quizattempt/${Date.now()}`);
+    setStartingQuiz(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/quiz/timed-exam/start`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timeLimit: parseInt(timeLimit),
+          questionCount: 20
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start timed exam');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        navigate(`/quizattempt/${data.data.attemptId}`);
+      } else {
+        throw new Error(data.message || 'Failed to start timed exam');
+      }
+    } catch (err) {
+      console.error('Error starting timed exam:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start timed exam');
+    } finally {
+      setStartingQuiz(false);
+    }
   };
 
-  const handleStartAdaptiveTest = () => {
-    navigate(`/quizattempt/${Date.now()}`);
+  const handleStartAdaptiveTest = async () => {
+    setStartingQuiz(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/quiz/adaptive/start`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetDifficulty: 'intermediate',
+          questionCount: 18
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start adaptive test');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        navigate(`/quizattempt/${data.data.attemptId}`);
+      } else {
+        throw new Error(data.message || 'Failed to start adaptive test');
+      }
+    } catch (err) {
+      console.error('Error starting adaptive test:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start adaptive test');
+    } finally {
+      setStartingQuiz(false);
+    }
   };
 
   const toggleModuleSelection = (moduleId: number) => {
@@ -198,19 +346,15 @@ export default function QuizSelection() {
             </div>
 
             {/* Module Selector */}
-            <div className="mb-6">
+            <div className="mb-6" onClick={(e) => e.stopPropagation()}>
               <label className="block text-sm font-medium mb-3 text-slate-300">
                 Select Module
               </label>
               <select
                 value={selectedModule?.moduleId || ''}
-                onChange={async (e) => {
+                onChange={(e) => {
                   const module = modules.find(m => m.moduleId === parseInt(e.target.value));
                   setSelectedModule(module || null);
-                  if (module) {
-                    // Immediately start the quiz for the selected module
-                    await startQuizForModule(module.moduleId);
-                  }
                 }}
                 className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
                 disabled={loading}
@@ -541,4 +685,4 @@ export default function QuizSelection() {
       `}</style>
     </div>
   );
-}
+  }

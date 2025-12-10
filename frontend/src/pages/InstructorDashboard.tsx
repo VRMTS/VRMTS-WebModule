@@ -1,50 +1,191 @@
-import React, { useState } from 'react';
-import { Users, BookOpen, TrendingUp, AlertCircle, Clock, Target, Award, MessageSquare, Settings, Bell, Search, ChevronRight, Plus, Download, Send, BarChart3, Activity, CheckCircle, AlertTriangle, Calendar, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Users, BookOpen, TrendingUp, AlertCircle, Clock, Target, Award, MessageSquare, Settings, Bell, Search, ChevronRight, Plus, Download, Send, BarChart3, Activity, CheckCircle, AlertTriangle, Calendar, Eye, Loader2 } from 'lucide-react';
+
+const API_BASE_URL = 'http://localhost:8080/api';
+
+interface ClassStats {
+  totalStudents: number;
+  averagePerformance: number;
+  modulesAssigned: number;
+  totalModules: number;
+  atRiskStudents: number;
+}
+
+interface ModulePerformance {
+  module: string;
+  completed: number;
+  avgScore: number;
+  timeSpent: string;
+  status: string;
+}
+
+interface RecentSubmission {
+  student: string;
+  module: string;
+  score: number;
+  time: string;
+  status: string;
+}
+
+interface AtRiskStudent {
+  name: string;
+  avatar: string;
+  avgScore: number;
+  missedDeadlines: number;
+  lastActive: string;
+  risk: string;
+}
+
+interface TopPerformer {
+  name: string;
+  avatar: string;
+  avgScore: number;
+  modules: number;
+  badge: string;
+}
+
+interface UpcomingDeadline {
+  assignment: string;
+  dueDate: string;
+  studentsCompleted: number;
+  totalStudents: number;
+}
 
 export default function InstructorDashboard() {
+  const navigate = useNavigate();
   const [selectedClass, setSelectedClass] = useState('Medical Batch 2024');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [classStats, setClassStats] = useState<ClassStats>({
+    totalStudents: 0,
+    averagePerformance: 0,
+    modulesAssigned: 0,
+    totalModules: 0,
+    atRiskStudents: 0
+  });
+  const [modulePerformance, setModulePerformance] = useState<ModulePerformance[]>([]);
+  const [recentSubmissions, setRecentSubmissions] = useState<RecentSubmission[]>([]);
+  const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
+  const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([]);
+  const [totalStudents, setTotalStudents] = useState(156);
+  const [userName, setUserName] = useState('Instructor');
+  const [userInitials, setUserInitials] = useState('IN');
 
-  const classStats = [
-    { label: 'Total Students', value: '156', icon: Users, color: 'from-cyan-500 to-teal-500', change: '+12' },
-    { label: 'Average Performance', value: '78%', icon: Target, color: 'from-purple-500 to-indigo-500', change: '+5%' },
-    { label: 'Modules Assigned', value: '8/12', icon: BookOpen, color: 'from-emerald-500 to-green-500', change: '+2' },
-    { label: 'At-Risk Students', value: '12', icon: AlertCircle, color: 'from-red-500 to-orange-500', change: '-3' }
-  ];
+  useEffect(() => {
+    fetchUserInfo();
+    fetchDashboardData();
+  }, []);
 
-  const modulePerformance = [
-    { module: 'Cardiovascular System', completed: 142, avgScore: 85, timeSpent: '4.2h', status: 'excellent' },
-    { module: 'Nervous System', completed: 138, avgScore: 82, timeSpent: '5.1h', status: 'good' },
-    { module: 'Skeletal System', completed: 125, avgScore: 76, timeSpent: '3.8h', status: 'average' },
-    { module: 'Muscular System', completed: 98, avgScore: 71, timeSpent: '3.2h', status: 'needs-attention' },
-    { module: 'Respiratory System', completed: 87, avgScore: 79, timeSpent: '2.9h', status: 'good' }
-  ];
+  const fetchUserInfo = async () => {
+    try {
+      const userResponse = await axios.get(`${API_BASE_URL}/auth/check`, { withCredentials: true });
+      if (userResponse.data.isAuthenticated && userResponse.data.user) {
+        const name = userResponse.data.user.name || 'Instructor';
+        setUserName(name);
+        // Get initials from name
+        const initials = name
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .substring(0, 2);
+        setUserInitials(initials);
+      }
+    } catch (err) {
+      console.error('Error fetching user info:', err);
+    }
+  };
 
-  const recentSubmissions = [
-    { student: 'Sarah Johnson', module: 'Cardiovascular System', score: 94, time: '2 mins ago', status: 'excellent' },
-    { student: 'Michael Chen', module: 'Nervous System', score: 67, time: '15 mins ago', status: 'needs-review' },
-    { student: 'Emma Davis', module: 'Skeletal System', score: 88, time: '1 hour ago', status: 'good' },
-    { student: 'James Wilson', module: 'Cardiovascular System', score: 45, time: '2 hours ago', status: 'poor' },
-    { student: 'Olivia Brown', module: 'Respiratory System', score: 91, time: '3 hours ago', status: 'excellent' }
-  ];
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const atRiskStudents = [
-    { name: 'Michael Chen', avatar: 'MC', avgScore: 62, missedDeadlines: 3, lastActive: '2 days ago', risk: 'high' },
-    { name: 'James Wilson', avatar: 'JW', avgScore: 58, missedDeadlines: 4, lastActive: '5 days ago', risk: 'high' },
-    { name: 'Lisa Anderson', avatar: 'LA', avgScore: 68, missedDeadlines: 2, lastActive: '1 day ago', risk: 'medium' },
-    { name: 'David Martinez', avatar: 'DM', avgScore: 65, missedDeadlines: 2, lastActive: '3 days ago', risk: 'medium' }
-  ];
+      const [
+        statsResponse,
+        modulePerfResponse,
+        submissionsResponse,
+        atRiskResponse,
+        topPerformersResponse,
+        deadlinesResponse
+      ] = await Promise.all([
+        axios.get(`${API_BASE_URL}/instructor/class-stats`, { withCredentials: true }),
+        axios.get(`${API_BASE_URL}/instructor/module-performance`, { withCredentials: true }),
+        axios.get(`${API_BASE_URL}/instructor/recent-submissions`, { withCredentials: true }),
+        axios.get(`${API_BASE_URL}/instructor/at-risk-students`, { withCredentials: true }),
+        axios.get(`${API_BASE_URL}/instructor/top-performers`, { withCredentials: true }),
+        axios.get(`${API_BASE_URL}/instructor/upcoming-deadlines`, { withCredentials: true })
+      ]);
 
-  const upcomingDeadlines = [
-    { assignment: 'Cardiovascular Quiz', dueDate: 'Dec 15', studentsCompleted: 89, totalStudents: 156 },
-    { assignment: 'Nervous System Module', dueDate: 'Dec 18', studentsCompleted: 134, totalStudents: 156 },
-    { assignment: 'Respiratory Quiz', dueDate: 'Dec 22', studentsCompleted: 45, totalStudents: 156 }
-  ];
+      if (statsResponse.data.success) {
+        setClassStats(statsResponse.data.data);
+      }
 
-  const topPerformers = [
-    { name: 'Sarah Johnson', avatar: 'SJ', avgScore: 94, modules: 8, badge: '🏆' },
-    { name: 'Emily White', avatar: 'EW', avgScore: 92, modules: 8, badge: '🥇' },
-    { name: 'Olivia Brown', avatar: 'OB', avgScore: 91, modules: 7, badge: '🥈' },
-    { name: 'Sophia Lee', avatar: 'SL', avgScore: 89, modules: 8, badge: '🥉' }
+      if (modulePerfResponse.data.success) {
+        setModulePerformance(modulePerfResponse.data.data);
+        setTotalStudents(modulePerfResponse.data.totalStudents || 156);
+      }
+
+      if (submissionsResponse.data.success) {
+        setRecentSubmissions(submissionsResponse.data.data);
+      }
+
+      if (atRiskResponse.data.success) {
+        setAtRiskStudents(atRiskResponse.data.data);
+      }
+
+      if (topPerformersResponse.data.success) {
+        setTopPerformers(topPerformersResponse.data.data);
+      }
+
+      if (deadlinesResponse.data.success) {
+        setUpcomingDeadlines(deadlinesResponse.data.data);
+      }
+
+    } catch (err: any) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again.');
+      if (err.response?.status === 401) {
+        navigate('/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const displayClassStats = [
+    { 
+      label: 'Total Students', 
+      value: classStats.totalStudents.toString(), 
+      icon: Users, 
+      color: 'from-cyan-500 to-teal-500', 
+      change: null 
+    },
+    { 
+      label: 'Average Performance', 
+      value: `${classStats.averagePerformance}%`, 
+      icon: Target, 
+      color: 'from-purple-500 to-indigo-500', 
+      change: null 
+    },
+    { 
+      label: 'Modules Assigned', 
+      value: `${classStats.modulesAssigned}/${classStats.totalModules}`, 
+      icon: BookOpen, 
+      color: 'from-emerald-500 to-green-500', 
+      change: null 
+    },
+    { 
+      label: 'At-Risk Students', 
+      value: classStats.atRiskStudents.toString(), 
+      icon: AlertCircle, 
+      color: 'from-red-500 to-orange-500', 
+      change: null 
+    }
   ];
 
   const getStatusColor = (status: string) => {
@@ -75,8 +216,7 @@ export default function InstructorDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold">
-              <span className="text-white">VR</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">MTS</span>
+              <span className="text-white">VRMTS</span>
             </h1>
             <nav className="hidden md:flex gap-6">
               <button className="text-slate-400 hover:text-white transition-colors">Dashboard</button>
@@ -103,11 +243,14 @@ export default function InstructorDashboard() {
               <Bell className="w-5 h-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full"></span>
             </button>
-            <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+            <button
+              onClick={() => navigate('/instructor/settings')}
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
               <Settings className="w-5 h-5" />
             </button>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center font-bold">
-              DR
+              {userInitials}
             </div>
           </div>
         </div>
@@ -117,7 +260,7 @@ export default function InstructorDashboard() {
         {/* Welcome Section */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Good afternoon, Dr. Rahman 👋</h2>
+            <h2 className="text-3xl font-bold mb-2">Welcome back, {userName} 👋</h2>
             <p className="text-slate-400">Here's what's happening with your classes today</p>
           </div>
           <div className="flex gap-3">
@@ -132,9 +275,31 @@ export default function InstructorDashboard() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+            <span className="ml-3 text-slate-400">Loading dashboard data...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-6">
+            <p className="text-red-400">{error}</p>
+            <button 
+              onClick={fetchDashboardData}
+              className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-sm transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Stats Grid */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {classStats.map((stat, idx) => (
+          {displayClassStats.map((stat, idx) => (
             <div 
               key={idx}
               className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-cyan-400/50 transition-all"
@@ -158,7 +323,9 @@ export default function InstructorDashboard() {
             </div>
           ))}
         </div>
+        )}
 
+        {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-6">
@@ -175,7 +342,12 @@ export default function InstructorDashboard() {
               </div>
 
               <div className="space-y-4">
-                {modulePerformance.map((module, idx) => (
+                {modulePerformance.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400">
+                    <p>No module performance data available yet.</p>
+                  </div>
+                ) : (
+                  modulePerformance.map((module, idx) => (
                   <div 
                     key={idx}
                     className="bg-slate-800/50 border border-white/10 rounded-xl p-4 hover:border-cyan-400/50 transition-all"
@@ -186,7 +358,7 @@ export default function InstructorDashboard() {
                         <div className="flex items-center gap-4 text-sm text-slate-400">
                           <span className="flex items-center gap-1">
                             <CheckCircle className="w-4 h-4" />
-                            {module.completed}/156 completed
+                            {module.completed}/{totalStudents} completed
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
@@ -204,11 +376,12 @@ export default function InstructorDashboard() {
                     <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-cyan-500 to-teal-500"
-                        style={{ width: `${(module.completed / 156) * 100}%` }}
+                        style={{ width: `${totalStudents > 0 ? (module.completed / totalStudents) * 100 : 0}%` }}
                       />
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -225,7 +398,12 @@ export default function InstructorDashboard() {
               </div>
 
               <div className="space-y-3">
-                {recentSubmissions.map((submission, idx) => (
+                {recentSubmissions.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400">
+                    <p>No recent quiz submissions.</p>
+                  </div>
+                ) : (
+                  recentSubmissions.map((submission, idx) => (
                   <div 
                     key={idx}
                     className="flex items-center gap-4 p-4 bg-slate-800/30 border border-white/5 rounded-lg hover:border-cyan-400/30 transition-all"
@@ -250,7 +428,8 @@ export default function InstructorDashboard() {
                       <Eye className="w-4 h-4 text-cyan-400" />
                     </button>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -279,7 +458,12 @@ export default function InstructorDashboard() {
                 At-Risk Students
               </h4>
               <div className="space-y-3">
-                {atRiskStudents.map((student, idx) => (
+                {atRiskStudents.length === 0 ? (
+                  <div className="text-center py-4 text-slate-400 text-sm">
+                    <p>No at-risk students identified.</p>
+                  </div>
+                ) : (
+                  atRiskStudents.map((student, idx) => (
                   <div 
                     key={idx}
                     className={`p-3 rounded-lg border ${getRiskColor(student.risk)}`}
@@ -301,7 +485,8 @@ export default function InstructorDashboard() {
                       Send Reminder
                     </button>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
               <button className="mt-4 w-full py-2 px-4 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm font-medium transition-all">
                 View All At-Risk
@@ -315,7 +500,12 @@ export default function InstructorDashboard() {
                 Top Performers
               </h4>
               <div className="space-y-3">
-                {topPerformers.map((student, idx) => (
+                {topPerformers.length === 0 ? (
+                  <div className="text-center py-4 text-slate-400 text-sm">
+                    <p>No top performers data available yet.</p>
+                  </div>
+                ) : (
+                  topPerformers.map((student, idx) => (
                   <div 
                     key={idx}
                     className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg hover:bg-slate-800/50 transition-colors"
@@ -332,7 +522,8 @@ export default function InstructorDashboard() {
                       <p className="text-sm font-bold text-emerald-400">{student.avgScore}%</p>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -343,7 +534,12 @@ export default function InstructorDashboard() {
                 Upcoming Deadlines
               </h4>
               <div className="space-y-4">
-                {upcomingDeadlines.map((deadline, idx) => (
+                {upcomingDeadlines.length === 0 ? (
+                  <div className="text-center py-4 text-slate-400 text-sm">
+                    <p>No upcoming deadlines.</p>
+                  </div>
+                ) : (
+                  upcomingDeadlines.map((deadline, idx) => (
                   <div key={idx} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div>
@@ -364,7 +560,8 @@ export default function InstructorDashboard() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -375,23 +572,8 @@ export default function InstructorDashboard() {
                 AI Insights
               </h4>
               <div className="space-y-3 text-sm">
-                <div className="flex gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2"></div>
-                  <p className="text-slate-300">
-                    <span className="text-cyan-400 font-medium">12 students</span> are struggling with the Muscular System module
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2"></div>
-                  <p className="text-slate-300">
-                    Class engagement has increased <span className="text-emerald-400 font-medium">15%</span> this week
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-2"></div>
-                  <p className="text-slate-300">
-                    Consider reviewing cardiovascular quiz difficulty
-                  </p>
+                <div className="text-center py-4 text-slate-400 text-sm">
+                  <p>AI insights will appear here once available.</p>
                 </div>
               </div>
               <button className="mt-4 w-full py-2 px-4 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg text-sm font-medium transition-all">
@@ -400,6 +582,7 @@ export default function InstructorDashboard() {
             </div>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

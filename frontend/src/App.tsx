@@ -7,9 +7,12 @@ import StudentDashboard from "./pages/StudentDashboard";
 import InstructorDashboard from "./pages/InstructorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import InstructorManageStudents from "./pages/InstructorManageStudents";
+import InstructorSettings from "./pages/InstructorSettings";
 import StudentSettings from "./pages/StudentSettings";
 import StudentAnalytics from "./pages/StudentAnalytics";
 import ModuleExploration from "./pages/ModuleExploration";
+import Lab1Explore from "./pages/Lab1Explore";
+import Lab2Explore from "./pages/Lab2Explore";
 import ModulesList from "./pages/ModulesList";
 import QuizSelection from "./pages/QuizSelection";
 import QuizTaking from "./pages/QuizTaking";
@@ -29,10 +32,13 @@ const App = () => (
           <Route path="/instructordashboard" element={<InstructorDashboard />} />
           <Route path="/admindashboard" element={<AdminDashboard />} />
           <Route path="/instructor/students" element={<InstructorManageStudents />} />
+          <Route path="/instructor/settings" element={<InstructorSettings />} />
           <Route path="/settings" element={<StudentSettings />} />
           <Route path="/studentanalytics" element={<StudentAnalytics />} />
           <Route path="/modules" element={<ModulesList />} />
           <Route path="/module/:id" element={<ModuleExploration />} />
+          <Route path="/lab1explore" element={<Lab1Explore />} />
+          <Route path="/lab2explore" element={<Lab2Explore />} />
           <Route path="/quizselection" element={<QuizSelection />} />
           <Route path="/quizattempt/:attemptId" element={<QuizTaking />} />
           <Route path="/quizresult/:attemptId" element={<QuizResult />} />

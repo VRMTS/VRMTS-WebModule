@@ -1,5 +1,14 @@
 # VR Medical Training System (VRMTS)
 
+A comprehensive Virtual Reality Medical Training System for anatomy education with interactive 3D models, module-based learning, and quiz assessment capabilities.
+
+## Table of Contents
+- [Frontend Screens](#frontend-screens)
+- [Backend APIs](#backend-apis)
+- [Quiz System Implementation](#quiz-system-implementation)
+- [3D Model Viewing](#3d-model-viewing-progress)
+- [Setup Instructions](#setup-instructions)
+
 ## Frontend Screens
 
 ### Common Screens
@@ -20,6 +29,7 @@
 ### Instructor Screens
 - **InstructorDashboard** (`/instructordashboard`) - Instructor main dashboard
 - **InstructorManageStudents** (`/instructor/students`) - Instructor student management
+- **InstructorSettings** (`/instructorsettings`) - Instructor settings and preferences
 
 ### Admin Screens
 - **AdminDashboard** (`/admindashboard`) - Admin main dashboard
@@ -57,16 +67,17 @@ The following API endpoints are implemented in the backend:
 - `PUT /password` - Change password
 
 ### Quiz (`/api/quiz`)
-- `GET /modules` - Get quiz modules
-- `GET /stats` - Get quiz statistics
-- `GET /attempts` - Get quiz attempts
-- `POST /module/:moduleId/start` - Start module quiz
-- `POST /timed-exam/start` - Start timed exam
-- `POST /adaptive/start` - Start adaptive test
-- `POST /attempt/:attemptId/answer` - Submit quiz answer
-- `GET /attempt/:attemptId/progress` - Get quiz progress
-- `POST /attempt/:attemptId/finish` - Finish quiz attempt
-- `GET /attempt/:attemptId` - Get quiz attempt details
+- `GET /modules` - Get available modules for quiz selection
+- `GET /stats` - Get quiz statistics (quizzes taken, average score, pass rate, total time)
+- `GET /attempts` - Get previous quiz attempts with scores and status
+- `POST /module/:moduleId/start` - Start a module quiz (10 random questions, 15 min time limit)
+- `POST /timed-exam/start` - Start a timed exam (custom time limit, 20 questions)
+- `POST /adaptive/start` - Start an adaptive test (18 questions, 45 min, difficulty-based)
+- `POST /submit-answer` - Submit an answer for a question (alternative route)
+- `POST /attempt/:attemptId/answer` - Submit an answer for a specific question
+- `GET /attempt/:attemptId/progress` - Get quiz progress (answered questions, points earned, time spent)
+- `POST /attempt/:attemptId/finish` - Finish quiz attempt and calculate final score
+- `GET /attempt/:attemptId` - Get quiz attempt details with questions and results
 
 ### Module Exploration (`/api/explore`)
 - `GET /:moduleId/details` - Get module details
@@ -85,6 +96,50 @@ The following API endpoints are implemented in the backend:
 ### Test
 - `GET /api/test` - API test endpoint
 
+## Quiz System Implementation
+
+The quiz system is fully implemented and functional. Here's how it works:
+
+### Quiz Creation Flow
+1. **Module Quiz**: Student selects a module → System randomly selects 10 questions from QuestionBank → Creates Quiz and QuizQuestion records → Creates QuizAttempt with "in_progress" status
+2. **Timed Exam**: Student selects modules and time limit → System randomly selects questions → Creates custom quiz
+3. **Adaptive Test**: Student selects difficulty → System selects questions based on difficulty level
+
+### Quiz Taking Flow
+1. Student navigates to quiz taking page with `attemptId`
+2. System fetches quiz questions from `QuizQuestion` table
+3. Student answers questions → Each answer is saved to `AnswerRecord` table via `/api/quiz/submit-answer`
+4. Timer counts down (15 minutes for module quiz)
+5. Student clicks "Submit Quiz" → Calls `/api/quiz/attempt/:attemptId/finish`
+
+### Scoring System
+1. **Answer Validation**: Each answer is compared to `correctAnswer` in `QuestionBank` (case-insensitive)
+2. **Points Calculation**: Correct answers earn points (default 1 point per question)
+3. **Final Score**: Calculated as `(totalPointsEarned / totalPossiblePoints) * 100`
+4. **Pass/Fail**: Determined by comparing score to `passingScore` (default 60%)
+5. **Results Include**:
+   - Final score percentage
+   - Correct/incorrect/skipped question counts
+   - Time spent
+   - Question breakdown by type (MCQ, Labeling, Drag & Drop)
+   - Detailed question review with explanations
+
+### Database Schema Notes
+- **QuestionBank**: Stores all available questions (no `moduleId` or `questionText` columns in current schema)
+- **Quiz**: Stores quiz instances (basic schema: `moduleId`, `timeLimit`, `totalQuestions`, `passingScore`)
+- **QuizQuestion**: Links questions to quizzes, stores `questionText` (retrieved from existing records or generated)
+- **QuizAttempt**: Tracks student attempts with status (`in_progress`, `completed`, `abandoned`)
+- **AnswerRecord**: Stores individual answers with correctness and points earned
+
+### Key Features
+- ✅ Random question selection from QuestionBank
+- ✅ Real-time answer submission
+- ✅ Automatic timer with auto-submit
+- ✅ Score calculation and pass/fail determination
+- ✅ Detailed results with question-by-question breakdown
+- ✅ Question text retrieval from existing QuizQuestion records
+- ✅ Support for multiple question types (MCQ, Labeling, Drag & Drop)
+
 ## Next Targets: Frontend-Backend Integration
 
 The following frontend pages need to be connected to backend APIs (currently using mock data or not fetching from backend):
@@ -94,9 +149,9 @@ The following frontend pages need to be connected to backend APIs (currently usi
 - **StudentAnalytics** - Connect to `/api/analytics/student` for detailed analytics data
 - **ModulesList** - Connect to `/api/modules` for available modules and stats
 - **ModuleExploration** - Connect to `/api/explore/:moduleId` endpoints for details, bookmarks, notes, interactions, chat, and progress
-- **QuizSelection** - Connect to `/api/quiz/modules` and `/api/quiz/stats`
-- **QuizTaking** - Connect to `/api/quiz/attempt/:attemptId` endpoints for progress, submitting answers, and finishing
-- **QuizResult** - Connect to `/api/quiz/attempt/:attemptId` for attempt details
+- **QuizSelection** - ✅ **FULLY INTEGRATED** - Connected to `/api/quiz/modules`, `/api/quiz/stats`, and `/api/quiz/attempts`
+- **QuizTaking** - ✅ **FULLY INTEGRATED** - Connected to `/api/quiz/attempt/:attemptId` for questions, `/api/quiz/submit-answer` for answers, and `/api/quiz/attempt/:attemptId/finish` for submission
+- **QuizResult** - ✅ **FULLY INTEGRATED** - Connected to `/api/quiz/attempt/:attemptId` for detailed results with scores and question breakdown
 
 ### Instructor Screens
 - **InstructorDashboard** - Connect to `/api/dashboard` endpoints 
@@ -140,6 +195,15 @@ The 3D model viewing functionality has been implemented with the following featu
 
 ### Next Steps
 - Add camera presets or viewpoints
-- more interactivity
+- More interactivity
 - Connect to backend for dynamic model loading based on modules
-- expanding and manipulating using physics
+- Expanding and manipulating using physics
+
+
+### Quiz System Notes
+- Questions are stored in the `QuestionBank` table
+- When creating quizzes, the system randomly selects questions
+- Question text is retrieved from existing `QuizQuestion` records if available
+- If no existing question text is found, it generates a placeholder based on the topic
+- All quiz attempts are tracked in `QuizAttempt` with status and scores
+- Answers are stored in `AnswerRecord` with correctness validation

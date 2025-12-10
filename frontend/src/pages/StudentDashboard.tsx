@@ -79,9 +79,17 @@ export default function VRDashboard() {
       setLoading(true);
       setError(null);
 
-      // Fetch user info and dashboard data in parallel
-      const [userResponse, statsResponse, modulesResponse, activityResponse, deadlinesResponse] = await Promise.all([
-        axios.get(`${API_BASE_URL}/auth/check`, { withCredentials: true }),
+      // Fetch user info first to check user type
+      const userResponse = await axios.get(`${API_BASE_URL}/auth/check`, { withCredentials: true });
+      
+      // Redirect teachers to instructor dashboard
+      if (userResponse.data.isAuthenticated && (userResponse.data.user.userType === 'teacher' || userResponse.data.user.userType === 'instructor')) {
+        navigate('/instructordashboard');
+        return;
+      }
+
+      // Fetch dashboard data in parallel
+      const [statsResponse, modulesResponse, activityResponse, deadlinesResponse] = await Promise.all([
         axios.get(`${API_BASE_URL}/dashboard/stats`, { withCredentials: true }),
         axios.get(`${API_BASE_URL}/dashboard/recent-modules`, { withCredentials: true }),
         axios.get(`${API_BASE_URL}/dashboard/recent-activity`, { withCredentials: true }),
@@ -240,7 +248,16 @@ export default function VRDashboard() {
                 {modules.slice(0, 4).map((module) => (
                   <div
                     key={module.moduleId}
-                    onClick={() => module.status !== 'locked' && navigate(`/module/${module.moduleId}`)}
+                    onClick={() => {
+                      if (module.status !== 'locked') {
+                        // Check if this is LAB 2 module
+                        if (module.name && (module.name.toUpperCase().includes('LAB 2') || module.name.toUpperCase().includes('LAB2'))) {
+                          navigate('/lab2explore');
+                        } else {
+                          navigate(`/module/${module.moduleId}`);
+                        }
+                      }
+                    }}
                     className={`relative group bg-gradient-to-br from-slate-800/50 to-slate-900/50 border rounded-xl p-5 transition-all hover:scale-102 hover:shadow-xl hover:shadow-cyan-500/10 ${
                       module.status === 'locked'
                         ? 'border-slate-700/50 opacity-60'

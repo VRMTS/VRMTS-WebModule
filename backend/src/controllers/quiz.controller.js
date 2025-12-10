@@ -132,10 +132,27 @@ const getQuizStats = async (req, res) => {
 
 // Start a module quiz
 const startModuleQuiz = async (req, res) => {
+  let connection = null;
   try {
+    // Validate session
+    if (!req.session?.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
     const userId = req.session.user.userId;
-    const { moduleId } = req.params;
-    const connection = await db();
+    const moduleId = parseInt(req.params.moduleId, 10);
+    
+    if (isNaN(moduleId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid module ID'
+      });
+    }
+
+    connection = await db();
 
     // Get studentId from userId
     const [students] = await connection.execute(
@@ -153,76 +170,148 @@ const startModuleQuiz = async (req, res) => {
 
     const studentId = students[0].studentId;
 
-    // Get quiz for the module
-    const [quizzes] = await connection.execute(
-      'SELECT q.quizId, q.timeLimit, q.totalQuestions, q.passingScore, m.systemId FROM Quiz q JOIN Module m ON q.moduleId = m.moduleId WHERE q.moduleId = ? LIMIT 1',
+    // Verify module exists
+    const [modules] = await connection.execute(
+      'SELECT moduleId, title FROM Module WHERE moduleId = ?',
       [moduleId]
     );
 
-    if (quizzes.length === 0) {
+    if (modules.length === 0) {
       await connection.end();
       return res.status(404).json({
         success: false,
-        message: 'No quiz found for this module'
+        message: 'Module not found'
       });
     }
 
-    const quiz = quizzes[0];
+    // Quiz configuration
+    const quizSize = 10;
+    const timeLimit = 15;
+    const passingScore = 60;
 
-    // Check if quiz has questions, if not, populate it
-    const [existingQuestions] = await connection.execute(
-      'SELECT COUNT(*) as count FROM QuizQuestion WHERE quizId = ?',
-      [quiz.quizId]
-    );
-
-    if (existingQuestions[0].count === 0) {
-      // Get random questions from QuestionBank for this system
-      const [questions] = await connection.execute(
-        'SELECT bankId FROM QuestionBank WHERE systemId = ? ORDER BY RAND() LIMIT ?',
-        [quiz.systemId, quiz.totalQuestions]
+    // Get random questions from QuestionBank (moduleId column doesn't exist, so we select all)
+    // Try to get questionText if column exists, otherwise we'll construct it
+    // Note: LIMIT cannot be parameterized in some MySQL versions, so we use template literal (safe since quizSize is controlled)
+    let questions;
+    try {
+      [questions] = await connection.execute(
+        `SELECT bankId, difficulty, topic, options, questionType, correctAnswer, explanation, questionText FROM QuestionBank ORDER BY RAND() LIMIT ${parseInt(quizSize)}`
       );
-
-      if (questions.length < quiz.totalQuestions) {
-        // If not enough questions for this system, get from general questions
-        const [generalQuestions] = await connection.execute(
-          'SELECT bankId FROM QuestionBank WHERE systemId IS NULL ORDER BY RAND() LIMIT ?',
-          [quiz.totalQuestions - questions.length]
-        );
-        questions.push(...generalQuestions);
-      }
-
-      // Add questions to quiz
-      for (let i = 0; i < Math.min(questions.length, quiz.totalQuestions); i++) {
-        await connection.execute(
-          'INSERT INTO QuizQuestion (quizId, bankId, displayOrder, points) VALUES (?, ?, ?, ?)',
-          [quiz.quizId, questions[i].bankId, i + 1, 1] // Default 1 point per question
-        );
-      }
+    } catch (e) {
+      // If questionText column doesn't exist, select without it
+      [questions] = await connection.execute(
+        `SELECT bankId, difficulty, topic, options, questionType, correctAnswer, explanation FROM QuestionBank ORDER BY RAND() LIMIT ${parseInt(quizSize)}`
+      );
     }
 
-    // Create quiz attempt
-    const [attemptResult] = await connection.execute(
-      'INSERT INTO QuizAttempt (studentId, quizId, startTime, status) VALUES (?, ?, NOW(), "in_progress")',
-      [studentId, quiz.quizId]
-    );
+    if (questions.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'No questions available for this module'
+      });
+    }
 
-    const attemptId = attemptResult.insertId;
+    // Map difficulty to ENUM values
+    const mapDifficulty = (difficulty) => {
+      if (!difficulty) return 'medium';
+      const lower = difficulty.toLowerCase();
+      if (lower === 'easy' || lower === 'beginner') return 'easy';
+      if (lower === 'hard' || lower === 'advanced' || lower === 'expert') return 'hard';
+      return 'medium';
+    };
 
-    await connection.end();
-
-    res.json({
-      success: true,
-      data: {
-        attemptId,
-        quizId: quiz.quizId,
-        timeLimit: quiz.timeLimit,
-        totalQuestions: quiz.totalQuestions,
-        passingScore: quiz.passingScore
+    // Helper to extract question text - use actual questionText if available, otherwise try to get from existing QuizQuestion
+    const getQuestionText = async (question, connection) => {
+      // If questionText exists in the result, use it
+      if (question.questionText) {
+        return question.questionText;
       }
-    });
+      
+      // Try to get questionText from existing QuizQuestion records with same bankId
+      try {
+        const [existingQuestions] = await connection.execute(
+          'SELECT questionText FROM QuizQuestion WHERE bankId = ? AND questionText IS NOT NULL AND questionText != "" LIMIT 1',
+          [question.bankId]
+        );
+        if (existingQuestions.length > 0 && existingQuestions[0].questionText) {
+          return existingQuestions[0].questionText;
+        }
+      } catch (e) {
+        // If query fails, continue to fallback
+      }
+      
+      // Otherwise, try to construct a meaningful question from topic
+      if (question.topic) {
+        return `What is related to ${question.topic}?`;
+      }
+      return 'Quiz Question';
+    };
+
+    // Start transaction - create quiz, add questions, create attempt
+    await connection.beginTransaction();
+
+    try {
+      // Create quiz - use basic schema (moduleId, timeLimit, totalQuestions, passingScore)
+      const [quizResult] = await connection.execute(
+        'INSERT INTO Quiz (moduleId, timeLimit, totalQuestions, passingScore) VALUES (?, ?, ?, ?)',
+        [moduleId, timeLimit, quizSize, passingScore]
+      );
+
+      const quizId = quizResult.insertId;
+
+      // Insert questions into QuizQuestion
+      for (let i = 0; i < questions.length; i++) {
+        const mappedDifficulty = mapDifficulty(questions[i].difficulty);
+        const questionText = await getQuestionText(questions[i], connection);
+        
+        await connection.execute(
+          'INSERT INTO QuizQuestion (quizId, bankId, questionText, difficulty, points, displayOrder) VALUES (?, ?, ?, ?, 1, ?)',
+          [quizId, questions[i].bankId, questionText, mappedDifficulty, i + 1]
+        );
+      }
+
+      // Create quiz attempt
+      const [attemptResult] = await connection.execute(
+        'INSERT INTO QuizAttempt (studentId, quizId, startTime, status) VALUES (?, ?, NOW(), "in_progress")',
+        [studentId, quizId]
+      );
+
+      const attemptId = attemptResult.insertId;
+
+      // Commit transaction
+      await connection.commit();
+      await connection.end();
+
+      res.json({
+        success: true,
+        data: {
+          attemptId,
+          quizId,
+          timeLimit,
+          totalQuestions: questions.length,
+          passingScore,
+          questionsAssigned: questions.length
+        }
+      });
+
+    } catch (transactionError) {
+      // Rollback on any error
+      await connection.rollback();
+      throw transactionError;
+    }
 
   } catch (error) {
     console.error('Error starting module quiz:', error);
+    
+    if (connection) {
+      try {
+        await connection.end();
+      } catch (closeError) {
+        console.error('Error closing connection:', closeError);
+      }
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Failed to start quiz',
@@ -235,7 +324,7 @@ const startModuleQuiz = async (req, res) => {
 const startTimedExam = async (req, res) => {
   try {
     const userId = req.session.user.userId;
-    const { timeLimit, questionCount } = req.body;
+    const { timeLimit, questionCount, selectedModules } = req.body;
     const connection = await db();
 
     // Get studentId from userId
@@ -254,25 +343,77 @@ const startTimedExam = async (req, res) => {
 
     const studentId = students[0].studentId;
 
+    // For custom quizzes, use first selected module or first available module as moduleId
+    let quizModuleId = null;
+    if (selectedModules && selectedModules.length > 0) {
+      quizModuleId = selectedModules[0];
+    } else {
+      // Get first available module
+      const [firstModule] = await connection.execute('SELECT moduleId FROM Module LIMIT 1');
+      quizModuleId = firstModule.length > 0 ? firstModule[0].moduleId : 1;
+    }
+
     // Create a custom quiz for timed exam
     const [quizResult] = await connection.execute(
-      'INSERT INTO Quiz (title, description, timeLimit, totalQuestions, passingScore, isCustom) VALUES (?, ?, ?, ?, 60, TRUE)',
-      [`Timed Exam - ${timeLimit}min`, `Custom timed exam with ${questionCount} questions`, timeLimit, questionCount]
+      'INSERT INTO Quiz (moduleId, timeLimit, totalQuestions, passingScore) VALUES (?, ?, ?, 60)',
+      [quizModuleId, timeLimit, questionCount]
     );
 
     const quizId = quizResult.insertId;
 
-    // Select random questions
-    const [questions] = await connection.execute(
-      'SELECT bankId FROM QuestionBank ORDER BY RAND() LIMIT ?',
-      [questionCount]
-    );
+    let questions = [];
 
-    // Add questions to quiz
+    // Helper function to map difficulty to ENUM values
+    const mapDifficulty = (difficulty) => {
+      if (!difficulty) return 'medium';
+      const lower = difficulty.toLowerCase();
+      if (lower === 'easy' || lower === 'beginner') return 'easy';
+      if (lower === 'hard' || lower === 'advanced' || lower === 'expert') return 'hard';
+      return 'medium';
+    };
+
+    // Helper to get question text - use actual questionText if available
+    const getQuestionText = (question) => {
+      if (question.questionText) {
+        return question.questionText;
+      }
+      return question.topic 
+        ? `What is related to ${question.topic}?` 
+        : 'Quiz Question';
+    };
+
+    // Select random questions (moduleId column doesn't exist in QuestionBank)
+    // Try to get questionText if column exists
+    // LIMIT cannot be parameterized, so we use template literal (safe after validation)
+    const safeQuestionCount = parseInt(questionCount) || 20;
+    let allQuestions;
+    try {
+      [allQuestions] = await connection.execute(
+        `SELECT bankId, difficulty, topic, options, questionType, correctAnswer, explanation, questionText FROM QuestionBank ORDER BY RAND() LIMIT ${safeQuestionCount}`
+      );
+    } catch (e) {
+      // If questionText column doesn't exist, select without it
+      [allQuestions] = await connection.execute(
+        `SELECT bankId, difficulty, topic, options, questionType, correctAnswer, explanation FROM QuestionBank ORDER BY RAND() LIMIT ${safeQuestionCount}`
+      );
+    }
+    questions = allQuestions;
+
+    if (questions.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'No questions available for the selected modules'
+      });
+    }
+
+    // Insert questions into QuizQuestion
     for (let i = 0; i < questions.length; i++) {
+      const mappedDifficulty = mapDifficulty(questions[i].difficulty);
+      const questionText = getQuestionText(questions[i]);
       await connection.execute(
-        'INSERT INTO QuizQuestion (quizId, bankId, displayOrder) VALUES (?, ?, ?)',
-        [quizId, questions[i].bankId, i + 1]
+        'INSERT INTO QuizQuestion (quizId, bankId, questionText, difficulty, points, displayOrder) VALUES (?, ?, ?, ?, 1, ?)',
+        [quizId, questions[i].bankId, questionText, mappedDifficulty, i + 1]
       );
     }
 
@@ -292,8 +433,9 @@ const startTimedExam = async (req, res) => {
         attemptId,
         quizId,
         timeLimit,
-        totalQuestions: questionCount,
-        passingScore: 60
+        totalQuestions: questions.length,
+        passingScore: 60,
+        questionsAssigned: questions.length
       }
     });
 
@@ -330,25 +472,81 @@ const startAdaptiveTest = async (req, res) => {
 
     const studentId = students[0].studentId;
 
+    // For adaptive test, use first available module as moduleId
+    const [firstModule] = await connection.execute('SELECT moduleId FROM Module LIMIT 1');
+    const quizModuleId = firstModule.length > 0 ? firstModule[0].moduleId : 1;
+
     // Create a custom quiz for adaptive test
     const [quizResult] = await connection.execute(
-      'INSERT INTO Quiz (title, description, timeLimit, totalQuestions, passingScore, isCustom) VALUES (?, ?, ?, ?, 70, TRUE)',
-      [`Adaptive Test - ${targetDifficulty}`, `Adaptive test with ${questionCount} questions`, 45, questionCount]
+      'INSERT INTO Quiz (moduleId, timeLimit, totalQuestions, passingScore) VALUES (?, 45, ?, 70)',
+      [quizModuleId, questionCount]
     );
 
     const quizId = quizResult.insertId;
 
-    // Select questions based on difficulty
-    const [questions] = await connection.execute(
-      'SELECT bankId FROM QuestionBank WHERE difficulty = ? ORDER BY RAND() LIMIT ?',
-      [targetDifficulty, questionCount]
-    );
+    // Helper function to map difficulty to ENUM values
+    const mapDifficulty = (difficulty) => {
+      if (!difficulty) return 'medium';
+      const lower = difficulty.toLowerCase();
+      if (lower === 'easy' || lower === 'beginner') return 'easy';
+      if (lower === 'hard' || lower === 'advanced' || lower === 'expert') return 'hard';
+      return 'medium'; // default to medium for intermediate or any other value
+    };
 
-    // Add questions to quiz
+    // Map targetDifficulty to match QuestionBank difficulty values
+    // QuestionBank might use 'beginner', 'intermediate', 'advanced' while QuizQuestion uses 'easy', 'medium', 'hard'
+    let searchDifficulty = targetDifficulty;
+    if (targetDifficulty === 'easy' || targetDifficulty === 'beginner') {
+      searchDifficulty = 'easy';
+    } else if (targetDifficulty === 'hard' || targetDifficulty === 'advanced') {
+      searchDifficulty = 'hard';
+    } else {
+      searchDifficulty = 'medium'; // intermediate or medium
+    }
+
+    // Helper to get question text - use actual questionText if available
+    const getQuestionText = (question) => {
+      if (question.questionText) {
+        return question.questionText;
+      }
+      return question.topic 
+        ? `What is related to ${question.topic}?` 
+        : 'Quiz Question';
+    };
+
+    // Select questions based on difficulty
+    // Try to get questionText if column exists
+    // LIMIT cannot be parameterized, so we use template literal (safe after validation)
+    const safeQuestionCount = parseInt(questionCount) || 18;
+    let questions;
+    try {
+      [questions] = await connection.execute(
+        `SELECT bankId, difficulty, topic, options, questionType, correctAnswer, explanation, questionText FROM QuestionBank WHERE difficulty = ? OR difficulty = ? ORDER BY RAND() LIMIT ${safeQuestionCount}`,
+        [targetDifficulty, searchDifficulty]
+      );
+    } catch (e) {
+      // If questionText column doesn't exist, select without it
+      [questions] = await connection.execute(
+        `SELECT bankId, difficulty, topic, options, questionType, correctAnswer, explanation FROM QuestionBank WHERE difficulty = ? OR difficulty = ? ORDER BY RAND() LIMIT ${safeQuestionCount}`,
+        [targetDifficulty, searchDifficulty]
+      );
+    }
+
+    if (questions.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'No questions available for the selected difficulty level'
+      });
+    }
+
+    // Insert questions into QuizQuestion
     for (let i = 0; i < questions.length; i++) {
+      const mappedDifficulty = mapDifficulty(questions[i].difficulty);
+      const questionText = getQuestionText(questions[i]);
       await connection.execute(
-        'INSERT INTO QuizQuestion (quizId, bankId, displayOrder) VALUES (?, ?, ?)',
-        [quizId, questions[i].bankId, i + 1]
+        'INSERT INTO QuizQuestion (quizId, bankId, questionText, difficulty, points, displayOrder) VALUES (?, ?, ?, ?, 1, ?)',
+        [quizId, questions[i].bankId, questionText, mappedDifficulty, i + 1]
       );
     }
 
@@ -463,7 +661,9 @@ const getQuizAttempts = async (req, res) => {
 const submitAnswer = async (req, res) => {
   try {
     const userId = req.session.user.userId;
-    const { attemptId, questionId, answer, timeSpent } = req.body;
+    // Handle both route formats: /attempt/:attemptId/answer and /submit-answer
+    const attemptId = req.params.attemptId || req.body.attemptId;
+    const { questionId, answer, timeSpent } = req.body;
 
     if (!attemptId || !questionId) {
       return res.status(400).json({
@@ -514,9 +714,11 @@ const submitAnswer = async (req, res) => {
       });
     }
 
-    // Check if answer is correct
-    const isCorrect = answer === attempt.correctAnswer;
-    const pointsEarned = isCorrect ? attempt.points : 0;
+    // Check if answer is correct (handle string comparison, case-insensitive, trim whitespace)
+    const normalizedAnswer = String(answer || '').trim();
+    const normalizedCorrect = String(attempt.correctAnswer || '').trim();
+    const isCorrect = normalizedAnswer.toLowerCase() === normalizedCorrect.toLowerCase();
+    const pointsEarned = isCorrect ? (attempt.points || 1) : 0;
 
     // Insert or update answer record
     await connection.execute(
@@ -548,10 +750,26 @@ const submitAnswer = async (req, res) => {
 // Get quiz progress for a specific attempt
 const getQuizProgress = async (req, res) => {
   try {
-    const studentId = req.session.user.userId;
+    const userId = req.session.user.userId;
     const { attemptId } = req.params;
 
     const connection = await db();
+
+    // Get studentId from userId
+    const [students] = await connection.execute(
+      'SELECT studentId FROM Student WHERE userId = ?',
+      [userId]
+    );
+
+    if (students.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    const studentId = students[0].studentId;
 
     // Get attempt details and progress
     const [attempts] = await connection.execute(`
@@ -639,10 +857,26 @@ const getQuizProgress = async (req, res) => {
 // Finish a quiz attempt
 const finishQuiz = async (req, res) => {
   try {
-    const studentId = req.session.user.userId;
+    const userId = req.session.user.userId;
     const { attemptId } = req.params;
 
     const connection = await db();
+
+    // Get studentId from userId
+    const [students] = await connection.execute(
+      'SELECT studentId FROM Student WHERE userId = ?',
+      [userId]
+    );
+
+    if (students.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    const studentId = students[0].studentId;
 
     // Get attempt details and calculate final score
     const [attempts] = await connection.execute(`
@@ -684,13 +918,51 @@ const finishQuiz = async (req, res) => {
 
     // Calculate final score
     const totalPossiblePoints = attempt.totalPossiblePoints || attempt.totalQuestions; // fallback if points not set
-    const score = totalPossiblePoints > 0 ? Math.round((attempt.totalPointsEarned / totalPossiblePoints) * 100) : 0;
+    const totalPointsEarned = attempt.totalPointsEarned || 0;
+    const score = totalPossiblePoints > 0 ? Math.round((totalPointsEarned / totalPossiblePoints) * 100) : 0;
     const passed = score >= (attempt.passingScore || 60);
+    const correctAnswers = Math.round((totalPointsEarned / (totalPossiblePoints / attempt.totalQuestions)) || 0);
+    const incorrectAnswers = attempt.answeredQuestions - correctAnswers;
+    const skippedQuestions = attempt.totalQuestions - attempt.answeredQuestions;
+
+    // Get all questions with answers for detailed results
+    const [questionDetails] = await connection.execute(`
+      SELECT
+        qq.questionId,
+        qq.questionText,
+        qq.displayOrder,
+        qq.difficulty,
+        qb.questionType,
+        qb.options,
+        qb.correctAnswer,
+        qb.explanation,
+        ar.studentAnswer,
+        ar.isCorrect,
+        ar.pointsEarned,
+        ar.timeSpent
+      FROM QuizQuestion qq
+      JOIN QuestionBank qb ON qq.bankId = qb.bankId
+      JOIN Quiz q ON qq.quizId = q.quizId
+      JOIN QuizAttempt qa ON q.quizId = qa.quizId
+      LEFT JOIN AnswerRecord ar ON qq.questionId = ar.questionId AND qa.attemptId = ar.attemptId
+      WHERE qa.attemptId = ?
+      ORDER BY qq.displayOrder ASC
+    `, [attemptId]);
+
+    // Get module title
+    const [moduleInfo] = await connection.execute(`
+      SELECT m.title as moduleTitle
+      FROM Quiz q
+      LEFT JOIN Module m ON q.moduleId = m.moduleId
+      WHERE q.quizId = ?
+    `, [attempt.quizId]);
+
+    const moduleTitle = moduleInfo.length > 0 ? moduleInfo[0].moduleTitle : 'Quiz';
 
     // Update attempt with final results
     await connection.execute(
       'UPDATE QuizAttempt SET status = "completed", endTime = NOW(), submitAnswers = ?, finishAt = NOW(), getScore = ? WHERE attemptId = ?',
-      [JSON.stringify({ answeredQuestions: attempt.answeredQuestions, totalPointsEarned: attempt.totalPointsEarned }), score, attemptId]
+      [JSON.stringify({ answeredQuestions: attempt.answeredQuestions, totalPointsEarned: totalPointsEarned }), score, attemptId]
     );
 
     // Generate AI feedback if enabled
@@ -714,19 +986,72 @@ const finishQuiz = async (req, res) => {
       // Continue without feedback if it fails
     }
 
+    // Format questions for frontend
+    const mapQuestionType = (questionType) => {
+      if (!questionType) return 'MCQ';
+      const type = questionType.toLowerCase();
+      if (type === 'multiple_choice') return 'MCQ';
+      if (type === 'labeling') return 'Labeling';
+      if (type === 'drag_drop') return 'Drag & Drop';
+      return 'MCQ';
+    };
+
+    const detailedQuestions = questionDetails.map(q => ({
+      id: q.questionId,
+      question: q.questionText || 'Question text not available',
+      yourAnswer: q.studentAnswer || 'Not answered',
+      correctAnswer: q.correctAnswer || 'N/A',
+      isCorrect: q.isCorrect === 1 || q.isCorrect === true,
+      type: mapQuestionType(q.questionType),
+      explanation: q.explanation || 'No explanation available',
+      pointsEarned: q.pointsEarned || 0,
+      timeSpent: q.timeSpent || 0
+    }));
+
+    // Calculate question breakdown by type
+    const questionBreakdown = detailedQuestions.reduce((acc, q) => {
+      const type = q.type;
+      if (!acc[type]) {
+        acc[type] = { type, total: 0, correct: 0 };
+      }
+      acc[type].total++;
+      if (q.isCorrect) {
+        acc[type].correct++;
+      }
+      return acc;
+    }, {});
+
     await connection.end();
+
+    // Format time spent
+    const timeSpentMinutes = attempt.timeSpent || 0;
+    const hours = Math.floor(timeSpentMinutes / 60);
+    const minutes = timeSpentMinutes % 60;
+    const timeSpentFormatted = hours > 0 
+      ? `${hours}:${minutes.toString().padStart(2, '0')}`
+      : `${minutes}:00`;
 
     res.json({
       success: true,
       data: {
         attemptId,
         score,
+        passingScore: attempt.passingScore || 60,
         passed,
         totalQuestions: attempt.totalQuestions,
+        correctAnswers,
+        incorrectAnswers,
+        skippedQuestions,
         answeredQuestions: attempt.answeredQuestions,
-        totalPointsEarned: attempt.totalPointsEarned,
+        totalPointsEarned,
         totalPossiblePoints,
-        timeSpent: attempt.timeSpent,
+        timeSpent: timeSpentFormatted,
+        timeTaken: timeSpentMinutes * 60, // in seconds
+        attemptDate: new Date().toLocaleString(),
+        quizTitle: moduleTitle,
+        module: moduleTitle,
+        questionBreakdown: Object.values(questionBreakdown),
+        detailedQuestions,
         feedback
       }
     });
@@ -744,10 +1069,26 @@ const finishQuiz = async (req, res) => {
 // Get details of a specific quiz attempt
 const getQuizAttempt = async (req, res) => {
   try {
-    const studentId = req.session.user.userId;
+    const userId = req.session.user.userId;
     const { attemptId } = req.params;
 
     const connection = await db();
+
+    // Get studentId from userId
+    const [students] = await connection.execute(
+      'SELECT studentId FROM Student WHERE userId = ?',
+      [userId]
+    );
+
+    if (students.length === 0) {
+      await connection.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    const studentId = students[0].studentId;
 
     // Get attempt details
     const [attempts] = await connection.execute(`
@@ -780,7 +1121,7 @@ const getQuizAttempt = async (req, res) => {
 
     const attempt = attempts[0];
 
-    // Get questions and answers
+    // Get questions and answers from QuizQuestion (which now contains the question data)
     const [questions] = await connection.execute(`
       SELECT
         qq.questionId,
@@ -806,8 +1147,120 @@ const getQuizAttempt = async (req, res) => {
 
     await connection.end();
 
+    // Map questionType to frontend format
+    const mapQuestionType = (questionType) => {
+      if (!questionType) return 'mcq';
+      const type = questionType.toLowerCase();
+      if (type === 'multiple_choice') return 'mcq';
+      if (type === 'labeling') return 'labeling';
+      if (type === 'drag_drop') return 'drag-drop';
+      return 'mcq'; // default
+    };
+
+    // Format questions for frontend
+    const formattedQuestions = questions.map(q => {
+      const parsedOptions = q.options ? (typeof q.options === 'string' ? JSON.parse(q.options) : q.options) : [];
+      const questionType = mapQuestionType(q.questionType);
+      
+      const baseQuestion = {
+        id: q.questionId,
+        question: q.questionText || 'Question text not available',
+        type: questionType,
+        difficulty: q.difficulty,
+        points: q.points,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+        studentAnswer: q.studentAnswer,
+        isCorrect: q.isCorrect,
+        hint: q.explanation || 'No hint available'
+      };
+
+      // Add type-specific fields
+      if (questionType === 'mcq' && Array.isArray(parsedOptions)) {
+        baseQuestion.options = parsedOptions;
+      } else if (questionType === 'labeling') {
+        // For labeling questions, create mock hotspots and labels from options
+        baseQuestion.hotspots = parsedOptions.slice(0, 5).map((opt, idx) => ({
+          id: `spot-${idx}`,
+          x: 20 + (idx * 15),
+          y: 30 + (idx % 2 * 20)
+        }));
+        baseQuestion.labels = Array.isArray(parsedOptions) ? parsedOptions : [];
+      } else if (questionType === 'drag-drop') {
+        // For drag-drop, create drop zones and items from options
+        baseQuestion.dropZones = [
+          { id: 'zone-1', description: 'Drop answer here' },
+          { id: 'zone-2', description: 'Drop answer here' }
+        ];
+        baseQuestion.items = Array.isArray(parsedOptions) 
+          ? parsedOptions.map((opt, idx) => ({ id: `item-${idx}`, text: opt }))
+          : [];
+      }
+
+      return baseQuestion;
+    });
+
+    // Calculate results if quiz is completed
+    let resultsData = null;
+    if (attempt.status === 'completed' && attempt.getScore !== null) {
+      // Calculate correct/incorrect answers
+      const correctAnswers = formattedQuestions.filter(q => q.isCorrect === 1 || q.isCorrect === true).length;
+      const incorrectAnswers = formattedQuestions.filter(q => q.studentAnswer && (q.isCorrect === 0 || q.isCorrect === false)).length;
+      const skippedQuestions = formattedQuestions.filter(q => !q.studentAnswer).length;
+      
+      // Calculate question breakdown by type
+      const questionBreakdown = formattedQuestions.reduce((acc, q) => {
+        const type = q.type === 'mcq' ? 'MCQ' : q.type === 'labeling' ? 'Labeling' : q.type === 'drag-drop' ? 'Drag & Drop' : 'MCQ';
+        if (!acc[type]) {
+          acc[type] = { type, total: 0, correct: 0 };
+        }
+        acc[type].total++;
+        if (q.isCorrect === 1 || q.isCorrect === true) {
+          acc[type].correct++;
+        }
+        return acc;
+      }, {});
+
+      // Format time spent
+      const timeSpentMinutes = attempt.endTime && attempt.startTime
+        ? Math.floor((new Date(attempt.endTime) - new Date(attempt.startTime)) / (1000 * 60))
+        : 0;
+      const hours = Math.floor(timeSpentMinutes / 60);
+      const minutes = timeSpentMinutes % 60;
+      const timeSpentFormatted = hours > 0 
+        ? `${hours}:${minutes.toString().padStart(2, '0')}`
+        : `${minutes}:00`;
+
+      // Format detailed questions for results
+      const detailedQuestions = formattedQuestions.map(q => ({
+        id: q.id,
+        question: q.question,
+        yourAnswer: q.studentAnswer || 'Not answered',
+        correctAnswer: q.correctAnswer || 'N/A',
+        isCorrect: q.isCorrect === 1 || q.isCorrect === true,
+        type: q.type === 'mcq' ? 'MCQ' : q.type === 'labeling' ? 'Labeling' : q.type === 'drag-drop' ? 'Drag & Drop' : 'MCQ',
+        explanation: q.explanation || 'No explanation available'
+      }));
+
+      resultsData = {
+        score: attempt.getScore || 0,
+        passingScore: attempt.passingScore || 60,
+        passed: (attempt.getScore || 0) >= (attempt.passingScore || 60),
+        correctAnswers,
+        incorrectAnswers,
+        skippedQuestions,
+        timeSpent: timeSpentFormatted,
+        timeTaken: timeSpentMinutes * 60,
+        attemptDate: attempt.endTime ? new Date(attempt.endTime).toLocaleString() : new Date().toLocaleString(),
+        questionBreakdown: Object.values(questionBreakdown),
+        detailedQuestions
+      };
+    }
+
     const attemptDetails = {
       attemptId: attempt.attemptId,
+      title: attempt.moduleTitle || 'Quiz',
+      module: attempt.moduleTitle || 'Module',
       startTime: attempt.startTime,
       endTime: attempt.endTime,
       status: attempt.status,
@@ -817,20 +1270,8 @@ const getQuizAttempt = async (req, res) => {
       passingScore: attempt.passingScore,
       moduleTitle: attempt.moduleTitle,
       moduleId: attempt.moduleId,
-      questions: questions.map(q => ({
-        questionId: q.questionId,
-        questionText: q.questionText,
-        difficulty: q.difficulty,
-        points: q.points,
-        questionType: q.questionType,
-        options: q.options ? JSON.parse(q.options) : null,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        studentAnswer: q.studentAnswer,
-        isCorrect: q.isCorrect,
-        pointsEarned: q.pointsEarned || 0,
-        timeSpent: q.timeSpent || 0
-      }))
+      questions: formattedQuestions,
+      results: resultsData // Include results if completed
     };
 
     res.json({

@@ -65,7 +65,7 @@ const getModuleCategory = (moduleName: string) => {
 export default function ModulesPage() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('grid');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recommended');
   const [modules, setModules] = useState<Module[]>([]);
@@ -78,14 +78,11 @@ export default function ModulesPage() {
     avgProgress: 0
   });
 
-  const categories = [
-    { id: 'all', name: 'All Modules', count: modules.length },
-    { id: 'cardiovascular', name: 'Cardiovascular', count: modules.filter(m => getModuleCategory(m.name) === 'cardiovascular').length },
-    { id: 'nervous', name: 'Nervous System', count: modules.filter(m => getModuleCategory(m.name) === 'nervous').length },
-    { id: 'skeletal', name: 'Skeletal', count: modules.filter(m => getModuleCategory(m.name) === 'skeletal').length },
-    { id: 'muscular', name: 'Muscular', count: modules.filter(m => getModuleCategory(m.name) === 'muscular').length },
-    { id: 'respiratory', name: 'Respiratory', count: modules.filter(m => getModuleCategory(m.name) === 'respiratory').length },
-    { id: 'sensory', name: 'Sensory', count: modules.filter(m => getModuleCategory(m.name) === 'sensory').length }
+  const statuses = [
+    { id: 'all', name: 'All', count: modules.length },
+    { id: 'completed', name: 'Completed', count: modules.filter(m => m.status === 'completed').length },
+    { id: 'in_progress', name: 'In Progress', count: modules.filter(m => m.status === 'in_progress').length },
+    { id: 'not_started', name: 'Not Started', count: modules.filter(m => m.status === 'not_started').length }
   ];
 
   // Fetch modules from API
@@ -105,7 +102,6 @@ export default function ModulesPage() {
       if (response.data.success) {
         const modulesData = response.data.data.map((module: any) => ({
           ...module,
-          category: getModuleCategory(module.name),
           icon: getModuleIcon(module.name).emoji,
           duration: `${Math.ceil((module.parts || 10) * 0.3)}-${Math.ceil((module.parts || 10) * 0.4)} hours`,
           parts: module.parts || 10,
@@ -144,12 +140,21 @@ export default function ModulesPage() {
     }
   };
 
-  const handleStartModule = async (moduleId: number) => {
+  const handleStartModule = async (moduleId: number, moduleName?: string) => {
     try {
       await axios.post(`${API_BASE_URL}/modules/${moduleId}/start`, {}, {
         withCredentials: true
       });
-      navigate(`/module/${moduleId}`);
+      // Check if this is LAB 1 module
+      if (moduleId === 1 || (moduleName && (moduleName.toUpperCase().includes('LAB 1') || moduleName.toUpperCase().includes('LAB1')))) {
+        navigate('/lab1explore');
+      }
+      // Check if this is LAB 2 module
+      else if (moduleName && (moduleName.toUpperCase().includes('LAB 2') || moduleName.toUpperCase().includes('LAB2'))) {
+        navigate('/lab2explore');
+      } else {
+        navigate(`/module/${moduleId}`);
+      }
     } catch (error) {
       console.error('Error starting module:', error);
     }
@@ -179,7 +184,7 @@ export default function ModulesPage() {
     try {
       const response = await axios.get(`${API_BASE_URL}/auth/check`, { withCredentials: true });
       if (response.data.isAuthenticated) {
-        const dashboardPath = response.data.user.userType === 'student' ? '/studentdashboard' : '/instructordashboard';
+        const dashboardPath = (response.data.user.userType === 'student') ? '/studentdashboard' : '/instructordashboard';
         navigate(dashboardPath);
       } else {
         navigate('/login');
@@ -191,10 +196,10 @@ export default function ModulesPage() {
   };
 
   const filteredModules = modules.filter(module => {
-    const matchesCategory = filterCategory === 'all' || module.category === filterCategory;
+    const matchesStatus = filterStatus === 'all' || module.status === filterStatus;
     const matchesSearch = module.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          module.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesStatus && matchesSearch;
   });
 
   const sortedModules = [...filteredModules].sort((a, b) => {
@@ -350,23 +355,23 @@ export default function ModulesPage() {
               </div>
             </div>
 
-            {/* Category Filter */}
+            {/* Status Filter */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
-              {categories.map(cat => (
+              {statuses.map(status => (
                 <button
-                  key={cat.id}
-                  onClick={() => setFilterCategory(cat.id)}
+                  key={status.id}
+                  onClick={() => setFilterStatus(status.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                    filterCategory === cat.id
+                    filterStatus === status.id
                       ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white'
                       : 'bg-slate-800/50 text-slate-300 hover:bg-slate-800'
                   }`}
                 >
-                  {cat.name}
+                  {status.name}
                   <span className={`text-xs px-1.5 py-0.5 rounded ${
-                    filterCategory === cat.id ? 'bg-white/20' : 'bg-slate-700'
+                    filterStatus === status.id ? 'bg-white/20' : 'bg-slate-700'
                   }`}>
-                    {cat.count}
+                    {status.count}
                   </span>
                 </button>
               ))}
@@ -430,7 +435,7 @@ export default function ModulesPage() {
   );
 }
 
-function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number) => void }) {
+function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number, name?: string) => void }) {
   const getDifficultyColor = (difficulty: string) => {
     switch(difficulty) {
       case 'beginner': return 'text-emerald-400';
@@ -446,7 +451,7 @@ function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number)
         ? 'border-slate-700/50 opacity-70'
         : 'border-white/10 hover:border-cyan-400/50 hover:shadow-cyan-500/10 cursor-pointer'
     }`}
-    onClick={() => module.status !== 'locked' && onStart(module.moduleId)}
+    onClick={() => module.status !== 'locked' && onStart(module.moduleId, module.name)}
     >
       {module.status === 'in_progress' && (
         <div className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
@@ -535,7 +540,7 @@ function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number)
   );
 }
 
-function ModuleListItem({ module, onStart }: { module: Module; onStart: (id: number) => void }) {
+function ModuleListItem({ module, onStart }: { module: Module; onStart: (id: number, name?: string) => void }) {
   const getDifficultyColor = (difficulty: string) => {
     switch(difficulty) {
       case 'beginner': return 'text-emerald-400';
@@ -551,7 +556,7 @@ function ModuleListItem({ module, onStart }: { module: Module; onStart: (id: num
         ? 'border-slate-700/50 opacity-70'
         : 'border-white/10 hover:border-cyan-400/50 cursor-pointer'
     }`}
-    onClick={() => module.status !== 'locked' && onStart(module.moduleId)}
+    onClick={() => module.status !== 'locked' && onStart(module.moduleId, module.name)}
     >
       <div className="flex items-center gap-6">
         <div className="text-5xl">{module.icon}</div>

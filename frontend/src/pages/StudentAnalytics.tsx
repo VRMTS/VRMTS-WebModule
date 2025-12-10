@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, TrendingUp, Clock, Trophy, Target, Calendar, ChevronLeft, Download, Filter, Brain, Zap, BookOpen, Activity, Eye, CheckCircle2, XCircle, AlertCircle, TrendingDown, Award } from 'lucide-react';
+import { BarChart3, TrendingUp, Clock, Trophy, Target, Calendar, ChevronLeft, Download, Filter, Brain, Zap, BookOpen, Activity, Eye, CheckCircle2, XCircle, AlertCircle, TrendingDown, Award, Loader2 } from 'lucide-react';
+
+const API_BASE_URL = 'http://localhost:8080/api';
 
 interface Overview {
   totalStudyTime: string;
@@ -91,80 +93,75 @@ export default function StudentAnalytics() {
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState('month');
   const [selectedModule, setSelectedModule] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
 
-  const analyticsData: AnalyticsData = {
-    overview: {
-      totalStudyTime: '47.5',
-      modulesCompleted: 8,
-      totalModules: 12,
-      averageScore: 85,
-      quizzesTaken: 24,
-      currentStreak: 12,
-      longestStreak: 18,
-      totalSessions: 45
-    },
-    scoreProgress: [
-      { month: 'Aug', score: 65 },
-      { month: 'Sep', score: 72 },
-      { month: 'Oct', score: 78 },
-      { month: 'Nov', score: 85 }
-    ],
-    studyTime: [
-      { day: 'Mon', hours: 2.5 },
-      { day: 'Tue', hours: 3.2 },
-      { day: 'Wed', hours: 1.8 },
-      { day: 'Thu', hours: 4.1 },
-      { day: 'Fri', hours: 2.9 },
-      { day: 'Sat', hours: 5.5 },
-      { day: 'Sun', hours: 3.8 }
-    ],
-    modulePerformance: [
-      { module: 'Cardiovascular', progress: 100, avgScore: 88, timeSpent: '8.5h', lastAttempt: '2 days ago', status: 'completed' },
-      { module: 'Nervous System', progress: 100, avgScore: 92, timeSpent: '12.3h', lastAttempt: '5 days ago', status: 'completed' },
-      { module: 'Skeletal System', progress: 85, avgScore: 78, timeSpent: '6.2h', lastAttempt: '1 day ago', status: 'in-progress' },
-      { module: 'Muscular System', progress: 65, avgScore: 75, timeSpent: '4.8h', lastAttempt: '3 days ago', status: 'in-progress' },
-      { module: 'Respiratory', progress: 100, avgScore: 85, timeSpent: '7.1h', lastAttempt: '1 week ago', status: 'completed' },
-      { module: 'Digestive System', progress: 40, avgScore: 71, timeSpent: '3.2h', lastAttempt: '4 days ago', status: 'in-progress' }
-    ],
-    questionTypePerformance: [
-      { type: 'Multiple Choice', correct: 156, total: 180, percentage: 87 },
-      { type: 'Labeling', correct: 42, total: 55, percentage: 76 },
-      { type: 'Drag & Drop', correct: 35, total: 40, percentage: 88 }
-    ],
-    recentActivity: [
-      { date: 'Oct 30, 2025', action: 'Completed Quiz', module: 'Skeletal System', score: 85, time: '15:24' },
-      { date: 'Oct 29, 2025', action: 'Studied Module', module: 'Muscular System', duration: '2.5h' },
-      { date: 'Oct 28, 2025', action: 'Completed Quiz', module: 'Nervous System', score: 92, time: '18:45' },
-      { date: 'Oct 27, 2025', action: 'Studied Module', module: 'Cardiovascular', duration: '1.8h' },
-      { date: 'Oct 26, 2025', action: 'Completed Quiz', module: 'Respiratory', score: 88, time: '16:32' }
-    ],
-    strengths: [
-      { topic: 'Heart Anatomy', mastery: 95, questions: 24 },
-      { topic: 'Blood Flow', mastery: 92, questions: 18 },
-      { topic: 'Nerve Function', mastery: 90, questions: 22 }
-    ],
-    weaknesses: [
-      { topic: 'Heart Valves', mastery: 65, questions: 12 },
-      { topic: 'Bone Structure', mastery: 68, questions: 15 },
-      { topic: 'Muscle Types', mastery: 72, questions: 10 }
-    ],
-    learningPattern: {
-      mostActiveDay: 'Saturday',
-      mostActiveTime: '2PM - 6PM',
-      avgSessionLength: '63 mins',
-      preferredFormat: 'VR Sessions'
-    },
-    achievements: [
-      { name: 'First Quiz Completed', icon: 'Trophy', unlocked: true, date: 'Oct 15, 2025' },
-      { name: 'Week Streak', icon: 'Zap', unlocked: true, date: 'Oct 20, 2025' },
-      { name: 'Perfect Score', icon: 'Award', unlocked: true, date: 'Oct 25, 2025' },
-      { name: 'Module Master', icon: 'Brain', unlocked: false },
-      { name: 'Consistency King', icon: 'Target', unlocked: false },
-      { name: 'Speed Demon', icon: 'Clock', unlocked: false }
-    ]
-  };
+  // Fetch analytics data
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const maxStudyHours = Math.max(...analyticsData.studyTime.map((d: any) => d.hours));
+        const response = await fetch(`${API_BASE_URL}/analytics/student`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics data');
+        }
+
+        const result = await response.json();
+        if (result.success && result.data) {
+          setAnalyticsData(result.data);
+        } else {
+          throw new Error(result.message || 'Failed to load analytics data');
+        }
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load analytics data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-cyan-400 mx-auto mb-4" />
+          <p className="text-slate-400">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !analyticsData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Error Loading Analytics</h2>
+          <p className="text-slate-400 mb-4">{error || 'Analytics data not available'}</p>
+          <button
+            onClick={() => navigate('/studentdashboard')}
+            className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-medium transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const maxStudyHours = Math.max(...(analyticsData.studyTime || []).map((d: any) => d.hours || 0), 1);
 
   const getAchievementIcon = (iconName: string) => {
     switch (iconName) {
@@ -191,8 +188,7 @@ export default function StudentAnalytics() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <h1 className="text-2xl font-bold">
-              <span className="text-white">VR</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">MTS</span>
+              <span className="text-white">VRMTS</span>
             </h1>
           </div>
           

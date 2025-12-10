@@ -24,11 +24,22 @@ app.use(session(sessionConfig));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/modules', require('./routes/modules.routes'));
-app.use('/api/dashboard', require('./routes/dashboard.routes'));
+
+// Dashboard routes
+const dashboardRoutes = require('./routes/dashboard.routes');
+app.use('/api/dashboard', dashboardRoutes);
+console.log('✓ Dashboard routes registered at /api/dashboard');
+
+app.use('/api/instructor', require('./routes/instructorDashboard.routes'));
 app.use('/api/user', require('./routes/user.routes'));
 app.use('/api/quiz', require('./routes/quiz.routes'));
 app.use('/api/explore', require('./routes/moduleExploration.routes'));
 app.use('/api/analytics', require('./routes/analytics.routes'));
+
+// Debug: Test dashboard route
+app.get('/api/dashboard/test', (req, res) => {
+  res.json({ message: 'Dashboard routes are working!' });
+});
 
 // Test route
 app.get('/api/test', (req, res) => {

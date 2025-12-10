@@ -3,7 +3,7 @@ const connectDB = require('../config/db');
 const updateAccountInfo = async (req, res) => {
   try {
     const { firstName, lastName, email, phone, institution, bio } = req.body;
-    const userId = req.session.userId;
+    const userId = req.session.user.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -33,6 +33,10 @@ const updateAccountInfo = async (req, res) => {
     );
 
     await connection.end();
+
+    // Update session with new name
+    req.session.user.name = `${firstName} ${lastName}`;
+
     res.json({ message: 'Account info updated successfully' });
   } catch (error) {
     console.error('Error updating account info:', error);
@@ -43,7 +47,7 @@ const updateAccountInfo = async (req, res) => {
 const updatePreferences = async (req, res) => {
   try {
     const { theme, language, timeZone, dateFormat, defaultView } = req.body;
-    const userId = req.session.userId;
+    const userId = req.session.user.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -72,7 +76,7 @@ const updatePreferences = async (req, res) => {
 const updateAccessibility = async (req, res) => {
   try {
     const { textSize, highContrast, reduceMotion, screenReader, keyboardNav, captions } = req.body;
-    const userId = req.session.userId;
+    const userId = req.session.user.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -100,7 +104,7 @@ const updateAccessibility = async (req, res) => {
 const updateNotifications = async (req, res) => {
   try {
     const { assignments, quizDeadlines, performance, announcements, emailDigest } = req.body;
-    const userId = req.session.userId;
+    const userId = req.session.user.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -128,7 +132,7 @@ const updateNotifications = async (req, res) => {
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.session.userId;
+    const userId = req.session.user.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -163,7 +167,7 @@ const changePassword = async (req, res) => {
 
 const getUserSettings = async (req, res) => {
   try {
-    const userId = req.session.userId;
+    const userId = req.session.user.userId;
 
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });

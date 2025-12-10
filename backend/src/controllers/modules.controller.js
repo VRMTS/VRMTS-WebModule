@@ -3,9 +3,25 @@ const db = require('../config/db');
 // Get all modules for the current student
 const getModules = async (req, res) => {
   try {
-    const studentId = req.session.user.userId;
+    const userId = req.session.user.userId;
 
     const connection = await db();
+
+    // First get the studentId from the Student table
+    const [students] = await connection.execute(
+      'SELECT studentId FROM Student WHERE userId = ?',
+      [userId]
+    );
+
+    if (students.length === 0) {
+      await connection.end();
+      return res.status(403).json({
+        success: false,
+        message: 'User is not a student'
+      });
+    }
+
+    const studentId = students[0].studentId;
 
     // Get all modules with their assignment status for the student
     const [modules] = await connection.execute(`
@@ -96,9 +112,25 @@ const getModules = async (req, res) => {
 // Get modules stats for the current student
 const getModulesStats = async (req, res) => {
   try {
-    const studentId = req.session.user.userId;
+    const userId = req.session.user.userId;
 
     const connection = await db();
+
+    // First get the studentId from the Student table
+    const [students] = await connection.execute(
+      'SELECT studentId FROM Student WHERE userId = ?',
+      [userId]
+    );
+
+    if (students.length === 0) {
+      await connection.end();
+      return res.status(403).json({
+        success: false,
+        message: 'User is not a student'
+      });
+    }
+
+    const studentId = students[0].studentId;
 
     // Get stats from StudentModuleAssignment
     const [stats] = await connection.execute(`
@@ -138,10 +170,26 @@ const getModulesStats = async (req, res) => {
 // Start a module for the current student
 const startModule = async (req, res) => {
   try {
-    const studentId = req.session.user.userId;
+    const userId = req.session.user.userId;
     const moduleId = req.params.moduleId;
 
     const connection = await db();
+
+    // First get the studentId from the Student table
+    const [students] = await connection.execute(
+      'SELECT studentId FROM Student WHERE userId = ?',
+      [userId]
+    );
+
+    if (students.length === 0) {
+      await connection.end();
+      return res.status(403).json({
+        success: false,
+        message: 'User is not a student'
+      });
+    }
+
+    const studentId = students[0].studentId;
 
     // Check if assignment already exists
     const [existing] = await connection.execute(

@@ -176,15 +176,18 @@ CREATE TABLE WeaknessProfile (
 
 CREATE TABLE QuestionBank (
     bankId INT PRIMARY KEY AUTO_INCREMENT,
-    questionType ENUM('multiple_choice', 'true_false', 'short_answer') NOT NULL,
+    questionType ENUM('multiple_choice', 'true_false', 'short_answer', 'labeling', 'drag_drop') NOT NULL,
     difficulty VARCHAR(50),
     topic VARCHAR(100),
+    moduleId INT,
     systemId INT,
     correctAnswer TEXT,
     options JSON,
     explanation TEXT,
+    questionText TEXT NOT NULL,
     getByDifficultyLevel VARCHAR(50),
     getByTopic VARCHAR(100),
+    FOREIGN KEY (moduleId) REFERENCES Module(moduleId) ON DELETE SET NULL,
     FOREIGN KEY (systemId) REFERENCES AnatomySystem(systemId) ON DELETE SET NULL,
     INDEX idx_questionType (questionType),
     INDEX idx_difficulty (difficulty),
@@ -530,3 +533,9 @@ ALTER TABLE Quiz
   DROP COLUMN description,
   DROP COLUMN isCustom,
   MODIFY COLUMN moduleId INT NOT NULL;
+  
+  
+  ALTER TABLE QuestionBank 
+MODIFY COLUMN questionType ENUM('multiple_choice', 'true_false', 'short_answer', 'labeling', 'drag_drop') NOT NULL;
+
+DESCRIBE QuestionBank;

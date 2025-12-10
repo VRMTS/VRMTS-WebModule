@@ -37,7 +37,7 @@ export default function Login() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // IMPORTANT: Include cookies for sessions
+        credentials: 'include', //Include cookies for sessions
         body: JSON.stringify({ email, password })
       });
 
@@ -49,7 +49,7 @@ export default function Login() {
         // Redirect after successful login based on userType
         setTimeout(() => {
           let dashboardPath = '/studentdashboard';
-          if (data.user.userType === 'instructor') {
+          if (data.user.userType === 'teacher' || data.user.userType === 'instructor') {
             dashboardPath = '/instructordashboard';
           } else if (data.user.userType === 'admin') {
             dashboardPath = '/admindashboard';

@@ -178,8 +178,7 @@ export default function VRMTSModuleAssignment() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <h1 className="text-2xl font-bold">
-              <span className="text-white">VR</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">MTS</span>
+              <span className="text-white">VRMTS</span>
             </h1>
             <nav className="hidden md:flex gap-6">
               <button className="text-slate-400 hover:text-white transition-colors">Dashboard</button>

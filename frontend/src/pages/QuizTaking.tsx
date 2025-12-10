@@ -1,126 +1,136 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, Flag, ChevronLeft, ChevronRight, MessageCircle, Eye, EyeOff, Save, AlertCircle, CheckCircle, Circle, XCircle, Lightbulb, Brain } from 'lucide-react';
 
 export default function QuizTaking() {
   const navigate = useNavigate();
+  const { attemptId } = useParams<{ attemptId: string }>();
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [markedForReview, setMarkedForReview] = useState(new Set());
   const [showHint, setShowHint] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [draggedLabels, setDraggedLabels] = useState<Record<string, string>>({});
   const [showQuestionNav, setShowQuestionNav] = useState(true);
+  const [quizData, setQuizData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submittedAnswers, setSubmittedAnswers] = useState<Set<number>>(new Set());
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
 
-  // Mock quiz data - this would come from your backend
-  const quizData = {
-    title: "Cardiovascular System Quiz",
-    module: "Cardiovascular System",
-    totalQuestions: 15,
-    timeLimit: 1800,
-    passingScore: 70,
-    questions: [
-      {
-        id: 1,
-        type: 'mcq',
-        question: 'Which chamber of the heart receives oxygenated blood from the lungs?',
-        options: [
-          'Right Atrium',
-          'Right Ventricle',
-          'Left Atrium',
-          'Left Ventricle'
-        ],
-        hint: 'Think about where oxygenated blood enters the heart after leaving the lungs.'
-      },
-      {
-        id: 2,
-        type: 'mcq',
-        question: 'What is the largest artery in the human body?',
-        options: [
-          'Pulmonary Artery',
-          'Aorta',
-          'Carotid Artery',
-          'Femoral Artery'
-        ],
-        hint: 'This vessel carries oxygenated blood from the left ventricle to the rest of the body.'
-      },
-      {
-        id: 3,
-        type: 'labeling',
-        question: 'Label the following parts of the heart on the diagram below:',
-        image: 'heart-diagram',
-        labels: ['Aorta', 'Left Atrium', 'Right Ventricle', 'Pulmonary Artery'],
-        hotspots: [
-          { id: 'spot1', x: 45, y: 20, label: null },
-          { id: 'spot2', x: 30, y: 40, label: null },
-          { id: 'spot3', x: 60, y: 60, label: null },
-          { id: 'spot4', x: 55, y: 25, label: null }
-        ],
-        hint: 'Start from the top of the heart and work your way down.'
-      },
-      {
-        id: 4,
-        type: 'mcq',
-        question: 'What is the normal resting heart rate for adults (beats per minute)?',
-        options: [
-          '40-60 bpm',
-          '60-100 bpm',
-          '100-120 bpm',
-          '120-140 bpm'
-        ],
-        hint: 'The normal range is between 60 and 100 beats per minute.'
-      },
-      {
-        id: 5,
-        type: 'drag-drop',
-        question: 'Match the following blood vessels to their correct descriptions:',
-        items: [
-          { id: 'item1', text: 'Arteries', matched: false },
-          { id: 'item2', text: 'Veins', matched: false },
-          { id: 'item3', text: 'Capillaries', matched: false }
-        ],
-        dropZones: [
-          { id: 'zone1', description: 'Carry oxygenated blood away from the heart', correctItem: 'item1' },
-          { id: 'zone2', description: 'Tiny vessels where gas exchange occurs', correctItem: 'item3' },
-          { id: 'zone3', description: 'Return deoxygenated blood to the heart', correctItem: 'item2' }
-        ],
-        hint: 'Think about the direction of blood flow and the function of each vessel type.'
-      },
-      {
-        id: 6,
-        type: 'mcq',
-        question: 'Which valve prevents backflow of blood from the left ventricle into the left atrium?',
-        options: [
-          'Tricuspid Valve',
-          'Mitral Valve',
-          'Aortic Valve',
-          'Pulmonary Valve'
-        ],
-        hint: 'This valve is also known as the bicuspid valve.'
-      },
-      {
-        id: 7,
-        type: 'mcq',
-        question: 'What is the primary function of red blood cells?',
-        options: [
-          'Fighting infections',
-          'Blood clotting',
-          'Transporting oxygen',
-          'Producing antibodies'
-        ],
-        hint: 'These cells contain hemoglobin, which binds to oxygen.'
+  const handleSubmitQuiz = async () => {
+    if (submitting || autoSubmitted) return;
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`http://localhost:8080/api/quiz/attempt/${attemptId}/finish`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit quiz');
       }
-    ]
+
+      const data = await response.json();
+      if (data.success) {
+        // Navigate to results page with the attempt ID
+        navigate(`/quizresult/${attemptId}`);
+      } else {
+        throw new Error(data.message || 'Failed to submit quiz');
+      }
+    } catch (err) {
+      console.error('Error submitting quiz:', err);
+      setError(err instanceof Error ? err.message : 'Failed to submit quiz');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const handleSaveProgress = async () => {
+    // Placeholder for save progress functionality
+    console.log('Save progress clicked');
+    // TODO: Implement save progress API call
+  };
+
+  // Fetch quiz data
+  useEffect(() => {
+    const fetchQuizData = async () => {
+      console.log('DEBUG: fetchQuizData called with attemptId:', attemptId);
+      if (!attemptId) {
+        console.log('DEBUG: No attemptId provided');
+        setError('No attempt ID provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const fetchUrl = `http://localhost:8080/api/quiz/attempt/${attemptId}`;
+        console.log('DEBUG: Fetching quiz data from:', fetchUrl);
+        const response = await fetch(fetchUrl, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('DEBUG: Response status:', response.status);
+        console.log('DEBUG: Response ok:', response.ok);
+
+        if (response.status === 404) {
+          console.log('DEBUG: Quiz attempt not found (404)');
+          throw new Error('Quiz attempt not found. Please start a new quiz from the quiz selection page.');
+        }
+
+        if (!response.ok) {
+          console.log('DEBUG: Response not ok, throwing error');
+          throw new Error('Failed to fetch quiz data');
+        }
+
+        const data = await response.json();
+        console.log('DEBUG: Response data:', data);
+
+        if (data.success) {
+          console.log('DEBUG: Data success, setting quizData:', data.data);
+          console.log('DEBUG: Questions in data:', data.data.questions ? data.data.questions.length : 'No questions array');
+          // Check if questions are assigned
+          if (!data.data.questions || data.data.questions.length === 0) {
+            console.log('DEBUG: No questions assigned to this attempt');
+            throw new Error('No questions assigned to this quiz attempt. Please start a new quiz from the quiz selection page.');
+          }
+          setQuizData(data.data);
+          // Set timer from backend data (convert minutes to seconds)
+          setTimeRemaining(data.data.timeLimit * 60);
+        } else {
+          console.log('DEBUG: Data not success, message:', data.message);
+          throw new Error(data.message || 'Failed to load quiz');
+        }
+      } catch (err) {
+        console.log('DEBUG: Error in fetchQuizData:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load quiz');
+      } finally {
+        console.log('DEBUG: fetchQuizData completed, setting loading to false');
+        setLoading(false);
+      }
+    };
+
+    fetchQuizData();
+  }, [attemptId]);
 
   // Timer countdown
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
-        if (prev <= 0) {
+        if (prev <= 0 && !autoSubmitted) {
           clearInterval(timer);
-          // Auto-submit quiz
+          // Auto-submit quiz when time runs out (only once)
+          setAutoSubmitted(true);
+          handleSubmitQuiz();
           return 0;
         }
         return prev - 1;
@@ -128,7 +138,7 @@ export default function QuizTaking() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [autoSubmitted]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -136,11 +146,44 @@ export default function QuizTaking() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswerSelect = (questionId: number, answer: any) => {
+  const handleAnswerSelect = async (questionId: number, answer: any) => {
+    // Update local state immediately for UI responsiveness
     setAnswers(prev => ({
       ...prev,
       [questionId]: answer
     }));
+
+    // Submit answer to backend
+    try {
+      const response = await fetch(`http://localhost:8080/api/quiz/submit-answer`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          attemptId: parseInt(attemptId!),
+          questionId,
+          answer,
+          timeSpent: 0 // TODO: Track actual time spent per question
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit answer');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Mark answer as submitted
+        setSubmittedAnswers(prev => new Set(prev).add(questionId));
+      } else {
+        console.error('Failed to submit answer:', data.message);
+      }
+    } catch (err) {
+      console.error('Error submitting answer:', err);
+      // Could show a toast notification here
+    }
   };
 
   const toggleMarkForReview = (questionId: number) => {
@@ -178,16 +221,54 @@ export default function QuizTaking() {
 
   const getQuestionStatus = (questionId: number) => {
     const isAnswered = answers[questionId] !== undefined;
+    const isSubmitted = submittedAnswers.has(questionId);
     const isMarked = markedForReview.has(questionId);
     const isCurrent = quizData.questions[currentQuestion].id === questionId;
 
     if (isCurrent) return 'current';
     if (isMarked) return 'marked';
+    if (isSubmitted) return 'submitted';
     if (isAnswered) return 'answered';
     return 'unanswered';
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading quiz...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !quizData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Error Loading Quiz</h2>
+          <p className="text-slate-400 mb-4">{error || 'Quiz data not available'}</p>
+          <button
+            onClick={() => navigate('/quizselection')}
+            className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-medium transition-colors"
+          >
+            Back to Quiz Selection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('DEBUG: Rendering quiz, quizData:', quizData);
+  console.log('DEBUG: Questions array:', quizData.questions);
+  console.log('DEBUG: Questions length:', quizData.questions ? quizData.questions.length : 'No questions');
+  console.log('DEBUG: Current question index:', currentQuestion);
+
   const question = quizData.questions[currentQuestion];
+  console.log('DEBUG: Current question object:', question);
+
   const progress = ((currentQuestion + 1) / quizData.questions.length) * 100;
   const answeredCount = Object.keys(answers).length;
 
@@ -199,8 +280,7 @@ export default function QuizTaking() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-bold">
-                <span className="text-white">VR</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">MTS</span>
+                <span className="text-white">VRMTS</span>
               </h1>
               <div className="h-6 w-px bg-white/10"></div>
               <div>
@@ -266,7 +346,7 @@ export default function QuizTaking() {
                     </span>
                   </div>
                   <h3 className="text-2xl font-semibold leading-relaxed">
-                    {question.question}
+                    {question.question || 'Question text not available'}
                   </h3>
                 </div>
                 
@@ -285,7 +365,7 @@ export default function QuizTaking() {
               {/* MCQ Options */}
               {question.type === 'mcq' && (
                 <div className="space-y-3">
-                  {question.options?.map((option, idx) => (
+                  {question.options?.map((option: string, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => handleAnswerSelect(question.id, option)}
@@ -322,7 +402,7 @@ export default function QuizTaking() {
                       </div>
                       
                       {/* Hotspots */}
-                      {question.hotspots?.map((spot) => (
+                      {question.hotspots?.map((spot: any) => (
                         <div
                           key={spot.id}
                           className="absolute"
@@ -353,12 +433,12 @@ export default function QuizTaking() {
 
                   {/* Label Options */}
                   <div className="grid grid-cols-2 gap-3">
-                    {question.labels?.map((label, idx) => (
+                    {question.labels?.map((label: string, idx: number) => (
                       <button
                         key={idx}
                         className="p-4 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 hover:bg-slate-800 transition-all text-center font-medium"
                       >
-                        {label}
+                        {label || `Label ${idx + 1}`}
                       </button>
                     ))}
                   </div>
@@ -370,7 +450,7 @@ export default function QuizTaking() {
                 <div className="space-y-6">
                   {/* Drop Zones */}
                   <div className="space-y-4">
-                    {question.dropZones?.map((zone) => (
+                    {question.dropZones?.map((zone: any) => (
                       <div
                         key={zone.id}
                         className="p-6 bg-slate-800/30 border-2 border-dashed border-white/20 rounded-xl hover:border-cyan-500/50 transition-all"
@@ -384,7 +464,7 @@ export default function QuizTaking() {
                           {draggedLabels[zone.id] ? (
                             <div className="flex items-center justify-between">
                               <span className="font-medium">
-                                {question.items.find(item => item.id === draggedLabels[zone.id])?.text}
+                                {question.items.find((item: any) => item.id === draggedLabels[zone.id])?.text}
                               </span>
                               <button
                                 onClick={() => setDraggedLabels(prev => {
@@ -409,14 +489,14 @@ export default function QuizTaking() {
                   <div>
                     <p className="text-sm text-slate-400 mb-3">Available Items:</p>
                     <div className="grid grid-cols-3 gap-3">
-                      {question.items?.map((item) => {
+                      {question.items?.map((item: any) => {
                         const isUsed = Object.values(draggedLabels).includes(item.id);
                         return (
                           <button
                             key={item.id}
                             onClick={() => {
                               // Simple click to add to first available zone
-                              const emptyZone = question.dropZones.find(z => !draggedLabels[z.id]);
+                              const emptyZone = question.dropZones.find((z: any) => !draggedLabels[z.id]);
                               if (emptyZone && !isUsed) {
                                 handleDrop(item.id, emptyZone.id);
                               }
@@ -473,7 +553,10 @@ export default function QuizTaking() {
                     {showHint ? 'Hide' : 'Show'} Hint
                   </button>
 
-                  <button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-medium transition-colors flex items-center gap-2">
+                  <button
+                    onClick={handleSaveProgress}
+                    className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-medium transition-colors flex items-center gap-2"
+                  >
                     <Save className="w-5 h-5" />
                     Save Progress
                   </button>
@@ -481,10 +564,11 @@ export default function QuizTaking() {
 
                 {currentQuestion === quizData.questions.length - 1 ? (
                   <button
-                    onClick={() => navigate('/quizresult/1')}
-                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/20"
+                    onClick={handleSubmitQuiz}
+                    disabled={submitting}
+                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Submit Quiz
+                    {submitting ? 'Submitting...' : 'Submit Quiz'}
                   </button>
                 ) : (
                   <button
@@ -528,7 +612,7 @@ export default function QuizTaking() {
 
                   {/* Question Grid */}
                   <div className="grid grid-cols-5 gap-2 mb-6">
-                    {quizData.questions.map((q, idx) => {
+                    {quizData.questions.map((q: any, idx: number) => {
                       const status = getQuestionStatus(q.id);
                       return (
                         <button
@@ -542,6 +626,8 @@ export default function QuizTaking() {
                               ? 'bg-gradient-to-br from-cyan-500 to-teal-500 text-white ring-2 ring-cyan-400 ring-offset-2 ring-offset-slate-950'
                               : status === 'marked'
                               ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
+                              : status === 'submitted'
+                              ? 'bg-blue-500/20 border border-blue-500/50 text-blue-400'
                               : status === 'answered'
                               ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400'
                               : 'bg-slate-800/50 border border-white/10 text-slate-400 hover:border-cyan-500/50'
@@ -558,6 +644,10 @@ export default function QuizTaking() {
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded bg-gradient-to-br from-cyan-500 to-teal-500"></div>
                       <span className="text-slate-400">Current</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-blue-500/20 border border-blue-500/50"></div>
+                      <span className="text-slate-400">Submitted</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded bg-emerald-500/20 border border-emerald-500/50"></div>

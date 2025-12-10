@@ -26,6 +26,8 @@ router.post('/adaptive/start', quizController.startAdaptiveTest);
 
 // Submit an answer for a quiz attempt
 router.post('/attempt/:attemptId/answer', quizController.submitAnswer);
+// Alternative route for frontend compatibility
+router.post('/submit-answer', quizController.submitAnswer);
 
 // Get quiz progress for an attempt
 router.get('/attempt/:attemptId/progress', quizController.getQuizProgress);
