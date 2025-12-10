@@ -662,8 +662,8 @@ export default function ModelTestPage() {
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold mb-1">Skeletal System</h1>
-              <p className="text-slate-400 text-sm">Explore the human skeleton in 3D</p>
+              <h1 className="text-2xl font-bold mb-1">Planes of the Human Body</h1>
+              <p className="text-slate-400 text-sm">Explore the terminologies used</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="bg-slate-800/50 rounded-lg px-4 py-2 flex items-center gap-2">
