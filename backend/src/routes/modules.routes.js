@@ -8,6 +8,7 @@ router.use(authMiddleware);
 
 router.get('/', modulesController.getModules);
 router.get('/stats', modulesController.getModulesStats);
+router.get('/all', modulesController.getAllModules);
 router.post('/:moduleId/start', modulesController.startModule);
 
 module.exports = router;

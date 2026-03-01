@@ -529,7 +529,7 @@ export default function ModelTestPage() {
           .subVectors(meshCenter, groupCenter)
           .normalize();
         
-        if (direction.lengthSq() < 0.0001) {
+        if (direction.lengthSq() < 0.0001) { //fibosphere
           const phi = Math.acos(-1 + (2 * index) / meshes.length);
           const theta = Math.sqrt(meshes.length * Math.PI) * phi;
           direction.set(
@@ -853,4 +853,7 @@ export default function ModelTestPage() {
     </div>
   );
 }
+
+
+
 

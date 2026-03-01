@@ -228,4 +228,30 @@ const startModule = async (req, res) => {
   }
 };
 
-module.exports = { getModules, getModulesStats, startModule };
+// Get all modules (simple list for dropdowns)
+const getAllModules = async (req, res) => {
+  try {
+    const connection = await db();
+
+    const [modules] = await connection.execute(
+      'SELECT moduleId, title FROM Module ORDER BY title ASC'
+    );
+
+    await connection.end();
+
+    res.json({
+      success: true,
+      data: modules
+    });
+
+  } catch (error) {
+    console.error('Error fetching all modules:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch modules',
+      error: error.message
+    });
+  }
+};
+
+module.exports = { getModules, getModulesStats, startModule, getAllModules };

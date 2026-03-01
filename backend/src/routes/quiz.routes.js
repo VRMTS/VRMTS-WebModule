@@ -38,4 +38,10 @@ router.post('/attempt/:attemptId/finish', quizController.finishQuiz);
 // Get details of a specific quiz attempt
 router.get('/attempt/:attemptId', quizController.getQuizAttempt);
 
+// Create a new customized quiz
+router.post('/create', quizController.createQuiz);
+
+// Get custom quizzes for a module
+router.get('/module/:moduleId/custom', quizController.getCustomQuizzesByModule);
+
 module.exports = router;

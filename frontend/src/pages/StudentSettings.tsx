@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Calendar, Shield, Bell, Globe, Monitor, Sun, Moon, Eye, Lock, Key, Smartphone, Clock, Save, Camera, ChevronLeft, AlertCircle, Check } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Shield, Bell, Globe, Monitor, Sun, Moon, Eye, Lock, Key, Smartphone, Clock, Save, Camera, AlertCircle, Check } from 'lucide-react';
+import { PageLayout } from '@/components/PageLayout';
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('account');
   const [theme, setTheme] = useState('dark');
   const [language, setLanguage] = useState('en');
+  const [timeZone, setTimeZone] = useState('UTC+05:00 Pakistan Standard Time');
+  const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
+  const [defaultView, setDefaultView] = useState('Grid View');
   const [notifications, setNotifications] = useState({
     assignments: true,
     quizDeadlines: true,
@@ -141,52 +145,31 @@ export default function ProfileSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-2xl font-bold">
-              <span className="text-white">VRMTS</span>
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-teal-400 flex items-center justify-center font-bold">
-              {userData.firstName[0]}{userData.lastName[0]}
-            </div>
-          </div>
+    <PageLayout
+      title="Settings"
+      subtitle="Manage your account and preferences"
+      breadcrumbLabel="Settings"
+      userType="student"
+      headerRight={
+        <div className="w-9 h-9 rounded-full bg-slate-600 flex items-center justify-center text-sm font-medium text-slate-200">
+          {userData.firstName[0]}{userData.lastName[0]}
         </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        {/* Page Title */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Profile & Settings</h2>
-          <p className="text-slate-400">Manage your account and customize your experience</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
+      }
+    >
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 text-cyan-400'
-                      : 'hover:bg-white/5 text-slate-300'
+                      ? 'bg-slate-600 text-white'
+                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
                   }`}
                 >
-                  <tab.icon className="w-5 h-5" />
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
                   {tab.label}
                 </button>
               ))}
@@ -195,15 +178,12 @@ export default function ProfileSettings() {
 
           {/* Content */}
           <div className="lg:col-span-3">
-            {/* Account Tab */}
             {activeTab === 'account' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <User className="w-7 h-7 text-cyan-400" />
-                    Account Information
-                  </h3>
-                </div>
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2 mb-4">
+                  <User className="w-5 h-5 text-slate-400" />
+                  Account information
+                </h3>
 
                 {/* First Name and Last Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -216,7 +196,7 @@ export default function ProfileSettings() {
                       type="text"
                       value={userData.firstName || ''}
                       onChange={(e) => setUserData({...userData, firstName: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                     />
                   </div>
                   <div>
@@ -227,7 +207,7 @@ export default function ProfileSettings() {
                       type="text"
                       value={userData.lastName || ''}
                       onChange={(e) => setUserData({...userData, lastName: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                     />
                   </div>
                 </div>
@@ -242,7 +222,7 @@ export default function ProfileSettings() {
                     type="email"
                     value={userData.email || ''}
                     onChange={(e) => setUserData({...userData, email: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                   />
                 </div>
 
@@ -256,7 +236,7 @@ export default function ProfileSettings() {
                     type="tel"
                     value={userData.phone || ''}
                     onChange={(e) => setUserData({...userData, phone: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                   />
                 </div>
 
@@ -270,7 +250,7 @@ export default function ProfileSettings() {
                       type="text"
                       value={userData.institution || ''}
                       onChange={(e) => setUserData({...userData, institution: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                     />
                   </div>
                   <div>
@@ -281,7 +261,7 @@ export default function ProfileSettings() {
                       type="text"
                       value={userData.studentId || ''}
                       disabled
-                      className="w-full px-4 py-3 bg-slate-800/30 border border-white/5 rounded-xl text-slate-500 cursor-not-allowed"
+                      className="w-full px-3 py-2.5 bg-slate-800/40 border border-white/10 rounded-lg text-slate-500 cursor-not-allowed text-sm"
                     />
                   </div>
                 </div>
@@ -295,7 +275,7 @@ export default function ProfileSettings() {
                     value={userData.bio || ''}
                     onChange={(e) => setUserData({...userData, bio: e.target.value})}
                     placeholder="Tell us about yourself..."
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors resize-none"
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm resize-none"
                   />
                 </div>
               </div>
@@ -305,11 +285,10 @@ export default function ProfileSettings() {
             {activeTab === 'preferences' && (
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Monitor className="w-7 h-7 text-cyan-400" />
-                    Preferences
-                  </h3>
-                </div>
+                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2 mb-4">
+                  <Monitor className="w-5 h-5 text-slate-400" />
+                  Preferences
+                </h3>
 
                 {/* Theme Selection */}
                 <div>
@@ -319,36 +298,30 @@ export default function ProfileSettings() {
                   <div className="grid grid-cols-3 gap-4">
                     <button
                       onClick={() => setTheme('light')}
-                      className={`p-6 rounded-xl border-2 transition-all ${
-                        theme === 'light'
-                          ? 'border-cyan-400 bg-cyan-500/10'
-                          : 'border-white/10 hover:border-white/20'
+                      className={`p-4 rounded-lg border transition-colors ${
+                        theme === 'light' ? 'border-slate-500 bg-slate-700/80 text-white' : 'border-white/10 hover:border-slate-600 text-slate-400'
                       }`}
                     >
-                      <Sun className="w-8 h-8 mx-auto mb-3 text-yellow-400" />
-                      <div className="font-medium">Light</div>
+                      <Sun className="w-6 h-6 mx-auto mb-2 text-slate-400" />
+                      <div className="font-medium text-sm">Light</div>
                     </button>
                     <button
                       onClick={() => setTheme('dark')}
-                      className={`p-6 rounded-xl border-2 transition-all ${
-                        theme === 'dark'
-                          ? 'border-cyan-400 bg-cyan-500/10'
-                          : 'border-white/10 hover:border-white/20'
+                      className={`p-4 rounded-lg border transition-colors ${
+                        theme === 'dark' ? 'border-slate-500 bg-slate-700/80 text-white' : 'border-white/10 hover:border-slate-600 text-slate-400'
                       }`}
                     >
-                      <Moon className="w-8 h-8 mx-auto mb-3 text-cyan-400" />
-                      <div className="font-medium">Dark</div>
+                      <Moon className="w-6 h-6 mx-auto mb-2 text-slate-400" />
+                      <div className="font-medium text-sm">Dark</div>
                     </button>
                     <button
                       onClick={() => setTheme('auto')}
-                      className={`p-6 rounded-xl border-2 transition-all ${
-                        theme === 'auto'
-                          ? 'border-cyan-400 bg-cyan-500/10'
-                          : 'border-white/10 hover:border-white/20'
+                      className={`p-4 rounded-lg border transition-colors ${
+                        theme === 'auto' ? 'border-slate-500 bg-slate-700/80 text-white' : 'border-white/10 hover:border-slate-600 text-slate-400'
                       }`}
                     >
-                      <Monitor className="w-8 h-8 mx-auto mb-3 text-purple-400" />
-                      <div className="font-medium">Auto</div>
+                      <Monitor className="w-6 h-6 mx-auto mb-2 text-slate-400" />
+                      <div className="font-medium text-sm">Auto</div>
                     </button>
                   </div>
                 </div>
@@ -362,7 +335,7 @@ export default function ProfileSettings() {
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                   >
                     <option value="en">English</option>
                     <option value="es">Spanish</option>
@@ -379,12 +352,16 @@ export default function ProfileSettings() {
                     <Clock className="w-4 h-4 text-slate-400" />
                     Time Zone
                   </label>
-                  <select className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors">
-                    <option>UTC-08:00 Pacific Time</option>
-                    <option>UTC-05:00 Eastern Time</option>
-                    <option>UTC+00:00 GMT</option>
-                    <option>UTC+01:00 Central European Time</option>
-                    <option>UTC+05:00 Pakistan Standard Time</option>
+                  <select
+                    value={timeZone}
+                    onChange={(e) => setTimeZone(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
+                  >
+                    <option value="UTC-08:00 Pacific Time">UTC-08:00 Pacific Time</option>
+                    <option value="UTC-05:00 Eastern Time">UTC-05:00 Eastern Time</option>
+                    <option value="UTC+00:00 GMT">UTC+00:00 GMT</option>
+                    <option value="UTC+01:00 Central European Time">UTC+01:00 Central European Time</option>
+                    <option value="UTC+05:00 Pakistan Standard Time">UTC+05:00 Pakistan Standard Time</option>
                   </select>
                 </div>
 
@@ -394,10 +371,14 @@ export default function ProfileSettings() {
                     <Calendar className="w-4 h-4 text-slate-400" />
                     Date Format
                   </label>
-                  <select className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors">
-                    <option>MM/DD/YYYY</option>
-                    <option>DD/MM/YYYY</option>
-                    <option>YYYY-MM-DD</option>
+                  <select
+                    value={dateFormat}
+                    onChange={(e) => setDateFormat(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
+                  >
+                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                   </select>
                 </div>
 
@@ -406,24 +387,25 @@ export default function ProfileSettings() {
                   <label className="block text-sm font-medium mb-3 text-slate-300">
                     Default Dashboard View
                   </label>
-                  <select className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors">
-                    <option>Grid View</option>
-                    <option>List View</option>
-                    <option>Compact View</option>
+                  <select
+                    value={defaultView}
+                    onChange={(e) => setDefaultView(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
+                  >
+                    <option value="Grid View">Grid View</option>
+                    <option value="List View">List View</option>
                   </select>
                 </div>
               </div>
+            </div>
             )}
 
-            {/* Accessibility Tab */}
             {activeTab === 'accessibility' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Eye className="w-7 h-7 text-cyan-400" />
-                    Accessibility
-                  </h3>
-                </div>
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2 mb-4">
+                  <Eye className="w-5 h-5 text-slate-400" />
+                  Accessibility
+                </h3>
 
                 {/* Text Size */}
                 <div>
@@ -437,7 +419,7 @@ export default function ProfileSettings() {
                       min="12"
                       max="20"
                       value={16}
-                      className="flex-1 accent-cyan-500"
+                      className="flex-1 accent-slate-500"
                     />
                     <span className="text-xl text-slate-400">A</span>
                   </div>
@@ -445,82 +427,79 @@ export default function ProfileSettings() {
                 </div>
 
                 {/* High Contrast Mode */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                   <div className="flex-1">
                     <h4 className="font-semibold mb-1">High Contrast Mode</h4>
                     <p className="text-sm text-slate-400">Increase contrast for better visibility</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                   </label>
                 </div>
 
                 {/* Reduce Motion */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                   <div className="flex-1">
                     <h4 className="font-semibold mb-1">Reduce Motion</h4>
                     <p className="text-sm text-slate-400">Minimize animations and transitions</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                   </label>
                 </div>
 
                 {/* Screen Reader */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                   <div className="flex-1">
                     <h4 className="font-semibold mb-1">Screen Reader Optimization</h4>
                     <p className="text-sm text-slate-400">Enhanced compatibility with screen readers</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                   </label>
                 </div>
 
                 {/* Keyboard Navigation */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                   <div className="flex-1">
                     <h4 className="font-semibold mb-1">Enhanced Keyboard Navigation</h4>
                     <p className="text-sm text-slate-400">Show keyboard shortcuts and focus indicators</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" defaultChecked className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                   </label>
                 </div>
 
                 {/* Captions */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                   <div className="flex-1">
                     <h4 className="font-semibold mb-1">Auto-Enable Captions</h4>
                     <p className="text-sm text-slate-400">Show captions for video content by default</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                   </label>
                 </div>
               </div>
             )}
 
-            {/* Notifications Tab */}
             {activeTab === 'notifications' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Bell className="w-7 h-7 text-cyan-400" />
-                    Notifications
-                  </h3>
-                </div>
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2 mb-4">
+                  <Bell className="w-5 h-5 text-slate-400" />
+                  Notifications
+                </h3>
 
                 {/* Email Notifications */}
                 <div>
                   <h4 className="font-semibold mb-4 text-lg">Email Notifications</h4>
                   <div className="space-y-4">
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                    <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                       <div className="flex-1">
                         <h5 className="font-medium mb-1">Assignment Notifications</h5>
                         <p className="text-sm text-slate-400">Get notified when new modules are assigned</p>
@@ -532,11 +511,11 @@ export default function ProfileSettings() {
                           onChange={(e) => setNotifications({...notifications, assignments: e.target.checked})}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                       </label>
                     </div>
 
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                    <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                       <div className="flex-1">
                         <h5 className="font-medium mb-1">Quiz Deadlines</h5>
                         <p className="text-sm text-slate-400">Reminders about upcoming quiz deadlines</p>
@@ -548,11 +527,11 @@ export default function ProfileSettings() {
                           onChange={(e) => setNotifications({...notifications, quizDeadlines: e.target.checked})}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                       </label>
                     </div>
 
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                    <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                       <div className="flex-1">
                         <h5 className="font-medium mb-1">Performance Reports</h5>
                         <p className="text-sm text-slate-400">Weekly summary of your progress and performance</p>
@@ -564,11 +543,11 @@ export default function ProfileSettings() {
                           onChange={(e) => setNotifications({...notifications, performance: e.target.checked})}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                       </label>
                     </div>
 
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                    <div className="flex items-start justify-between p-4 bg-slate-800/50 rounded-lg border border-white/10">
                       <div className="flex-1">
                         <h5 className="font-medium mb-1">System Announcements</h5>
                         <p className="text-sm text-slate-400">Updates about new features and system maintenance</p>
@@ -580,7 +559,7 @@ export default function ProfileSettings() {
                           onChange={(e) => setNotifications({...notifications, announcements: e.target.checked})}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-500"></div>
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
                       </label>
                     </div>
                   </div>
@@ -594,7 +573,7 @@ export default function ProfileSettings() {
                   <select
                     value={notifications.emailDigest}
                     onChange={(e) => setNotifications({...notifications, emailDigest: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                   >
                     <option value="realtime">Real-time (as they happen)</option>
                     <option value="daily">Daily digest</option>
@@ -606,33 +585,30 @@ export default function ProfileSettings() {
                 {/* Push Notifications */}
                 <div>
                   <h4 className="font-semibold mb-4 text-lg flex items-center gap-2">
-                    <Smartphone className="w-5 h-5 text-cyan-400" />
+                    <Smartphone className="w-5 h-5 text-slate-400" />
                     Push Notifications
                   </h4>
-                  <div className="p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                  <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10">
                     <p className="text-sm text-slate-400 mb-4">Enable browser notifications to get instant updates</p>
-                    <button className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all">
-                      Enable Push Notifications
+                    <button type="button" className="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors">
+                      Enable push notifications
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Security Tab */}
             {activeTab === 'security' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Shield className="w-7 h-7 text-cyan-400" />
-                    Security
-                  </h3>
-                </div>
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2 mb-4">
+                  <Shield className="w-5 h-5 text-slate-400" />
+                  Security
+                </h3>
 
                 {/* Change Password */}
-                <div className="p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10">
                   <h4 className="font-semibold mb-4 flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-cyan-400" />
+                    <Lock className="w-5 h-5 text-slate-400" />
                     Change Password
                   </h4>
                   <div className="space-y-4">
@@ -643,7 +619,7 @@ export default function ProfileSettings() {
                       <input
                         type="password"
                         placeholder="Enter current password"
-                        className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                        className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                       />
                     </div>
                     <div>
@@ -653,7 +629,7 @@ export default function ProfileSettings() {
                       <input
                         type="password"
                         placeholder="Enter new password"
-                        className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                        className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                       />
                     </div>
                     <div>
@@ -663,17 +639,17 @@ export default function ProfileSettings() {
                       <input
                         type="password"
                         placeholder="Confirm new password"
-                        className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                        className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
                       />
                     </div>
-                    <button className="w-full py-3 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all">
+                    <button className="w-full py-3 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors transition-all">
                       Update Password
                     </button>
                   </div>
                 </div>
 
                 {/* Two-Factor Authentication */}
-                <div className="p-6 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -693,9 +669,9 @@ export default function ProfileSettings() {
                 <div>
                   <h4 className="font-semibold mb-4 text-lg">Active Sessions</h4>
                   <div className="space-y-3">
-                    <div className="p-4 bg-slate-800/30 rounded-xl border border-white/5 flex items-start justify-between">
+                    <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10 flex items-start justify-between">
                       <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-xl bg-slate-700/80 border border-white/10 flex items-center justify-center">
                           <Monitor className="w-6 h-6 text-cyan-400" />
                         </div>
                         <div>
@@ -708,9 +684,9 @@ export default function ProfileSettings() {
                       </div>
                     </div>
 
-                    <div className="p-4 bg-slate-800/30 rounded-xl border border-white/5 flex items-start justify-between">
+                    <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10 flex items-start justify-between">
                       <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-xl bg-slate-700/80 border border-white/10 flex items-center justify-center">
                           <Smartphone className="w-6 h-6 text-purple-400" />
                         </div>
                         <div>
@@ -723,9 +699,9 @@ export default function ProfileSettings() {
                       </button>
                     </div>
 
-                    <div className="p-4 bg-slate-800/30 rounded-xl border border-white/5 flex items-start justify-between">
+                    <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10 flex items-start justify-between">
                       <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-xl bg-slate-700/80 border border-white/10 flex items-center justify-center">
                           <Monitor className="w-6 h-6 text-orange-400" />
                         </div>
                         <div>
@@ -748,7 +724,7 @@ export default function ProfileSettings() {
                 <div>
                   <h4 className="font-semibold mb-4 text-lg">Recent Account Activity</h4>
                   <div className="space-y-2">
-                    <div className="p-4 bg-slate-800/30 rounded-xl border border-white/5 flex items-center justify-between">
+                    <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
                         <div>
@@ -759,7 +735,7 @@ export default function ProfileSettings() {
                       <AlertCircle className="w-5 h-5 text-slate-500" />
                     </div>
 
-                    <div className="p-4 bg-slate-800/30 rounded-xl border border-white/5 flex items-center justify-between">
+                    <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
                         <div>
@@ -770,7 +746,7 @@ export default function ProfileSettings() {
                       <AlertCircle className="w-5 h-5 text-slate-500" />
                     </div>
 
-                    <div className="p-4 bg-slate-800/30 rounded-xl border border-white/5 flex items-center justify-between">
+                    <div className="p-4 bg-slate-800/50 rounded-lg border border-white/10 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                         <div>
@@ -784,7 +760,7 @@ export default function ProfileSettings() {
                 </div>
 
                 {/* Danger Zone */}
-                <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+                <div className="p-4 bg-slate-800/50 border border-white/10 rounded-lg">
                   <h4 className="font-semibold mb-2 text-red-400 flex items-center gap-2">
                     <AlertCircle className="w-5 h-5" />
                     Danger Zone
@@ -800,21 +776,22 @@ export default function ProfileSettings() {
             )}
 
             {/* Save Button (Fixed at bottom) */}
-            <div className="mt-8 pt-6 border-t border-white/10 flex justify-end gap-4">
-              <button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg font-medium transition-colors">
+            <div className="mt-6 pt-6 border-t border-white/10 flex justify-end gap-3">
+              <button type="button" onClick={() => navigate(-1)} className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSave}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center gap-2 shadow-lg shadow-cyan-500/20"
+                disabled={loading}
+                className="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
               >
-                <Save className="w-5 h-5" />
-                Save Changes
+                <Save className="w-4 h-4" />
+                Save changes
               </button>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </PageLayout>
   );
 }

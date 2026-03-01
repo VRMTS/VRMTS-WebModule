@@ -18,6 +18,9 @@ import QuizSelection from "./pages/QuizSelection";
 import QuizTaking from "./pages/QuizTaking";
 import QuizResult from "./pages/QuizResult";
 import TestModelPage from "./pages/testmodel";
+import GuestLab from "./pages/GuestLab";
+import AdminSettings from "./pages/AdminSettings";
+import CreateQuiz from "./pages/CreateQuiz";
 
 const queryClient = new QueryClient();
 
@@ -28,11 +31,14 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<GuestLab />} />
           <Route path="/studentdashboard" element={<StudentDashboard />} />
           <Route path="/instructordashboard" element={<InstructorDashboard />} />
           <Route path="/admindashboard" element={<AdminDashboard />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/instructor/students" element={<InstructorManageStudents />} />
           <Route path="/instructor/settings" element={<InstructorSettings />} />
+          <Route path="/instructor/create-quiz" element={<CreateQuiz />} />
           <Route path="/settings" element={<StudentSettings />} />
           <Route path="/studentanalytics" element={<StudentAnalytics />} />
           <Route path="/modules" element={<ModulesList />} />

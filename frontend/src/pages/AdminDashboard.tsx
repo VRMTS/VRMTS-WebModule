@@ -23,14 +23,6 @@ export default function VRMTSAdminDashboard() {
     { service: 'WebGL Engine', status: 'operational', uptime: '99.9%', latency: '34ms', color: 'emerald' }
   ];
 
-  const recentActivity = [
-    { action: 'New instructor registered', user: 'Dr. Smith', time: '5 minutes ago', type: 'user' },
-    { action: 'Bulk upload completed', user: 'Admin', time: '15 minutes ago', type: 'data' },
-    { action: 'Module updated', user: 'Dr. Rahman', time: '1 hour ago', type: 'content' },
-    { action: 'System backup completed', user: 'System', time: '2 hours ago', type: 'system' },
-    { action: 'New class created', user: 'Dr. Chen', time: '3 hours ago', type: 'class' }
-  ];
-
   const userStats = {
     totalStudents: 286,
     totalInstructors: 48,
@@ -77,7 +69,7 @@ export default function VRMTSAdminDashboard() {
   const handleBulkUpload = () => {
     setIsUploading(true);
     setUploadProgress(0);
-    
+
     // Simulate upload progress
     const interval = setInterval(() => {
       setUploadProgress(prev => {
@@ -112,7 +104,7 @@ export default function VRMTSAdminDashboard() {
               <button className="text-slate-400 hover:text-white transition-colors">System</button>
             </nav>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <button className="p-2 hover:bg-white/5 rounded-lg transition-colors relative">
               <Bell className="w-5 h-5" />
@@ -135,7 +127,7 @@ export default function VRMTSAdminDashboard() {
             <p className="text-slate-400">System overview and management</p>
           </div>
           <div className="flex gap-3">
-            <button 
+            <button
               onClick={() => setShowBulkUpload(true)}
               className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center gap-2 shadow-lg shadow-cyan-500/25"
             >
@@ -148,7 +140,7 @@ export default function VRMTSAdminDashboard() {
         {/* System Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {systemStats.map((stat, idx) => (
-            <div 
+            <div
               key={idx}
               className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-cyan-400/50 transition-all"
             >
@@ -183,22 +175,20 @@ export default function VRMTSAdminDashboard() {
 
             <div className="space-y-3">
               {systemHealth.map((service, idx) => (
-                <div 
+                <div
                   key={idx}
                   className="bg-slate-800/30 border border-white/10 rounded-xl p-4 hover:border-cyan-400/30 transition-all"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${
-                        service.color === 'emerald' ? 'bg-emerald-500' :
-                        service.color === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
-                      } shadow-lg`}></div>
+                      <div className={`w-3 h-3 rounded-full ${service.color === 'emerald' ? 'bg-emerald-500' :
+                          service.color === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                        } shadow-lg`}></div>
                       <h4 className="font-semibold">{service.service}</h4>
-                      <span className={`px-2 py-0.5 rounded-full text-xs border ${
-                        service.status === 'operational' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                        service.status === 'warning' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-                        'bg-red-500/20 text-red-400 border-red-500/30'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs border ${service.status === 'operational' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                          service.status === 'warning' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+                            'bg-red-500/20 text-red-400 border-red-500/30'
+                        }`}>
                         {service.status}
                       </span>
                     </div>
@@ -231,7 +221,7 @@ export default function VRMTSAdminDashboard() {
                 <span className="font-semibold">{storageStats.used} GB / {storageStats.total} GB</span>
               </div>
               <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-cyan-500 to-teal-500"
                   style={{ width: `${(storageStats.used / storageStats.total) * 100}%` }}
                 />
@@ -304,7 +294,7 @@ export default function VRMTSAdminDashboard() {
 
             <div className="space-y-3">
               {classes.map((cls) => (
-                <div 
+                <div
                   key={cls.id}
                   className="bg-slate-800/30 border border-white/10 rounded-xl p-4 hover:border-cyan-400/30 transition-all"
                 >
@@ -313,10 +303,9 @@ export default function VRMTSAdminDashboard() {
                       <h4 className="font-semibold">{cls.name}</h4>
                       <p className="text-xs text-slate-400">Instructor: {cls.instructor}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs border ${
-                      cls.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                      'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs border ${cls.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                        'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                      }`}>
                       {cls.status}
                     </span>
                   </div>
@@ -339,41 +328,7 @@ export default function VRMTSAdminDashboard() {
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <Activity className="w-6 h-6 text-cyan-400" />
-              Recent Activity
-            </h3>
 
-            <div className="space-y-3">
-              {recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex gap-3 pb-3 border-b border-white/5 last:border-0">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    activity.type === 'user' ? 'bg-cyan-500/20' :
-                    activity.type === 'data' ? 'bg-purple-500/20' :
-                    activity.type === 'content' ? 'bg-emerald-500/20' :
-                    activity.type === 'system' ? 'bg-blue-500/20' :
-                    'bg-orange-500/20'
-                  }`}>
-                    {activity.type === 'user' && <Users className="w-4 h-4 text-cyan-400" />}
-                    {activity.type === 'data' && <Database className="w-4 h-4 text-purple-400" />}
-                    {activity.type === 'content' && <BookOpen className="w-4 h-4 text-emerald-400" />}
-                    {activity.type === 'system' && <Server className="w-4 h-4 text-blue-400" />}
-                    {activity.type === 'class' && <UserPlus className="w-4 h-4 text-orange-400" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                      <span>{activity.user}</span>
-                      <span>•</span>
-                      <span>{activity.time}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Quick Actions */}
@@ -412,7 +367,7 @@ export default function VRMTSAdminDashboard() {
                   <h3 className="text-2xl font-bold">Bulk Upload Students</h3>
                   <p className="text-slate-400 text-sm mt-1">Upload a CSV file to add multiple students at once</p>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     setShowBulkUpload(false);
                     setUploadFile(null);
@@ -472,7 +427,7 @@ export default function VRMTSAdminDashboard() {
                           <h4 className="font-semibold">{uploadFile.name}</h4>
                           <p className="text-sm text-slate-400">{(uploadFile.size / 1024).toFixed(2)} KB</p>
                         </div>
-                        <button 
+                        <button
                           onClick={() => {
                             setUploadFile(null);
                             setPreviewData([]);

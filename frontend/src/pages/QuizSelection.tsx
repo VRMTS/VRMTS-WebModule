@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Brain, Clock, Zap, Target, ChevronRight, ChevronLeft, Trophy, TrendingUp, Calendar, Filter, Search, Play, BarChart3, CheckCircle2, XCircle, Award, Loader2 } from 'lucide-react';
+import { Brain, Clock, Zap, Target, ChevronRight, ChevronLeft, Trophy, TrendingUp, Calendar, Filter, Search, Play, BarChart3, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { PageLayout } from '@/components/PageLayout';
 
 interface Module {
   moduleId: number;
@@ -13,7 +14,18 @@ interface Module {
   avgDifficulty?: number;
 }
 
+interface Quiz {
+  quizId: number;
+  title: string;
+  description: string;
+  totalQuestions: number;
+  timeLimit: number;
+  passingScore: number;
+}
+
 interface QuizAttempt {
+  attemptId?: number;
+  quizId?: number;
   date: string;
   type: string;
   module: string;
@@ -40,7 +52,7 @@ export default function QuizSelection() {
   const [showFilters, setShowFilters] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [, setError] = useState('');
   const [modules, setModules] = useState<Module[]>([]);
   const [stats, setStats] = useState<QuizStats>({
     quizzesTaken: 0,
@@ -50,6 +62,17 @@ export default function QuizSelection() {
   });
   const [previousAttempts, setPreviousAttempts] = useState<QuizAttempt[]>([]);
   const [startingQuiz, setStartingQuiz] = useState(false);
+  const [customQuizzes, setCustomQuizzes] = useState<Quiz[]>([]);
+  const [loadingCustom, setLoadingCustom] = useState(false);
+  const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
+  const [attemptsPage, setAttemptsPage] = useState(1);
+  const ATTEMPTS_PER_PAGE = 5;
+
+  const totalAttemptsPages = Math.max(1, Math.ceil(previousAttempts.length / ATTEMPTS_PER_PAGE));
+  const paginatedAttempts = previousAttempts.slice(
+    (attemptsPage - 1) * ATTEMPTS_PER_PAGE,
+    attemptsPage * ATTEMPTS_PER_PAGE
+  );
 
   // Fetch data from API on component mount
   useEffect(() => {
@@ -120,11 +143,40 @@ export default function QuizSelection() {
     fetchData();
   }, []);
 
+  // Fetch custom quizzes when module changes
+  useEffect(() => {
+    const fetchCustomQuizzes = async () => {
+      if (!selectedModule) return;
+      try {
+        setLoadingCustom(true);
+        const response = await fetch(`${API_BASE_URL}/quiz/module/${selectedModule.moduleId}/custom`, {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCustomQuizzes(data.data || []);
+          setSelectedQuizId(null); // Reset selection
+        }
+      } catch (err) {
+        console.error('Error fetching custom quizzes:', err);
+      } finally {
+        setLoadingCustom(false);
+      }
+    };
+
+    fetchCustomQuizzes();
+  }, [selectedModule]);
+
   const handleStartModuleQuiz = async () => {
     if (!selectedModule) return;
     setStartingQuiz(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/quiz/module/${selectedModule.moduleId}/start`, {
+      // If a custom quiz is selected, we might need a different endpoint or pass ID
+      const endpoint = selectedQuizId
+        ? `${API_BASE_URL}/quiz/module/${selectedModule.moduleId}/start?quizId=${selectedQuizId}`
+        : `${API_BASE_URL}/quiz/module/${selectedModule.moduleId}/start`;
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -150,35 +202,6 @@ export default function QuizSelection() {
     }
   };
 
-  // Start a module quiz directly by moduleId (used when selecting from dropdown)
-  const startQuizForModule = async (moduleId: number) => {
-    setStartingQuiz(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/quiz/module/${moduleId}/start`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to start quiz');
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        navigate(`/quizattempt/${data.data.attemptId}`);
-      } else {
-        throw new Error(data.message || 'Failed to start quiz');
-      }
-    } catch (err) {
-      console.error('Error starting quiz:', err);
-      setError(err instanceof Error ? err.message : 'Failed to start quiz');
-    } finally {
-      setStartingQuiz(false);
-    }
-  };
 
   const handleStartTimedExam = async () => {
     if (selectedModules.length === 0) return;
@@ -262,106 +285,69 @@ export default function QuizSelection() {
     { label: 'Total Time', value: `${stats.totalTime}h`, icon: Clock, color: 'from-purple-500 to-indigo-500' }
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-slate-400 mx-auto mb-4" />
+          <p className="text-sm text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/studentdashboard')}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-2xl font-bold">
-              <span className="text-white">VRMTS</span>
-            </h1>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-teal-400 flex items-center justify-center font-bold">
-              JD
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-cyan-400" />
-            Test Your Knowledge
-          </h2>
-          <p className="text-slate-400">Choose your assessment type and prove your mastery</p>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <>
+      <PageLayout
+        title="Quiz"
+        subtitle="Choose your assessment type"
+        breadcrumbLabel="Quiz"
+        activeNav="quiz"
+        userType="student"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {statsDisplay.map((stat, idx) => (
-            <div 
-              key={idx}
-              className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-cyan-400/50 transition-all"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color}`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+            <div key={idx} className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
+              <div className="flex items-start justify-between mb-2">
+                <div className="p-2.5 rounded-lg bg-slate-700/80">
+                  <stat.icon className="w-5 h-5 text-slate-300" />
                 </div>
               </div>
-              <div className="text-2xl font-bold mb-1">{stat.value}</div>
-              <div className="text-slate-400 text-sm">{stat.label}</div>
+              <div className="text-xl font-semibold text-slate-100">{stat.value}</div>
+              <div className="text-slate-500 text-sm">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Quiz Type Selection Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Module Quiz */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div
             onClick={handleStartModuleQuiz}
-            className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:border-cyan-400/50 transition-all hover:scale-105 cursor-pointer group"
+            className="bg-slate-800/50 border border-white/10 rounded-lg p-6 hover:border-slate-600 transition-colors cursor-pointer group"
           >
-            <div className="mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 flex items-center justify-center mb-4">
-                <Brain className="w-8 h-8 text-cyan-400" />
+            <div className="mb-4">
+              <div className="w-12 h-12 rounded-lg bg-slate-700/80 flex items-center justify-center mb-3">
+                <Brain className="w-6 h-6 text-slate-400" />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Module Quiz</h3>
-              <p className="text-slate-400 text-sm">Test your knowledge on a specific anatomy module</p>
+              <h3 className="text-lg font-semibold text-slate-100 mb-1">Module quiz</h3>
+              <p className="text-slate-500 text-sm">Test your knowledge on a specific anatomy module</p>
             </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Question Type:</span>
-                <span className="font-medium">MCQ & Labeling</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Duration:</span>
-                <span className="font-medium">15-20 mins</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Questions:</span>
-                <span className="font-medium">10-15</span>
-              </div>
+            <div className="space-y-3 mb-4 text-sm text-slate-400">
+              <div className="flex justify-between"><span>Question type</span><span className="text-slate-200">MCQ & Labeling</span></div>
+              <div className="flex justify-between"><span>Duration</span><span className="text-slate-200">15-20 mins</span></div>
+              <div className="flex justify-between"><span>Questions</span><span className="text-slate-200">10-15</span></div>
             </div>
-
-            {/* Module Selector */}
-            <div className="mb-6" onClick={(e) => e.stopPropagation()}>
-              <label className="block text-sm font-medium mb-3 text-slate-300">
-                Select Module
-              </label>
+            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-sm font-medium mb-2 text-slate-400">Select module</label>
               <select
                 value={selectedModule?.moduleId || ''}
                 onChange={(e) => {
                   const module = modules.find(m => m.moduleId === parseInt(e.target.value));
                   setSelectedModule(module || null);
                 }}
-                className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full px-3 py-2 bg-slate-800/60 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:border-slate-600 text-sm"
                 disabled={loading}
               >
-                {loading ? (
-                  <option>Loading modules...</option>
-                ) : modules.length === 0 ? (
+                {modules.length === 0 ? (
                   <option>No modules available</option>
                 ) : (
                   modules.map(module => (
@@ -372,181 +358,147 @@ export default function QuizSelection() {
                 )}
               </select>
             </div>
+            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-sm font-medium mb-2 text-slate-400">Select quiz</label>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                <button
+                  onClick={() => setSelectedQuizId(null)}
+                  className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${selectedQuizId === null ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800/60 border-white/10 text-slate-300 hover:border-slate-600'}`}
+                >
+                  <div className="text-sm font-medium">Random Practice</div>
+                  <div className="text-xs text-slate-500">10-15 random questions from bank</div>
+                </button>
 
+                {customQuizzes.map(quiz => (
+                  <button
+                    key={quiz.quizId}
+                    onClick={() => setSelectedQuizId(quiz.quizId)}
+                    className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${selectedQuizId === quiz.quizId ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-slate-800/60 border-white/10 text-slate-300 hover:border-slate-600'}`}
+                  >
+                    <div className="text-sm font-medium">{quiz.title}</div>
+                    <div className="text-xs text-slate-500">{quiz.totalQuestions} questions • {quiz.timeLimit} mins</div>
+                  </button>
+                ))}
+
+                {loadingCustom && <div className="text-center py-2"><Loader2 className="w-4 h-4 animate-spin mx-auto text-slate-500" /></div>}
+                {!loadingCustom && customQuizzes.length === 0 && <div className="text-xs text-slate-600 text-center py-2 italic whitespace-normal">No custom quizzes found for this module</div>}
+              </div>
+            </div>
             <button
-              onClick={handleStartModuleQuiz}
               disabled={startingQuiz}
-              className="w-full py-4 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-xl font-semibold hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full py-2.5 px-3 rounded-md font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${previousAttempts.some(a => a.status === 'in_progress' && (
+                selectedQuizId
+                  ? a.quizId === selectedQuizId
+                  : (a.type === 'Practice' && (a.module === selectedModule?.name || a.module === `Practice: ${selectedModule?.name}`))
+              ))
+                ? 'bg-amber-600 hover:bg-amber-500'
+                : 'bg-slate-600 hover:bg-slate-500'
+                }`}
             >
-              {startingQuiz ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-              Start Quiz
+              {startingQuiz ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {previousAttempts.some(a => a.status === 'in_progress' && (
+                selectedQuizId
+                  ? a.quizId === selectedQuizId
+                  : (a.type === 'Practice' && (a.module === selectedModule?.name || a.module === `Practice: ${selectedModule?.name}`))
+              ))
+                ? (selectedQuizId ? 'Resume assessment' : 'Resume practice')
+                : (selectedQuizId ? 'Start assessment' : 'Start practice')
+              }
             </button>
           </div>
 
-          {/* Timed Exam */}
           <div
             onClick={handleStartTimedExam}
-            className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:border-purple-400/50 transition-all hover:scale-105 cursor-pointer group"
+            className="bg-slate-800/50 border border-white/10 rounded-lg p-6 hover:border-slate-600 transition-colors cursor-pointer group"
           >
-            <div className="mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center mb-4">
-                <Clock className="w-8 h-8 text-purple-400" />
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Timed Examination</h3>
-              <p className="text-slate-400 text-sm">Comprehensive test with a strict time limit</p>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Question Type:</span>
-                <span className="font-medium">All Types</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Duration:</span>
-                <span className="font-medium">Custom</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Questions:</span>
-                <span className="font-medium">20-30</span>
-              </div>
-            </div>
-
-            {/* Module Multi-Select */}
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-3 text-slate-300">
-                Select Modules
-              </label>
+              <div className="w-12 h-12 rounded-lg bg-slate-700/80 flex items-center justify-center mb-3">
+                <Clock className="w-6 h-6 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-1">Timed examination</h3>
+              <p className="text-slate-500 text-sm">Comprehensive test with a strict time limit</p>
+            </div>
+
+            <div className="space-y-3 mb-4 text-sm text-slate-400">
+              <div className="flex justify-between"><span>Question type</span><span className="text-slate-200">All types</span></div>
+              <div className="flex justify-between"><span>Duration</span><span className="text-slate-200">Custom</span></div>
+              <div className="flex justify-between"><span>Questions</span><span className="text-slate-200">20-30</span></div>
+            </div>
+            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-sm font-medium mb-2 text-slate-400">Select modules</label>
               <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {modules.map(module => (
-                  <label key={module.moduleId} className="flex items-center gap-2 p-2 bg-slate-800/30 rounded-lg cursor-pointer hover:bg-slate-800/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={selectedModules.includes(module.moduleId)}
-                      onChange={() => toggleModuleSelection(module.moduleId)}
-                      className="w-4 h-4 accent-purple-500"
-                    />
-                    <span className="text-sm">{module.name.split(' ')[0]}</span>
+                  <label key={module.moduleId} className="flex items-center gap-2 p-2 bg-slate-800/40 rounded-md cursor-pointer hover:bg-slate-800/60 transition-colors">
+                    <input type="checkbox" checked={selectedModules.includes(module.moduleId)} onChange={() => toggleModuleSelection(module.moduleId)} className="w-4 h-4 accent-slate-500" />
+                    <span className="text-sm text-slate-200">{module.name.split(' ')[0]}</span>
                   </label>
                 ))}
               </div>
             </div>
-
-            {/* Time Limit */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-3 text-slate-300">
-                Time Limit (minutes)
-              </label>
-              <input
-                type="number"
-                value={timeLimit}
-                onChange={(e) => setTimeLimit(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-purple-400 focus:outline-none transition-colors"
-                min="15"
-                max="120"
-              />
+            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-sm font-medium mb-2 text-slate-400">Time limit (minutes)</label>
+              <input type="number" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} className="w-full px-3 py-2 bg-slate-800/60 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:border-slate-600 text-sm" min="15" max="120" />
             </div>
-
-            <button
-              onClick={handleStartTimedExam}
-              disabled={startingQuiz}
-              className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-semibold hover:from-purple-400 hover:to-indigo-400 transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {startingQuiz ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-              Start Exam
+            <button disabled={startingQuiz} className="w-full py-2.5 px-3 bg-slate-600 hover:bg-slate-500 rounded-md font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {startingQuiz ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Start exam
             </button>
           </div>
 
-          {/* Adaptive Test */}
-          <div
-            onClick={handleStartAdaptiveTest}
-            className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:border-emerald-400/50 transition-all hover:scale-105 cursor-pointer group"
-          >
-            <div className="mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 flex items-center justify-center mb-4">
-                <Zap className="w-8 h-8 text-emerald-400" />
+          <div onClick={handleStartAdaptiveTest} className="bg-slate-800/50 border border-white/10 rounded-lg p-6 hover:border-slate-600 transition-colors cursor-pointer group">
+            <div className="mb-4">
+              <div className="w-12 h-12 rounded-lg bg-slate-700/80 flex items-center justify-center mb-3">
+                <Zap className="w-6 h-6 text-slate-400" />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Adaptive Test</h3>
-              <p className="text-slate-400 text-sm">AI-adjusted difficulty based on your performance</p>
+              <h3 className="text-lg font-semibold text-slate-100 mb-1">Adaptive test</h3>
+              <p className="text-slate-500 text-sm">AI-adjusted difficulty based on your performance</p>
             </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Question Type:</span>
-                <span className="font-medium">Dynamic</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Duration:</span>
-                <span className="font-medium">20-25 mins</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Questions:</span>
-                <span className="font-medium">15-20</span>
-              </div>
+            <div className="space-y-3 mb-4 text-sm text-slate-400">
+              <div className="flex justify-between"><span>Question type</span><span className="text-slate-200">Dynamic</span></div>
+              <div className="flex justify-between"><span>Duration</span><span className="text-slate-200">20-25 mins</span></div>
+              <div className="flex justify-between"><span>Questions</span><span className="text-slate-200">15-20</span></div>
             </div>
-
-            {/* AI Recommendation */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/30 rounded-xl">
-              <div className="flex items-start gap-3">
-                <Target className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div className="mb-4 p-3 bg-slate-800/60 border border-white/5 rounded-md">
+              <div className="flex items-start gap-2">
+                <Target className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-sm mb-1 text-emerald-400">AI Recommendation</h4>
-                  <p className="text-xs text-slate-400">Based on your performance, we recommend focusing on the Cardiovascular and Respiratory systems.</p>
+                  <h4 className="font-medium text-xs text-slate-300 mb-0.5">AI recommendation</h4>
+                  <p className="text-xs text-slate-500">Based on your performance, we recommend focusing on Cardiovascular and Respiratory systems.</p>
                 </div>
               </div>
             </div>
-
-            {/* Estimated Duration */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-slate-300">Estimated Duration</span>
-                <span className="font-medium">~22 mins</span>
-              </div>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full" style={{ width: '75%' }}></div>
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-slate-500 mb-1"><span>Estimated duration</span><span>~22 mins</span></div>
+              <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: '75%' }} />
               </div>
             </div>
-
-            <button
-              onClick={handleStartAdaptiveTest}
-              disabled={startingQuiz}
-              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl font-semibold hover:from-emerald-400 hover:to-green-400 transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {startingQuiz ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-              Begin Test
+            <button disabled={startingQuiz} className="w-full py-2.5 px-3 bg-slate-600 hover:bg-slate-500 rounded-md font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {startingQuiz ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Begin test
             </button>
           </div>
         </div>
 
-        {/* Previous Attempts Section */}
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold flex items-center gap-3">
-              <BarChart3 className="w-7 h-7 text-cyan-400" />
-              Previous Attempts
+        <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-slate-400" />
+              Previous attempts
             </h3>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-2 rounded-lg transition-colors ${
-                  showFilters ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-white/5'
-                }`}
-              >
-                <Filter className="w-5 h-5" />
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowFilters(!showFilters)} className={`p-2 rounded-md transition-colors ${showFilters ? 'bg-slate-600 text-white' : 'bg-slate-800/60 text-slate-500 hover:text-slate-300'}`}>
+                <Filter className="w-4 h-4" />
               </button>
               <div className="relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search attempts..."
-                  className="pl-10 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg focus:border-cyan-400 focus:outline-none transition-colors text-sm w-64"
-                />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input type="text" placeholder="Search attempts..." className="pl-9 pr-3 py-2 bg-slate-800/60 border border-white/10 rounded-md focus:outline-none focus:border-slate-600 text-sm w-48 text-slate-200 placeholder-slate-500" />
               </div>
             </div>
           </div>
 
-          {/* Filters */}
           {showFilters && (
-            <div className="mb-6 p-4 bg-slate-800/30 rounded-xl border border-white/10">
+            <div className="mb-4 p-4 bg-slate-800/40 rounded-lg border border-white/10">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <label className="block text-xs font-medium mb-2 text-slate-400">Difficulty</label>
@@ -596,7 +548,7 @@ export default function QuizSelection() {
                 </tr>
               </thead>
               <tbody>
-                {previousAttempts.map((attempt, idx) => (
+                {paginatedAttempts.map((attempt, idx) => (
                   <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
@@ -611,11 +563,10 @@ export default function QuizSelection() {
                       <span className="text-sm">{attempt.module}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`text-sm font-bold ${
-                        attempt.score >= 80 ? 'text-emerald-400' :
+                      <span className={`text-sm font-bold ${attempt.score >= 80 ? 'text-emerald-400' :
                         attempt.score >= 70 ? 'text-yellow-400' :
-                        'text-red-400'
-                      }`}>
+                          'text-red-400'
+                        }`}>
                         {attempt.score}%
                       </span>
                     </td>
@@ -623,11 +574,10 @@ export default function QuizSelection() {
                       <span className="text-sm text-slate-400">{attempt.time}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                        attempt.status === 'passed'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}>
+                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${attempt.status === 'passed'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}>
                         {attempt.status === 'passed' ? (
                           <CheckCircle2 className="w-3 h-3" />
                         ) : (
@@ -637,7 +587,11 @@ export default function QuizSelection() {
                       </span>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <button className="text-cyan-400 hover:text-cyan-300 text-sm font-medium flex items-center gap-1 ml-auto">
+                      <button
+                        onClick={() => attempt.attemptId && navigate(`/quizresult/${attempt.attemptId}`)}
+                        className="text-cyan-400 hover:text-cyan-300 text-sm font-medium flex items-center gap-1 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!attempt.attemptId || (attempt.status !== 'passed' && attempt.status !== 'failed')}
+                      >
                         Review <ChevronRight className="w-4 h-4" />
                       </button>
                     </td>
@@ -649,40 +603,45 @@ export default function QuizSelection() {
 
           {/* Pagination */}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
-            <p className="text-sm text-slate-400">Showing 1-5 of 24 attempts</p>
+            <p className="text-sm text-slate-400">
+              Showing {previousAttempts.length === 0 ? 0 : (attemptsPage - 1) * ATTEMPTS_PER_PAGE + 1}-
+              {Math.min(attemptsPage * ATTEMPTS_PER_PAGE, previousAttempts.length)} of {previousAttempts.length} attempts
+            </p>
             <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <button
+                onClick={() => setAttemptsPage(p => Math.max(1, p - 1))}
+                disabled={attemptsPage <= 1}
+                className="p-2 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <button className="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-lg font-medium text-sm">1</button>
-              <button className="px-3 py-1 hover:bg-white/5 rounded-lg font-medium text-sm">2</button>
-              <button className="px-3 py-1 hover:bg-white/5 rounded-lg font-medium text-sm">3</button>
-              <button className="px-3 py-1 hover:bg-white/5 rounded-lg font-medium text-sm">...</button>
-              <button className="px-3 py-1 hover:bg-white/5 rounded-lg font-medium text-sm">5</button>
-              <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+              {Array.from({ length: totalAttemptsPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setAttemptsPage(p)}
+                  className={`px-3 py-1 rounded-md font-medium text-sm transition-colors ${attemptsPage === p ? 'bg-slate-600 text-white' : 'hover:bg-slate-800/60 text-slate-300'
+                    }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setAttemptsPage(p => Math.min(totalAttemptsPages, p + 1))}
+                disabled={attemptsPage >= totalAttemptsPages}
+                className="p-2 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
-      </main>
-
+      </PageLayout>
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(6, 182, 212, 0.3);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(6, 182, 212, 0.5);
-        }
-      `}</style>
-    </div>
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.5); border-radius: 3px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.7); }
+    `}</style>
+    </>
   );
-  }
+}

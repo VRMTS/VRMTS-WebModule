@@ -10,8 +10,8 @@ const app = express();
 
 // 1. CORS - MUST be first and configured for credentials
 app.use(cors({
-  origin: 'http://localhost:5173', // Your React frontend URL
-  credentials: true // CRITICAL: Allow cookies to be sent
+  origin: [process.env.CORS_ORIGIN, 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true
 }));
 
 // 2. Body parsers

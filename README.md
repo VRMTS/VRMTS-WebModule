@@ -112,6 +112,14 @@ The quiz system is fully implemented and functional. Here's how it works:
 4. Timer counts down (15 minutes for module quiz)
 5. Student clicks "Submit Quiz" → Calls `/api/quiz/attempt/:attemptId/finish`
 
+## Docker Setup (Recommended)
+This project is fully dockerized. To start all services (frontend, backend, database):
+```bash
+docker compose up --build
+```
+See [DOCKERIZATION.md](./DOCKERIZATION.md) for detailed instructions and common commands.
+
+## Getting Started (Local Development)
 ### Scoring System
 1. **Answer Validation**: Each answer is compared to `correctAnswer` in `QuestionBank` (case-insensitive)
 2. **Points Calculation**: Correct answers earn points (default 1 point per question)
