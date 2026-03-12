@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Layers, MessageSquare, Info, Brain } from 'lucide-react';
+import { Layers, MessageSquare, Info, Brain, Activity, Search, FileText, Maximize2, Eye, EyeOff, X } from 'lucide-react';
+import { PageLayout } from '../components/PageLayout';
 
-export default function ModelTestPage() {
+export default function Lab1Explore() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,6 +16,7 @@ export default function ModelTestPage() {
   const [selectedGroupForExplosion, setSelectedGroupForExplosion] = useState<string>('ALL');
   const [zoomLevel, setZoomLevel] = useState(300);
   const [activeModel, setActiveModel] = useState<'saggital' | 'traverse' | 'coronal'>('saggital');
+  const [showManual, setShowManual] = useState(false);
   const sceneRef = useRef<any>(null);
   const initRef = useRef(false);
 
@@ -24,11 +26,11 @@ export default function ModelTestPage() {
     initRef.current = true;
 
     const container = containerRef.current;
-    
+
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
-    
+
     const loadScript = (src: string): Promise<void> => {
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -46,13 +48,13 @@ export default function ModelTestPage() {
         await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js');
 
         const THREE = (window as any).THREE;
-        
+
         const width = container.clientWidth;
         const height = container.clientHeight;
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0f1e);
-        
+        scene.background = new THREE.Color(0x050505);
+
         const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 2000);
         camera.position.set(0, 100, 300);
         camera.lookAt(0, 0, 0);
@@ -77,20 +79,29 @@ export default function ModelTestPage() {
         directionalLight3.position.set(0, -50, 0);
         scene.add(directionalLight3);
 
-        const gridHelper = new THREE.GridHelper(500, 50, 0x334155, 0x1e293b);
+        const gridHelper = new THREE.GridHelper(500, 50, 0x262626, 0x171717);
         scene.add(gridHelper);
 
         const axesHelper = new THREE.AxesHelper(100);
         scene.add(axesHelper);
 
         const loader = new (THREE as any).FBXLoader();
-        
+        const textureLoader = new THREE.TextureLoader();
+
+        // Load textures
+        const textures = {
+          body: textureLoader.load('/textures/young_lightskinned_male_diffuse.png'),
+          eyes: textureLoader.load('/textures/blue_eye.png'),
+          eyebrows: textureLoader.load('/textures/eyebrow001.1.png'),
+          eyelashes: textureLoader.load('/textures/eyelashes01.1.png')
+        };
+
         const models = {
           saggital: '/models/Saggittal.fbx',
           traverse: '/models/transverse.fbx',
           coronal: '/models/coronal.fbx'
         };
-        
+
         let loadedModels: any = {
           saggital: null,
           traverse: null,
@@ -103,7 +114,7 @@ export default function ModelTestPage() {
           coronal: []
         };
 
-        console.log('Starting to load models...');
+        console.log('Starting to load models with textures...');
 
         const loadModel = (modelKey: 'saggital' | 'traverse' | 'coronal', modelPath: string): Promise<any> => {
           return new Promise((resolve, reject) => {
@@ -126,34 +137,64 @@ export default function ModelTestPage() {
 
                 fbx.traverse((child: any) => {
                   if (child.isMesh) {
-                    const materials = Array.isArray(child.material) ? child.material : [child.material];
-                    materials.forEach((mat: any) => {
-                      if (mat) {
-                        originalMaterials.set(child.uuid, mat.clone());
-                        mat.side = THREE.DoubleSide;
-                        if (mat.type === 'MeshPhongMaterial') {
-                          mat.shininess = 30;
-                          mat.needsUpdate = true;
-                        }
-                      }
+                    const name = child.name.toLowerCase();
+                    const isHelper = name.includes('plane') || name.includes('line');
+
+                    let material = new THREE.MeshPhongMaterial({
+                      side: THREE.DoubleSide,
+                      shininess: 30,
+                      color: isHelper ? 0xff0000 : 0xffffff
                     });
+
+                    if (!isHelper) {
+                      // Apply textures based on mesh name
+                      if (name.includes('body') || name.includes('skin') || name.includes('head') ||
+                        name.includes('high_poly') || name.includes('muscle')) {
+                        material.map = textures.body;
+                      } else if (name.includes('eye')) {
+                        material.map = textures.eyes;
+                      } else if (name.includes('eyebrow')) {
+                        material.map = textures.eyebrows;
+                        material.transparent = true;
+                        material.alphaTest = 0.5;
+                      } else if (name.includes('eyelash')) {
+                        material.map = textures.eyelashes;
+                        material.transparent = true;
+                        material.alphaTest = 0.5;
+                      }
+                    }
+
+                    material.needsUpdate = true;
+                    originalMaterials.set(child.uuid, material.clone());
+                    child.material = material;
+
+                    if (isHelper) {
+                      child.visible = true;
+                    }
                   }
                 });
 
                 fbx.children.forEach((child: any) => {
-                  child.visible = false;
+                  // Only show helper planes by default, hide anatomy parts initially
+                  const name = child.name.toLowerCase();
+                  const isHelper = name.includes('plane') || name.includes('line');
+                  child.visible = isHelper;
+
                   child.traverse((subChild: any) => {
-                    subChild.visible = false;
+                    subChild.visible = isHelper;
                   });
                 });
 
-                // Hide model initially (only show active model)
+                // Hide whole model initially (only show active model)
                 fbx.visible = (modelKey === activeModel);
                 scene.add(fbx);
                 loadedModels[modelKey] = fbx;
 
                 const groups: any[] = [];
                 fbx.children.forEach((child: any) => {
+                  const name = child.name.toLowerCase();
+                  if (name.includes('plane') || name.includes('line')) return;
+
                   let meshCount = 0;
                   let totalVerts = 0;
                   child.traverse((subChild: any) => {
@@ -162,12 +203,12 @@ export default function ModelTestPage() {
                       totalVerts += subChild.geometry?.attributes?.position?.count || 0;
                     }
                   });
-                  
+
                   groups.push({
                     uuid: child.uuid,
                     name: child.name || 'Unnamed Group',
                     type: child.type,
-                    visible: false,
+                    visible: child.visible,
                     childCount: child.children?.length || 0,
                     meshCount: meshCount,
                     totalVertices: totalVerts,
@@ -197,8 +238,8 @@ export default function ModelTestPage() {
           loadModel('coronal', models.coronal)
         ])
           .then(() => {
-            console.log('All models loaded successfully!');
-            
+            console.log('All models loaded successfully with textures!');
+
             camera.position.set(0, 100, 300);
             camera.lookAt(0, 0, 0);
 
@@ -214,25 +255,21 @@ export default function ModelTestPage() {
               defaultCameraPos: new THREE.Vector3(0, 100, 300),
               defaultCameraTarget: new THREE.Vector3(0, 0, 0),
               originalPositions: new Map(),
-              boundingCenters: new Map(),
-              childOriginalPositions: new Map(),
-              childBoundingCenters: new Map()
+              boundingCenters: new Map()
             };
 
             const storePositions = (obj: any, parentUuid: string = '') => {
               const key = parentUuid ? `${parentUuid}_${obj.uuid}` : obj.uuid;
               sceneRef.current.originalPositions.set(key, obj.position.clone());
-              
+
               if (obj.isMesh || obj.isGroup) {
                 const objBox = new THREE.Box3().setFromObject(obj);
                 const objCenter = objBox.getCenter(new THREE.Vector3());
                 sceneRef.current.boundingCenters.set(key, objCenter);
               }
-              
+
               if (obj.children && obj.children.length > 0) {
-                obj.children.forEach((child: any) => {
-                  storePositions(child, obj.uuid);
-                });
+                obj.children.forEach((child: any) => storePositions(child, obj.uuid));
               }
             };
 
@@ -244,7 +281,7 @@ export default function ModelTestPage() {
               }
             });
 
-            setModelInfo(`${modelGroups[activeModel].length} top-level parts`);
+            setModelInfo(`${modelGroups[activeModel].length} parts`);
             setIsLoading(false);
           })
           .catch((error: any) => {
@@ -256,7 +293,7 @@ export default function ModelTestPage() {
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         let rotation = { x: 0, y: 0 };
-        
+
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let selectedMesh: any = null;
@@ -268,7 +305,7 @@ export default function ModelTestPage() {
 
         const onMouseMove = (e: MouseEvent) => {
           setMousePos({ x: e.clientX, y: e.clientY });
-          
+
           if (isDragging) {
             const deltaX = e.clientX - previousMousePosition.x;
             const deltaY = e.clientY - previousMousePosition.y;
@@ -281,10 +318,10 @@ export default function ModelTestPage() {
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-            
+
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(loadedModels[activeModel].children, true);
-            
+
             if (intersects.length > 0) {
               const hoveredMesh = intersects[0].object;
               const partName = hoveredMesh.name || 'Unnamed Part';
@@ -300,40 +337,37 @@ export default function ModelTestPage() {
         const onMouseUp = () => {
           isDragging = false;
         };
-        
+
         const onClick = (e: MouseEvent) => {
           const currentModel = sceneRef.current?.models?.[activeModel];
           if (!currentModel) return;
-          
+
           const rect = renderer.domElement.getBoundingClientRect();
           mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
           mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-          
+
           raycaster.setFromCamera(mouse, camera);
           const intersects = raycaster.intersectObjects(currentModel.children, true);
-          
+
           if (intersects.length > 0) {
             const clickedMesh = intersects[0].object;
             const partName = clickedMesh.name || 'Unnamed Part';
-            
+
             if (selectedMesh && selectedMesh !== clickedMesh) {
               const originalMat = originalMaterials.get(selectedMesh.uuid);
               if (originalMat) {
                 selectedMesh.material = originalMat.clone();
               }
             }
-            
+
             if (selectedMesh !== clickedMesh) {
               selectedMesh = clickedMesh;
               sceneRef.current.selectedMesh = selectedMesh;
               setSelectedPart(partName);
-              
-              const highlightMat = new THREE.MeshPhongMaterial({
-                color: 0x06b6d4,
-                emissive: 0x0891b2,
-                shininess: 100,
-                side: THREE.DoubleSide
-              });
+
+              const highlightMat = (clickedMesh.material as any).clone();
+              highlightMat.emissive.setHex(0x14532d);
+              highlightMat.color.setHex(0x22c55e);
               clickedMesh.material = highlightMat;
             } else {
               const originalMat = originalMaterials.get(selectedMesh.uuid);
@@ -413,21 +447,21 @@ export default function ModelTestPage() {
 
   const toggleVisibility = (uuid: string) => {
     if (!sceneRef.current) return;
-    
+
     const currentModel = sceneRef.current.models[activeModel];
     if (!currentModel) return;
-    
+
     const targetChild = currentModel.children.find((child: any) => child.uuid === uuid);
     if (targetChild) {
       const newVisibility = !targetChild.visible;
       targetChild.visible = newVisibility;
-      
+
       targetChild.traverse((child: any) => {
         child.visible = newVisibility;
       });
-      
-      setGroupList(prev => prev.map(g => 
-        g.uuid === uuid ? {...g, visible: newVisibility} : g
+
+      setGroupList(prev => prev.map(g =>
+        g.uuid === uuid ? { ...g, visible: newVisibility } : g
       ));
     }
   };
@@ -435,157 +469,157 @@ export default function ModelTestPage() {
   const showOnlyThis = (uuid: string) => {
     if (!sceneRef.current) return;
     const THREE = (window as any).THREE;
-    
+
     const currentModel = sceneRef.current.models[activeModel];
     if (!currentModel) return;
-    
+
     let targetChild = null;
-    
+
     currentModel.children.forEach((child: any) => {
       const shouldBeVisible = (child.uuid === uuid);
       child.visible = shouldBeVisible;
-      
+
       if (shouldBeVisible) {
         targetChild = child;
       }
-      
+
       child.traverse((subChild: any) => {
         subChild.visible = shouldBeVisible;
       });
     });
-    
+
     if (targetChild && sceneRef.current.camera) {
       const box = new THREE.Box3().setFromObject(targetChild);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
-      
+
       const maxDim = Math.max(size.x, size.y, size.z);
       const fov = sceneRef.current.camera.fov * (Math.PI / 180);
       let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
       cameraZ *= 2.0;
-      
+
       sceneRef.current.camera.position.set(center.x, center.y, center.z + cameraZ);
       sceneRef.current.camera.lookAt(center);
       setZoomLevel(center.z + cameraZ);
     }
-    
-    setGroupList(prev => prev.map(g => ({...g, visible: g.uuid === uuid})));
+
+    setGroupList(prev => prev.map(g => ({ ...g, visible: g.uuid === uuid })));
   };
 
   const showAll = () => {
     if (!sceneRef.current) return;
-    
+
     const currentModel = sceneRef.current.models[activeModel];
     if (!currentModel) return;
-    
+
     currentModel.children.forEach((child: any) => {
       child.visible = true;
-      
+
       child.traverse((subChild: any) => {
         subChild.visible = true;
       });
     });
-    
+
     if (sceneRef.current.camera && sceneRef.current.defaultCameraPos) {
       sceneRef.current.camera.position.copy(sceneRef.current.defaultCameraPos);
       sceneRef.current.camera.lookAt(sceneRef.current.defaultCameraTarget);
       setZoomLevel(300);
     }
-    
-    setGroupList(prev => prev.map(g => ({...g, visible: true})));
+
+    setGroupList(prev => prev.map(g => ({ ...g, visible: true })));
   };
 
   const hideAll = () => {
     if (!sceneRef.current) return;
-    
+
     const currentModel = sceneRef.current.models[activeModel];
     if (!currentModel) return;
-    
+
     currentModel.children.forEach((child: any) => {
       child.visible = false;
-      
+
       child.traverse((subChild: any) => {
         subChild.visible = false;
       });
     });
-    
-    setGroupList(prev => prev.map(g => ({...g, visible: false})));
+
+    setGroupList(prev => prev.map(g => ({ ...g, visible: false })));
   };
 
   const handleExplosion = (value: number) => {
     if (!sceneRef.current) return;
     const THREE = (window as any).THREE;
-    
+
     const currentModel = sceneRef.current.models[activeModel];
     if (!currentModel) return;
-    
+
     setExplosionAmount(value);
-    
+
     const resetPositions = (obj: any, parentUuid: string = '') => {
       const key = parentUuid ? `${parentUuid}_${obj.uuid}` : obj.uuid;
-      
+
       const originalPos = sceneRef.current.originalPositions.get(key);
       if (originalPos) {
         obj.position.copy(originalPos);
       }
-      
+
       if (obj.children) {
         obj.children.forEach((child: any) => resetPositions(child, obj.uuid));
       }
     };
-    
+
     currentModel.children.forEach((child: any) => {
-      resetPositions(child, ''); 
+      resetPositions(child, '');
     });
-    
+
     if (value === 0) return;
-    
+
     if (selectedGroupForExplosion === 'ALL') {
-      const modelCenter = new THREE.Vector3(-4.30, 86.03, -0.71); 
-      
+      const modelCenter = new THREE.Vector3(-4.30, 86.03, -0.71);
+
       currentModel.children.forEach((child: any) => {
         const originalPos = sceneRef.current.originalPositions.get(child.uuid);
         const boundingCenter = sceneRef.current.boundingCenters.get(child.uuid);
-        
+
         if (!originalPos || !boundingCenter) return;
-        
+
         const direction = new THREE.Vector3()
           .subVectors(boundingCenter, modelCenter)
           .normalize();
-        
+
         if (direction.lengthSq() < 0.0001) {
           direction.set(0, 1, 0);
         }
-        
+
         const offset = direction.multiplyScalar(value * 0.05);
         child.position.copy(originalPos).add(offset);
       });
 
     } else {
       const targetGroup = currentModel.children.find((c: any) => c.uuid === selectedGroupForExplosion);
-      
+
       if (!targetGroup) return;
-      
+
       const groupBox = new THREE.Box3().setFromObject(targetGroup);
       const groupCenter = groupBox.getCenter(new THREE.Vector3());
-      
+
       const meshes: any[] = [];
       targetGroup.traverse((child: any) => {
         if (child.isMesh) {
           meshes.push(child);
         }
       });
-      
+
       if (meshes.length === 0) return;
-      
+
       meshes.forEach((mesh: any, index: number) => {
         const meshBox = new THREE.Box3().setFromObject(mesh);
         const meshCenter = meshBox.getCenter(new THREE.Vector3());
-        
+
         let direction = new THREE.Vector3()
           .subVectors(meshCenter, groupCenter)
           .normalize();
-        
+
         if (direction.lengthSq() < 0.0001) {
           const phi = Math.acos(-1 + (2 * index) / meshes.length);
           const theta = Math.sqrt(meshes.length * Math.PI) * phi;
@@ -595,16 +629,16 @@ export default function ModelTestPage() {
             Math.cos(phi)
           ).normalize();
         }
-        
+
         let key = mesh.uuid;
         if (mesh.parent) {
-             key = `${mesh.parent.uuid}_${mesh.uuid}`;
+          key = `${mesh.parent.uuid}_${mesh.uuid}`;
         }
-        
+
         const originalPos = sceneRef.current.originalPositions.get(key);
-        
+
         if (originalPos) {
-          const offset = direction.multiplyScalar(value * 0.025); 
+          const offset = direction.multiplyScalar(value * 0.025);
           mesh.position.copy(originalPos).add(offset);
         }
       });
@@ -619,7 +653,7 @@ export default function ModelTestPage() {
 
   const switchModel = (modelKey: 'saggital' | 'traverse' | 'coronal') => {
     if (!sceneRef.current) return;
-    
+
     // Hide all models
     Object.keys(sceneRef.current.models).forEach((key) => {
       const model = sceneRef.current.models[key];
@@ -627,242 +661,148 @@ export default function ModelTestPage() {
         model.visible = false;
       }
     });
-    
+
     // Show selected model
     const selectedModel = sceneRef.current.models[modelKey];
     if (selectedModel) {
       selectedModel.visible = true;
     }
-    
+
     // Update active model state
     setActiveModel(modelKey);
-    
+
     // Update group list for the selected model
     if (sceneRef.current.modelGroups && sceneRef.current.modelGroups[modelKey]) {
       setGroupList(sceneRef.current.modelGroups[modelKey]);
-      setModelInfo(`${sceneRef.current.modelGroups[modelKey].length} top-level parts`);
+      setModelInfo(`${sceneRef.current.modelGroups[modelKey].length} parts`);
     }
-    
+
     // Reset camera
     if (sceneRef.current.camera && sceneRef.current.defaultCameraPos) {
       sceneRef.current.camera.position.copy(sceneRef.current.defaultCameraPos);
       sceneRef.current.camera.lookAt(sceneRef.current.defaultCameraTarget);
       setZoomLevel(300);
     }
-    
+
     // Reset explosion
     setExplosionAmount(0);
     setSelectedGroupForExplosion('ALL');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-[1800px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold mb-1">Planes of the Human Body</h1>
-              <p className="text-slate-400 text-sm">Explore the terminologies used</p>
+    <PageLayout
+      title="Anatomical Orientation"
+      subtitle="Interactive Body Planes & Directions"
+      breadcrumbLabel="Lab 1"
+      activeNav="modules"
+      userType="student"
+      isWide={true}
+    >
+      <div className="grid grid-cols-10 gap-6">
+        {/* Left Sidebar */}
+        <div className="col-span-2 space-y-4">
+          {/* Plane Switcher */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
+            <h3 className="font-semibold mb-3 text-sm flex items-center gap-2 text-white">
+              <Layers className="w-4 h-4 text-green-500" />
+              Anatomical Planes
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              {(['saggital', 'traverse', 'coronal'] as const).map((plane) => (
+                <button
+                  key={plane}
+                  onClick={() => switchModel(plane)}
+                  className={`w-full py-2 px-3 rounded-lg text-[10px] font-bold transition-all border uppercase tracking-wider ${activeModel === plane
+                    ? 'bg-green-500/20 border-green-500/50 text-green-500'
+                    : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                    }`}
+                >
+                  {plane} Plane
+                </button>
+              ))}
             </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-slate-800/50 rounded-lg px-4 py-2 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                <span className="text-sm">Progress: 0%</span>
-              </div>
-              <button className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium text-sm hover:from-cyan-400 hover:to-teal-400 transition-all">
-                Take Quiz
+          </div>
+
+          {/* Model Hierarchy */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 overflow-hidden flex flex-col max-h-[450px]">
+            <h3 className="font-semibold mb-3 text-sm flex items-center gap-2 text-white">
+              <Activity className="w-4 h-4 text-green-500" />
+              Hierarchy
+            </h3>
+            <div className="space-y-2 mb-3">
+              <button
+                onClick={showAll}
+                className="w-full bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white text-[9px] font-bold py-2 rounded-lg transition-all border border-neutral-800 uppercase tracking-widest"
+              >
+                RESET VIEW
               </button>
+            </div>
+            <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar">
+              {groupList.map(group => (
+                <div key={group.uuid} className="bg-neutral-950 p-2 rounded border border-neutral-800 group">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-medium truncate max-w-[150px]">{group.name}</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => showOnlyThis(group.uuid)}
+                        className="p-1 hover:bg-purple-500/20 rounded text-purple-400 transition-colors"
+                        title="Isolate Part"
+                      >
+                        <Maximize2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => toggleVisibility(group.uuid)}
+                        className={`p-1 rounded transition-colors ${group.visible ? 'text-green-500 hover:bg-green-500/20' : 'text-red-400 hover:bg-red-500/20'}`}
+                      >
+                        {group.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-[1800px] mx-auto px-6 py-6">
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Sidebar - Model Parts */}
-          <div className="col-span-3 space-y-4">
-            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-                <Layers className="w-4 h-4 text-cyan-400" />
-                Model Parts ({groupList.length})
-              </h3>
-              
-              <div className="space-y-2 mb-4">
-                <button
-                  onClick={showAll}
-                  className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm shadow-lg"
-                >
-                  SHOW ALL PARTS
-                </button>
-                
-                <button
-                  onClick={hideAll}
-                  className="w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm shadow-lg"
-                >
-                  HIDE ALL PARTS
-                </button>
-              </div>
-              
-              <p className="text-xs text-slate-400 mb-3 text-center">All parts start hidden. Click SHOW to reveal them.</p>
-              
-              {/* Explosion Controls */}
-              <div className="mb-4 bg-gradient-to-br from-slate-800/80 to-slate-800/40 p-4 rounded-lg border border-white/5">
-                <label className="block text-xs font-bold mb-3 text-cyan-400 uppercase tracking-wide">
-                  🎆 Exploded View
-                </label>
-                
-                <select
-                  value={selectedGroupForExplosion}
-                  onChange={(e) => {
-                    setSelectedGroupForExplosion(e.target.value);
-                    handleExplosion(explosionAmount);
-                  }}
-                  className="w-full bg-slate-700/80 text-white px-3 py-2 rounded-lg mb-3 text-xs font-medium border border-white/10 focus:border-cyan-400 focus:outline-none"
-                >
-                  <option value="ALL">🌐 All Parts</option>
-                  {groupList.filter(g => !g.isMesh).map((group) => (
-                    <option key={group.uuid} value={group.uuid}>
-                      {group.name}
-                    </option>
-                  ))}
-                </select>
-                
-                <div className="mb-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={explosionAmount}
-                    onChange={(e) => handleExplosion(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                    style={{
-                      background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${explosionAmount}%, #334155 ${explosionAmount}%, #334155 100%)`
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">Together</span>
-                  <span className="text-sm font-bold text-cyan-400">{explosionAmount}</span>
-                  <span className="text-[10px] text-slate-500">Apart</span>
-                </div>
-              </div>
-              
-              <div className="text-xs text-slate-500 mb-2 flex items-center justify-between">
-                <span>Click SHOW to reveal parts</span>
-                <span className="text-cyan-400 font-semibold">{groupList.filter(g => g.visible).length}/{groupList.length} visible</span>
-              </div>
-              
-              {/* Parts List */}
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2" style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'rgba(6, 182, 212, 0.5) rgba(30, 41, 59, 0.5)'
-              }}>
-                {groupList.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">
-                    {isLoading ? 'Loading parts...' : 'No parts found'}
-                  </div>
-                ) : (
-                  groupList.map((group) => (
-                    <div
-                      key={group.uuid}
-                      className="bg-slate-800/60 p-3 rounded-lg hover:bg-slate-800 transition-all border border-white/5"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-xs truncate text-white">{group.name}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">
-                            {group.meshCount} meshes • {group.totalVertices.toLocaleString()} verts
-                          </div>
-                        </div>
-                        <div className={`ml-2 w-2 h-2 rounded-full flex-shrink-0 mt-1 ${
-                          group.visible ? 'bg-green-400' : 'bg-red-400'
-                        }`}></div>
-                      </div>
-                      <div className="flex gap-1.5">
-                        <button
-                          onClick={() => showOnlyThis(group.uuid)}
-                          className="flex-1 px-2 py-1.5 rounded-md text-[11px] bg-purple-600/80 hover:bg-purple-600 font-semibold transition-all"
-                        >
-                          ONLY
-                        </button>
-                        <button
-                          onClick={() => toggleVisibility(group.uuid)}
-                          className={`flex-1 px-2 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                            group.visible 
-                              ? 'bg-green-600/80 hover:bg-green-600' 
-                              : 'bg-red-600/80 hover:bg-red-600'
-                          }`}
-                        >
-                          {group.visible ? 'HIDE' : 'SHOW'}
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Center - 3D Viewer */}
-          <div className="col-span-6 relative">
-            {/* Hover Tooltip */}
-            {hoveredPart && (
-              <div 
-                className="fixed bg-slate-900/95 backdrop-blur-sm border border-cyan-400/50 text-white text-sm font-semibold px-3 py-1.5 rounded pointer-events-none z-30"
-                style={{
-                  left: `${mousePos.x + 15}px`,
-                  top: `${mousePos.y + 15}px`,
-                }}
-              >
-                {hoveredPart}
-              </div>
-            )}
-
+        {/* Center - 3D Viewer */}
+        <div className="col-span-5 space-y-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden relative">
             {/* Loading Overlay */}
             {isLoading && !error && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm z-20 rounded-2xl">
-                <div className="text-center text-white">
-                  <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-lg font-bold mb-2">Loading 3D Models</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">{loadingProgress}%</p>
-                  <div className="w-64 h-2 bg-slate-800 rounded-full mt-4 overflow-hidden mx-auto">
-                    <div 
-                      className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 transition-all duration-300"
-                      style={{ width: `${loadingProgress}%` }}
-                    ></div>
-                  </div>
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-950/90 z-20">
+                <div className="text-center">
+                  <div className="w-16 h-16 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-lg font-bold text-white mb-2">Loading models...</p>
+                  <p className="text-3xl font-extrabold text-green-500">{loadingProgress}%</p>
                 </div>
               </div>
             )}
 
             {/* Error Overlay */}
             {error && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm z-20 rounded-2xl">
-                <div className="text-center text-white max-w-md px-6">
-                  <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-950/90 z-20">
+                <div className="text-center px-6">
+                  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-3">
+                    <X className="w-6 h-6 text-red-500" />
                   </div>
-                  <p className="text-lg font-bold mb-2">Failed to Load Models</p>
-                  <p className="text-sm text-slate-300">{error}</p>
+                  <p className="text-white font-bold mb-1">Load Failed</p>
+                  <p className="text-xs text-slate-400 max-w-[200px]">{error}</p>
                 </div>
               </div>
             )}
 
-            <div ref={containerRef} className="w-full h-[600px] rounded-2xl overflow-hidden" />
-            
-            {/* Zoom Control Slider */}
-            <div className="mt-4 bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+            <div ref={containerRef} className="w-full h-[550px]" />
+
+            {/* Zoom Influence */}
+            <div className="absolute bottom-4 left-4 right-4 bg-neutral-900 border border-neutral-800 rounded-xl p-3">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-cyan-400 uppercase tracking-wide flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                  </svg>
-                  Zoom Level
-                </label>
-                <span className="text-sm font-bold text-cyan-400">{Math.round((800 - zoomLevel) / 7.5)}%</span>
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-green-500/20 rounded-lg">
+                    <Search className="w-3.5 h-3.5 text-green-500" />
+                  </div>
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">Zoom Influence</span>
+                </div>
+                <span className="text-[10px] font-mono text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">{Math.round((800 - zoomLevel) / 7.5)}%</span>
               </div>
               <input
                 type="range"
@@ -870,121 +810,119 @@ export default function ModelTestPage() {
                 max="800"
                 value={zoomLevel}
                 onChange={(e) => handleZoomChange(Number(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                style={{
-                  background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((800 - zoomLevel) / 750) * 100}%, #334155 ${((800 - zoomLevel) / 750) * 100}%, #334155 100%)`
-                }}
+                className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-green-500"
               />
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-[10px] text-slate-500">Far</span>
-                <span className="text-[10px] text-slate-400">Scroll wheel also works</span>
-                <span className="text-[10px] text-slate-500">Close</span>
-              </div>
             </div>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="col-span-3 space-y-4">
-            {/* Model Selector Tabs */}
-            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-                <Layers className="w-4 h-4 text-cyan-400" />
-                Select Model View
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="col-span-3 space-y-4">
+          {/* Laboratory Manual */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2 text-white">
+                <FileText className="w-4 h-4 text-green-500" />
+                Laboratory Manual
               </h3>
-              <div className="grid grid-cols-1 gap-2">
-                <button
-                  onClick={() => switchModel('saggital')}
-                  className={`px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
-                    activeModel === 'saggital'
-                      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg'
-                      : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  Sagittal View
-                </button>
-                <button
-                  onClick={() => switchModel('traverse')}
-                  className={`px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
-                    activeModel === 'traverse'
-                      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg'
-                      : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  Transverse View
-                </button>
-                <button
-                  onClick={() => switchModel('coronal')}
-                  className={`px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
-                    activeModel === 'coronal'
-                      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg'
-                      : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  Coronal View
-                </button>
-              </div>
+              <button
+                onClick={() => setShowManual(!showManual)}
+                className="p-1.5 bg-neutral-950 hover:bg-neutral-800 rounded-lg transition-colors text-slate-500 hover:text-white"
+              >
+                {showManual ? <X size={14} /> : <Maximize2 size={14} />}
+              </button>
             </div>
 
-            {/* AI Assistant */}
-            <div className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/30 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-teal-400 flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold">AI Assistant</h4>
-                  <p className="text-xs text-slate-400">Ask me anything</p>
-                </div>
+            <div className={`relative transition-all duration-300 ${showManual ? 'h-[400px]' : 'h-[160px]'}`}>
+              <div className="absolute inset-0 bg-neutral-950 rounded-lg border border-neutral-800 overflow-hidden">
+                <iframe
+                  src="/pdfs/Lab_1.pdf#toolbar=0"
+                  className="w-full h-full border-none grayscale-[0.3] contrast-[1.1]"
+                  title="Lab Manual"
+                />
+                {!showManual && (
+                  <div className="absolute inset-0 bg-neutral-900/60 flex items-end justify-center pb-4">
+                    <button
+                      onClick={() => setShowManual(true)}
+                      className="px-4 py-2 bg-neutral-950 border border-neutral-800 rounded-full text-[10px] font-bold text-white hover:bg-neutral-800 transition-all flex items-center gap-2"
+                    >
+                      <Eye size={12} />
+                      PREVIEW MANUAL
+                    </button>
+                  </div>
+                )}
               </div>
-              <input 
+            </div>
+            <div className="mt-3">
+              <a
+                href="/pdfs/Lab_1.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-lg flex items-center justify-center gap-2 text-[10px] font-bold text-green-500 transition-all uppercase tracking-widest"
+              >
+                <FileText size={14} />
+                OPEN FULLSCREEN MANUAL
+              </a>
+            </div>
+          </div>
+
+          {/* AI Assistant */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-white">AI Assistant</h4>
+                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Orientation specialist ready</p>
+              </div>
+            </div>
+            <div className="relative">
+              <input
                 type="text"
-                placeholder="What is the function of the femur?"
-                className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:border-cyan-400/50"
+                placeholder="Ask about directions..."
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-3 pr-10 py-2 text-xs placeholder:text-neutral-700 focus:outline-none focus:border-green-500/50 transition-all text-white font-medium"
               />
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-green-500 hover:text-green-400 transition-colors">
+                <Search size={14} />
+              </button>
             </div>
+          </div>
 
-            {/* Information Panel */}
-            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-                <Info className="w-4 h-4 text-cyan-400" />
-                Information
-              </h3>
-              <p className="text-sm text-slate-400">
-                {selectedPart 
-                  ? `Selected: ${selectedPart}` 
-                  : hoveredPart 
-                  ? `Hovering over: ${hoveredPart}` 
-                  : 'Click on any part of the model to learn more about it.'}
-              </p>
+          {/* Selected Part Info */}
+          {(selectedPart || hoveredPart) && (
+            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="w-3.5 h-3.5 text-green-500" />
+                <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Part Info</h4>
+              </div>
+              <div className="font-bold text-white text-sm leading-tight">
+                {selectedPart || hoveredPart}
+              </div>
+              <div className="mt-2 text-[10px] text-slate-400 font-medium lowercase italic">
+                {selectedPart ? 'locked selection' : 'hovering'}
+              </div>
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Study Tips */}
-            <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-xl p-4">
-              <h3 className="font-semibold mb-2 text-sm flex items-center gap-2">
-                <Brain className="w-4 h-4 text-purple-400" />
-                Study Tip
-              </h3>
-              <p className="text-xs text-slate-300">
-                Use the exploded view slider to separate parts and understand their spatial relationships. Switch between different anatomical views!
-              </p>
-            </div>
+      {/* Root-Level Tooltip */}
+      {hoveredPart && (
+        <div
+          className="fixed bg-neutral-950 border border-green-500/30 text-white text-[11px] font-bold px-2 py-1.5 rounded-md pointer-events-none z-[9999] shadow-2xl translate-x-1 translate-y-1 transition-transform duration-75"
+          style={{
+            left: `${mousePos.x}px`,
+            top: `${mousePos.y}px`,
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+            {hoveredPart}
           </div>
         </div>
-      </main>
-
-      <style>{`
-        .bg-clip-text {
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
-    </div>
+      )}
+    </PageLayout>
   );
 }

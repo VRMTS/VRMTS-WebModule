@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Clock, Flag, ChevronLeft, ChevronRight, MessageCircle, Eye, EyeOff, Save, AlertCircle, CheckCircle, Circle, XCircle, Lightbulb, Brain, AlertTriangle } from 'lucide-react';
+import { Clock, Flag, ChevronLeft, ChevronRight, MessageCircle, Eye, EyeOff, Save, AlertCircle, CheckCircle, Circle, XCircle, Lightbulb, Brain, AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function QuizTaking() {
   const navigate = useNavigate();
@@ -234,10 +234,10 @@ export default function QuizTaking() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-slate-400 mx-auto mb-4" />
-          <p className="text-sm text-slate-400">Loading quiz...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+          <p className="text-sm text-neutral-500 font-medium tracking-tight">Loading assessment...</p>
         </div>
       </div>
     );
@@ -245,16 +245,16 @@ export default function QuizTaking() {
 
   if (error || !quizData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2 text-slate-200">Error loading quiz</h2>
-          <p className="text-slate-400 mb-4">{error || 'Quiz data not available'}</p>
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-6" />
+          <h2 className="text-xl font-bold text-white mb-2 tracking-tight">System Error</h2>
+          <p className="text-neutral-500 text-sm mb-8">{error || 'Quiz data not available'}</p>
           <button
             onClick={() => navigate('/quizselection')}
-            className="px-5 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors"
+            className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-sm font-bold text-white transition-all"
           >
-            Back to quiz selection
+            Back to Dashboard
           </button>
         </div>
       </div>
@@ -267,49 +267,47 @@ export default function QuizTaking() {
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
-      <header className="border-b border-white/10 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-neutral-950 text-neutral-200">
+      <header className="border-b border-neutral-900 bg-neutral-950/50 sticky top-0 z-50">
         <div className="max-w-[1200px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold">
-                <span className="text-white">VRMTS</span>
-              </h1>
-              <div className="h-6 w-px bg-white/10"></div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-6">
+              <h1 className="text-base font-bold text-white tracking-tight">VRMTS</h1>
+              <div className="h-6 w-px bg-neutral-900"></div>
               <div>
-                <h2 className="font-semibold">{quizData.title}</h2>
-                <p className="text-xs text-slate-400">{quizData.module}</p>
+                <h2 className="text-sm font-bold text-white tracking-tight">{quizData.title}</h2>
+                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">{quizData.module}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* Timer */}
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${timeRemaining < 300
-                ? 'bg-red-500/20 border-red-500/30 text-red-400'
-                : 'bg-slate-800/60 border-white/10 text-slate-200'
+              <div className={`flex items-center gap-2 px-3.5 py-2 rounded-md border text-xs font-bold font-mono tracking-wider transition-all ${timeRemaining < 300
+                ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                : 'bg-neutral-900 border-neutral-800 text-neutral-200'
                 }`}>
-                <Clock className="w-5 h-5" />
-                <span className="font-mono font-bold">{formatTime(timeRemaining)}</span>
+                <Clock className="w-4 h-4" />
+                <span>{formatTime(timeRemaining)}</span>
               </div>
 
               {/* Question Counter */}
-              <div className="px-3 py-2 bg-slate-800/60 border border-white/10 rounded-lg text-sm text-slate-200">
-                <span className="font-medium">{currentQuestion + 1}</span>
-                <span className="text-slate-500"> / {quizData.questions.length}</span>
+              <div className="px-3.5 py-2 bg-neutral-900 border border-neutral-800 rounded-md text-xs font-bold text-neutral-400">
+                <span className="text-white">{currentQuestion + 1}</span>
+                <span className="text-neutral-600 self-center"> / {quizData.questions.length}</span>
               </div>
 
               <button
                 type="button"
                 onClick={() => setShowExitModal(true)}
-                className="px-3 py-2 bg-slate-800/60 hover:bg-slate-700 border border-white/10 rounded-lg text-sm font-medium text-slate-300 transition-colors"
+                className="px-4 py-2 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 rounded-md text-xs font-bold text-neutral-400 hover:text-white transition-all uppercase tracking-widest"
               >
-                Exit quiz
+                Exit
               </button>
             </div>
           </div>
 
-          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-2">
-            <div className="h-full bg-cyan-500 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+          <div className="h-1 bg-neutral-900 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </header>
@@ -317,31 +315,31 @@ export default function QuizTaking() {
       <main className="max-w-[1200px] mx-auto px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
-            <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-              <div className="flex items-start justify-between mb-4">
+            <div key={question.id} className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+              <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2.5 py-1 bg-slate-700/80 text-slate-300 border border-white/10 rounded-md text-xs font-medium">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="px-2.5 py-1 bg-neutral-950 text-neutral-500 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest">
                       Question {currentQuestion + 1}
                     </span>
-                    <span className="px-2.5 py-1 bg-slate-800/60 text-slate-500 rounded-md text-xs">
+                    <span className="px-2.5 py-1 bg-neutral-950 text-neutral-600 rounded text-[10px] font-bold uppercase tracking-widest">
                       {question.type === 'mcq' ? 'Multiple Choice' :
                         question.type === 'labeling' ? 'Labeling' :
-                          'Drag & Drop'}
+                          'Matching'}
                     </span>
                   </div>
-                  <h3 className="text-lg font-medium text-slate-100 leading-relaxed">
-                    {question.question || 'Question text not available'}
+                  <h3 className="text-xl font-bold text-white leading-relaxed tracking-tight">
+                    {question.question || 'Instruction sequence unavailable'}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => toggleMarkForReview(question.id)}
-                  className={`p-2.5 rounded-lg border transition-colors ${markedForReview.has(question.id)
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                    : 'bg-slate-800/60 border-white/10 hover:border-slate-600 text-slate-400'
+                  className={`p-3 rounded-lg border transition-all ${markedForReview.has(question.id)
+                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                    : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700 text-neutral-600 hover:text-white'
                     }`}
-                  aria-label="Mark for review"
+                  aria-label="Review marker"
                 >
                   <Flag className="w-4 h-4" />
                 </button>
@@ -355,15 +353,12 @@ export default function QuizTaking() {
                       key={idx}
                       type="button"
                       onClick={() => handleAnswerSelect(question.id, option)}
-                      className={`w-full p-4 rounded-lg border transition-colors text-left flex items-center gap-3 text-sm ${answers[question.id] === option
-                        ? 'bg-slate-600 border-slate-500 text-slate-100'
-                        : 'bg-slate-800/50 border-white/10 hover:border-slate-600 text-slate-200'
+                      className={`w-full p-4 rounded-lg border transition-all text-left flex items-center gap-4 text-sm font-medium ${answers[question.id] === option
+                        ? 'bg-neutral-800 border-emerald-500/30 text-white'
+                        : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700 text-neutral-400'
                         }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${answers[question.id] === option ? 'border-slate-300 bg-slate-400' : 'border-slate-500'
-                        }`}>
-                        {answers[question.id] === option && <CheckCircle className="w-3 h-3 text-slate-900" />}
-                      </div>
+                      <div className={`w-2 h-2 rounded-full transition-all ${answers[question.id] === option ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-neutral-800'}`} />
                       <span>{option}</span>
                     </button>
                   ))}
@@ -372,13 +367,12 @@ export default function QuizTaking() {
 
               {/* Labeling Question */}
               {question.type === 'labeling' && (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {/* Diagram with Hotspots */}
-                  <div className="relative bg-slate-800/50 rounded-lg p-6 border border-white/10">
-                    {/* Mock Heart Diagram */}
-                    <div className="relative mx-auto" style={{ width: '400px', height: '400px' }}>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Brain className="w-64 h-64 text-cyan-400/20" />
+                  <div className="relative bg-neutral-950 rounded-lg p-8 border border-neutral-800">
+                    <div className="relative mx-auto flex items-center justify-center" style={{ width: '400px', height: '400px' }}>
+                      <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                        <Brain className="w-64 h-64 text-emerald-500" />
                       </div>
 
                       {/* Hotspots */}
@@ -389,19 +383,19 @@ export default function QuizTaking() {
                           style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
                         >
                           <div className="relative">
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all ${answers[question.id]?.[spot.id]
-                              ? 'bg-slate-600 border-slate-400'
-                              : 'bg-slate-800 border-slate-500 hover:border-slate-400'
+                            <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all ${answers[question.id]?.[spot.id]
+                              ? 'bg-emerald-500 border-emerald-400'
+                              : 'bg-neutral-900 border-neutral-700 hover:border-neutral-500'
                               }`}>
                               {answers[question.id]?.[spot.id] ? (
-                                <CheckCircle className="w-5 h-5 text-white" />
+                                <CheckCircle className="w-4 h-4 text-neutral-950" />
                               ) : (
-                                <Circle className="w-4 h-4 text-cyan-400" />
+                                <div className="w-2 h-2 rounded-full bg-neutral-700" />
                               )}
                             </div>
                             {answers[question.id]?.[spot.id] && (
-                              <div className="absolute left-10 top-0 bg-slate-800 border border-white/10 rounded-md px-2.5 py-1 text-sm whitespace-nowrap text-slate-200">
-                                <span className="text-sm font-medium">{answers[question.id][spot.id]}</span>
+                              <div className="absolute left-10 top-0 bg-neutral-800 border border-neutral-700 rounded-md px-3 py-1.5 text-xs font-bold text-white whitespace-nowrap tracking-tight">
+                                {answers[question.id][spot.id]}
                               </div>
                             )}
                           </div>
@@ -411,11 +405,11 @@ export default function QuizTaking() {
                   </div>
 
                   {/* Label Options */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-4">
                     {question.labels?.map((label: string, idx: number) => (
                       <button
                         key={idx}
-                        className="p-4 bg-slate-800/50 border border-white/10 rounded-lg hover:border-slate-600 hover:bg-slate-800 transition-all text-center font-medium"
+                        className="p-5 bg-neutral-950 border border-neutral-800 rounded-lg hover:border-neutral-700 hover:bg-neutral-900 transition-all text-center text-xs font-bold text-neutral-400 uppercase tracking-widest"
                       >
                         {label || `Label ${idx + 1}`}
                       </button>
@@ -481,8 +475,8 @@ export default function QuizTaking() {
                             }}
                             disabled={isUsed}
                             className={`p-4 rounded-lg border-2 font-medium transition-all ${isUsed
-                              ? 'bg-slate-800/30 border-white/5 text-slate-600 cursor-not-allowed'
-                              : 'bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border-white/10 hover:border-slate-600 hover:scale-105 cursor-grab active:cursor-grabbing'
+                              ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed'
+                              : 'bg-neutral-950 border-neutral-800 hover:border-neutral-600 hover:scale-105 cursor-grab active:cursor-grabbing'
                               }`}
                           >
                             {item.text}
@@ -510,32 +504,32 @@ export default function QuizTaking() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <button
                   onClick={handlePreviousQuestion}
                   disabled={currentQuestion === 0}
-                  className="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[10px] font-bold text-neutral-400 uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <ChevronLeft className="w-5 h-5" />
-                  Previous
+                  <ChevronLeft className="w-4 h-4" />
+                  PREVIOUS
                 </button>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <button
                     onClick={() => setShowHint(!showHint)}
-                    className="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    className="px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[10px] font-bold text-neutral-400 uppercase tracking-widest transition-all flex items-center gap-2"
                   >
-                    <Lightbulb className="w-5 h-5" />
-                    {showHint ? 'Hide' : 'Show'} Hint
+                    <Lightbulb className="w-4 h-4 text-amber-500" />
+                    HINT
                   </button>
 
                   <button
                     onClick={handleSaveProgress}
-                    className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    className="px-6 py-2.5 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[10px] font-bold text-neutral-300 uppercase tracking-widest transition-all flex items-center gap-2"
                   >
-                    <Save className="w-5 h-5" />
-                    Save Progress
+                    <Save className="w-4 h-4" />
+                    SAVE
                   </button>
                 </div>
 
@@ -543,17 +537,17 @@ export default function QuizTaking() {
                   <button
                     onClick={handleSubmitQuiz}
                     disabled={submitting}
-                    className="px-5 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2.5 bg-neutral-950 hover:bg-neutral-900 border border-emerald-500/30 text-emerald-500 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-30"
                   >
-                    {submitting ? 'Submitting...' : 'Submit Quiz'}
+                    {submitting ? 'SUBMITTING...' : 'FINISH QUIZ'}
                   </button>
                 ) : (
                   <button
                     onClick={handleNextQuestion}
-                    className="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    className="px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[10px] font-bold text-neutral-200 uppercase tracking-widest transition-all flex items-center gap-2"
                   >
-                    Next
-                    <ChevronRight className="w-5 h-5" />
+                    NEXT
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -562,12 +556,12 @@ export default function QuizTaking() {
 
           {/* Sidebar - Question Navigator */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 sticky top-24">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold">Questions</h4>
+            <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 sticky top-24">
+              <div className="flex items-center justify-between mb-8">
+                <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Navigation</h4>
                 <button
                   onClick={() => setShowQuestionNav(!showQuestionNav)}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                  className="p-1 text-neutral-600 hover:text-white transition-colors"
                 >
                   {showQuestionNav ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -576,19 +570,19 @@ export default function QuizTaking() {
               {showQuestionNav && (
                 <>
                   {/* Stats */}
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="p-3 bg-slate-800/50 rounded-lg">
-                      <p className="text-xs text-slate-400 mb-1">Answered</p>
-                      <p className="text-lg font-bold text-cyan-400">{answeredCount}/{quizData.questions.length}</p>
+                  <div className="grid grid-cols-2 gap-4 mb-10">
+                    <div className="p-4 bg-neutral-950 border border-neutral-800 rounded">
+                      <p className="text-[10px] font-bold text-neutral-600 uppercase mb-2">Answered</p>
+                      <p className="text-xl font-bold text-white tracking-tight">{answeredCount}<span className="text-neutral-700 text-sm">/{quizData.questions.length}</span></p>
                     </div>
-                    <div className="p-3 bg-slate-800/50 rounded-lg">
-                      <p className="text-xs text-slate-400 mb-1">Marked</p>
-                      <p className="text-lg font-bold text-yellow-400">{markedForReview.size}</p>
+                    <div className="p-4 bg-neutral-950 border border-neutral-800 rounded">
+                      <p className="text-[10px] font-bold text-neutral-600 uppercase mb-2">Review</p>
+                      <p className="text-xl font-bold text-amber-500 tracking-tight">{markedForReview.size}</p>
                     </div>
                   </div>
 
                   {/* Question Grid */}
-                  <div className="grid grid-cols-5 gap-2 mb-6">
+                  <div className="grid grid-cols-4 gap-2.5 mb-10">
                     {quizData.questions.map((q: any, idx: number) => {
                       const status = getQuestionStatus(q.id);
                       return (
@@ -598,54 +592,47 @@ export default function QuizTaking() {
                             setCurrentQuestion(idx);
                             setShowHint(false);
                           }}
-                          className={`aspect-square rounded-lg font-semibold text-sm transition-all ${status === 'current'
-                            ? 'bg-slate-600 text-white border-slate-500'
+                          className={`aspect-square rounded flex items-center justify-center text-[10px] font-bold transition-all border ${status === 'current'
+                            ? 'bg-neutral-800 border-neutral-600 text-white'
                             : status === 'marked'
-                              ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
+                              ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
                               : status === 'submitted'
-                                ? 'bg-blue-500/20 border border-blue-500/50 text-blue-400'
+                                ? 'bg-neutral-950 border-emerald-500/30 text-emerald-500'
                                 : status === 'answered'
-                                  ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400'
-                                  : 'bg-slate-800/50 border border-white/10 text-slate-400 hover:border-slate-600'
+                                  ? 'bg-neutral-950 border-neutral-800 text-neutral-300'
+                                  : 'bg-neutral-950 border-neutral-800 text-neutral-600 hover:border-neutral-700'
                             }`}
                         >
-                          {idx + 1}
+                          {(idx + 1).toString().padStart(2, '0')}
                         </button>
                       );
                     })}
                   </div>
 
                   {/* Legend */}
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-slate-500" />
-                      <span className="text-slate-400">Current</span>
+                  <div className="space-y-3 text-[9px] font-bold uppercase tracking-widest">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-neutral-600" />
+                      <span className="text-neutral-500">Active</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-blue-500/20 border border-blue-500/50"></div>
-                      <span className="text-slate-400">Submitted</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
+                      <span className="text-neutral-500">Submitted</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-emerald-500/20 border border-emerald-500/50"></div>
-                      <span className="text-slate-400">Answered</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-amber-500/50" />
+                      <span className="text-neutral-500">Flagged</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-yellow-500/20 border border-yellow-500/50"></div>
-                      <span className="text-slate-400">Marked</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-slate-800/50 border border-white/10"></div>
-                      <span className="text-slate-400">Unanswered</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full border border-neutral-800" />
+                      <span className="text-neutral-500">Not Answered</span>
                     </div>
                   </div>
 
-                  {/* AI Assistant */}
-                  <div className="mt-6 p-4 bg-slate-800/50 border border-white/10 rounded-lg">
-                    <button className="w-full flex items-center justify-center gap-2 text-purple-400 hover:text-purple-300 transition-colors">
-                      <MessageCircle className="w-5 h-5" />
-                      <span className="font-medium text-sm">Ask AI Assistant</span>
-                    </button>
-                  </div>
+                  <button className="mt-10 w-full py-3 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md flex items-center justify-center gap-3 text-neutral-400 hover:text-white transition-all text-[10px] font-bold uppercase tracking-widest">
+                    <MessageCircle className="w-4 h-4" />
+                    Support Bot
+                  </button>
                 </>
               )}
             </div>
@@ -655,31 +642,29 @@ export default function QuizTaking() {
 
       {/* Exit Confirmation Modal */}
       {showExitModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-md w-full">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="w-6 h-6 text-red-400" />
+        <div className="fixed inset-0 bg-neutral-950/90 flex items-center justify-center z-50 p-6">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-10 max-w-md w-full">
+            <div className="flex flex-col items-center text-center mb-8">
+              <div className="w-16 h-16 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center mb-6">
+                <AlertCircle className="w-8 h-8 text-neutral-600" />
               </div>
-              <div>
-                <h3 className="text-xl font-bold mb-2">Exit Quiz?</h3>
-                <p className="text-slate-400 text-sm">
-                  Are you sure you want to exit? Your progress will be saved, but the timer will continue running.
-                </p>
-              </div>
+              <h3 className="text-xl font-bold text-white mb-2 tracking-tight">EXIT QUIZ?</h3>
+              <p className="text-neutral-500 text-sm font-medium">
+                Your progress is saved, but the quiz timer will continue to run.
+              </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
               <button
                 onClick={() => setShowExitModal(false)}
-                className="flex-1 px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors"
+                className="w-full py-3 bg-white hover:bg-neutral-200 text-neutral-950 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all"
               >
-                Continue Quiz
+                RESUME QUIZ
               </button>
               <button
                 onClick={handleExit}
-                className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-sm font-medium transition-colors"
+                className="w-full py-3 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-neutral-400 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all"
               >
-                Save & Exit
+                SAVE AND EXIT
               </button>
             </div>
           </div>

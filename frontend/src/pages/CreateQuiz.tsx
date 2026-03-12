@@ -131,64 +131,64 @@ export default function CreateQuiz() {
     };
 
     const renderSelection = () => (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-12 text-blue-50">
             <button
                 onClick={() => setMode('manual')}
-                className="bg-slate-800/50 border border-white/10 rounded-2xl p-8 text-center hover:border-cyan-500/50 hover:bg-slate-800 transition-all group"
+                className="bg-neutral-900 border border-neutral-800 rounded-lg p-10 text-center hover:border-emerald-500/50 hover:bg-neutral-950 transition-all group"
             >
-                <div className="w-16 h-16 bg-cyan-500/10 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                    <Type className="w-8 h-8 text-cyan-400" />
+                <div className="w-16 h-16 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500/10 transition-colors">
+                    <Type className="w-8 h-8 text-neutral-400 group-hover:text-emerald-500 transition-colors" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Manual Entry</h3>
-                <p className="text-slate-400 text-sm">Create MCQs, short questions, and fill-in-the-blanks yourself.</p>
+                <h3 className="text-xl font-bold mb-3 uppercase tracking-tight">Manual Entry</h3>
+                <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Create MCQs, short questions, and fill-in-the-blanks yourself.</p>
             </button>
 
             <button
                 onClick={() => setMode('pdf')}
-                className="bg-slate-800/50 border border-white/10 rounded-2xl p-8 text-center hover:border-purple-500/50 hover:bg-slate-800 transition-all group"
+                className="bg-neutral-900 border border-neutral-800 rounded-lg p-10 text-center hover:border-emerald-500/50 hover:bg-neutral-950 transition-all group"
             >
-                <div className="w-16 h-16 bg-purple-500/10 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                    <Upload className="w-8 h-8 text-purple-400" />
+                <div className="w-16 h-16 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500/10 transition-colors">
+                    <Upload className="w-8 h-8 text-neutral-400 group-hover:text-emerald-500 transition-colors" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Upload PDF</h3>
-                <p className="text-slate-400 text-sm">Upload a document and we'll extract questions from it.</p>
+                <h3 className="text-xl font-bold mb-3 uppercase tracking-tight">Upload PDF</h3>
+                <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Upload a document and we'll extract questions from it.</p>
             </button>
 
             <button
                 onClick={() => setMode('ai')}
-                className="bg-slate-800/50 border border-white/10 rounded-2xl p-8 text-center hover:border-emerald-500/50 hover:bg-slate-800 transition-all group"
+                className="bg-neutral-900 border border-neutral-800 rounded-lg p-10 text-center hover:border-emerald-500/50 hover:bg-neutral-950 transition-all group"
             >
-                <div className="w-16 h-16 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                    <Sparkles className="w-8 h-8 text-emerald-400" />
+                <div className="w-16 h-16 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500/10 transition-colors">
+                    <Sparkles className="w-8 h-8 text-neutral-400 group-hover:text-emerald-500 transition-colors" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">AI Generated</h3>
-                <p className="text-slate-400 text-sm">Generate a comprehensive quiz using AI based on your topic.</p>
+                <h3 className="text-xl font-bold mb-3 uppercase tracking-tight">AI Generated</h3>
+                <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Generate a comprehensive quiz using AI based on your topic.</p>
             </button>
         </div>
     );
 
     const renderManualMode = () => (
         <div className="space-y-6 max-w-4xl mx-auto">
-            <div className="bg-slate-800/50 border border-white/10 rounded-xl p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1">Quiz Title</label>
+                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Quiz Title</label>
                         <input
                             type="text"
                             value={quizTitle}
                             onChange={(e) => setQuizTitle(e.target.value)}
                             placeholder="e.g. Cardiovascular System Essentials"
-                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-neutral-200 text-sm font-bold uppercase tracking-tight focus:outline-none focus:border-emerald-500/50 transition-colors"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1">Target Module</label>
+                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Target Module</label>
                         <select
                             value={selectedModule}
                             onChange={(e) => setSelectedModule(e.target.value)}
-                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-neutral-200 text-sm font-bold uppercase tracking-tight focus:outline-none focus:border-emerald-500/50 transition-colors appearance-none"
                         >
-                            <option value="">{isLoadingModules ? 'Loading modules...' : 'Select a module'}</option>
+                            <option value="">{isLoadingModules ? 'Loading...' : 'Select a module'}</option>
                             {moduleList.map((mod) => (
                                 <option key={mod.moduleId} value={mod.moduleId}>
                                     {mod.title}
@@ -201,18 +201,18 @@ export default function CreateQuiz() {
 
             <div className="space-y-4">
                 {questions.map((q, index) => (
-                    <div key={q.id} className="bg-slate-800/50 border border-white/10 rounded-xl p-6 relative group">
+                    <div key={q.id} className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 relative group">
                         <button
                             onClick={() => removeQuestion(q.id)}
-                            className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 transition-colors"
+                            className="absolute top-6 right-6 p-2 text-neutral-600 hover:text-rose-500 transition-colors"
                         >
                             <Trash2 className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-3 mb-4">
-                            <span className="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center text-sm font-bold text-slate-300">
+                        <div className="flex items-center gap-4 mb-6">
+                            <span className="w-8 h-8 bg-neutral-950 border border-neutral-800 rounded text-xs font-bold text-neutral-400 flex items-center justify-center">
                                 {index + 1}
                             </span>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
                                 {q.type === 'mcq' ? 'Multiple Choice' : q.type === 'short' ? 'Short Question' : 'Fill in the Blank'}
                             </span>
                         </div>
@@ -222,13 +222,13 @@ export default function CreateQuiz() {
                             value={q.question}
                             onChange={(e) => updateQuestion(q.id, { question: e.target.value })}
                             placeholder="Enter your question here..."
-                            className="w-full bg-slate-900/50 border border-white/5 rounded-lg px-4 py-3 text-white mb-4 focus:outline-none focus:border-cyan-500/50"
+                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-4 text-neutral-200 mb-6 focus:outline-none focus:border-emerald-500/50 text-sm font-bold uppercase tracking-tight"
                         />
 
                         {q.type === 'mcq' && q.options && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 {q.options.map((opt, optIdx) => (
-                                    <div key={optIdx} className="flex gap-2">
+                                    <div key={optIdx} className="flex gap-3">
                                         <div className="flex-1">
                                             <input
                                                 type="text"
@@ -239,14 +239,14 @@ export default function CreateQuiz() {
                                                     updateQuestion(q.id, { options: newOpts });
                                                 }}
                                                 placeholder={`Option ${optIdx + 1}`}
-                                                className="w-full bg-slate-900/50 border border-white/5 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                                                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-200 focus:outline-none focus:border-emerald-500/50"
                                             />
                                         </div>
                                         <button
                                             onClick={() => updateQuestion(q.id, { correctAnswer: opt })}
-                                            className={`px-3 rounded-lg border transition-colors ${q.correctAnswer === opt && opt !== ''
-                                                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                                                : 'bg-slate-900/50 border-white/5 text-slate-500 hover:text-slate-300'
+                                            className={`px-4 rounded-lg border transition-all ${q.correctAnswer === opt && opt !== ''
+                                                ? 'bg-emerald-500 text-neutral-950 border-emerald-500'
+                                                : 'bg-neutral-950 border-neutral-800 text-neutral-600 hover:text-neutral-400 box-content'
                                                 }`}
                                         >
                                             <CheckCircle className="w-4 h-4" />
@@ -262,47 +262,47 @@ export default function CreateQuiz() {
                                 value={q.correctAnswer}
                                 onChange={(e) => updateQuestion(q.id, { correctAnswer: e.target.value })}
                                 placeholder="Enter correct answer (for auto-grading)..."
-                                className="w-full bg-slate-900/50 border border-white/5 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-200 focus:outline-none focus:border-emerald-500/50"
                             />
                         )}
                     </div>
                 ))}
             </div>
 
-            <div className="flex gap-3 justify-center py-6 border-2 border-dashed border-white/5 rounded-xl">
+            <div className="flex gap-4 justify-center py-10 border border-dashed border-neutral-800 rounded-lg bg-neutral-900/50">
                 <button
                     onClick={() => addQuestion('mcq')}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors border border-white/10"
+                    className="flex items-center gap-3 px-6 py-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
                 >
                     <List className="w-4 h-4" /> Add MCQ
                 </button>
                 <button
                     onClick={() => addQuestion('short')}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors border border-white/10"
+                    className="flex items-center gap-3 px-6 py-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
                 >
                     <AlignLeft className="w-4 h-4" /> Add Short Question
                 </button>
                 <button
                     onClick={() => addQuestion('blank')}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors border border-white/10"
+                    className="flex items-center gap-3 px-6 py-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
                 >
                     <Type className="w-4 h-4" /> Add Fill-in-the-Blank
                 </button>
             </div>
 
-            <div className="flex justify-end gap-3 mt-8">
+            <div className="flex justify-end gap-4 mt-12">
                 <button
                     onClick={() => setMode('selection')}
-                    className="px-6 py-2.5 bg-slate-800 text-white rounded-lg font-medium border border-white/10 hover:bg-slate-700 transition-colors"
+                    className="px-8 py-3 bg-neutral-950 text-neutral-500 hover:text-white rounded border border-neutral-800 text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-900 transition-all"
                 >
-                    Cancel
+                    Discard Changes
                 </button>
                 <button
                     onClick={handleCreateQuiz}
                     disabled={isSubmitting || !quizTitle || questions.length === 0}
-                    className="px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-[10px] font-bold uppercase tracking-[0.2em] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                 >
-                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Publish Quiz
                 </button>
             </div>
@@ -311,58 +311,58 @@ export default function CreateQuiz() {
 
     const renderPDFMode = () => (
         <div className="max-w-xl mx-auto mt-12 text-center">
-            <div className="bg-slate-800/50 border-2 border-dashed border-white/10 rounded-2xl p-12 transition-all hover:border-purple-500/30">
-                <div className="w-20 h-20 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Upload className="w-10 h-10 text-purple-400" />
+            <div className="bg-neutral-900 border border-dashed border-neutral-800 rounded-lg p-12 transition-all hover:border-emerald-500/30">
+                <div className="w-20 h-20 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-center mx-auto mb-6">
+                    <Upload className="w-10 h-10 text-neutral-400" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Upload your PDF document</h3>
-                <p className="text-slate-400 mb-8">We'll analyze the content and generate relevant questions automatically.</p>
+                <h3 className="text-xl font-bold mb-3 uppercase tracking-tight">Upload your PDF document</h3>
+                <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-8 leading-relaxed">We'll analyze the content and generate relevant questions automatically.</p>
 
                 <label className="cursor-pointer">
                     <input type="file" className="hidden" accept=".pdf" />
-                    <span className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold transition-all inline-block shadow-lg shadow-purple-900/20">
+                    <span className="px-10 py-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-[10px] font-bold uppercase tracking-[0.2em] inline-block transition-all shadow-[0_0_20px_rgba(16,185,129,0.1)]">
                         Select File
                     </span>
                 </label>
-                <p className="text-xs text-slate-500 mt-4">Supported format: .pdf (Max 10MB)</p>
+                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest mt-6">Supported format: .pdf (Max 10MB)</p>
             </div>
 
             <button
                 onClick={() => setMode('selection')}
-                className="mt-8 text-slate-400 hover:text-white flex items-center justify-center gap-2 mx-auto transition-colors"
+                className="mt-8 text-neutral-500 hover:text-white flex items-center justify-center gap-2 mx-auto transition-colors text-[10px] font-bold uppercase tracking-widest"
             >
-                <ArrowLeft className="w-4 h-4" /> Back to selection
+                <ArrowLeft className="w-4 h-4" /> Selection mode
             </button>
         </div>
     );
 
     const renderAIMode = () => (
         <div className="max-w-2xl mx-auto mt-12">
-            <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-8">
-                <div className="w-16 h-16 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6">
-                    <Sparkles className="w-8 h-8 text-emerald-400" />
+            <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-10">
+                <div className="w-16 h-16 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center justify-center mb-6">
+                    <Sparkles className="w-8 h-8 text-neutral-400" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4">AI Quiz Generator</h3>
-                <p className="text-slate-400 mb-6">Describe the topic or paste the content you want to generate a quiz from.</p>
+                <h3 className="text-2xl font-bold mb-3 uppercase tracking-tight">AI Quiz Generator</h3>
+                <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-8 leading-relaxed">Describe the topic or paste the content you want to generate a quiz from.</p>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1">Topic / Content Description</label>
+                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Topic / Content Description</label>
                         <textarea
                             rows={6}
-                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600"
+                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-4 text-neutral-200 text-sm font-bold uppercase tracking-tight focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-neutral-800"
                             placeholder="e.g. Generate 10 MCQs about cellular respiration and its stages..."
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Number of Questions</label>
-                            <input type="number" defaultValue={10} className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-emerald-500" />
+                            <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Questions Count</label>
+                            <input type="number" defaultValue={10} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-neutral-200 text-sm font-bold uppercase tracking-tight outline-none focus:border-emerald-500/50" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Difficulty Level</label>
-                            <select className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-emerald-500">
+                            <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Difficulty</label>
+                            <select className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-neutral-200 text-sm font-bold uppercase tracking-tight outline-none focus:border-emerald-500/50 appearance-none">
                                 <option>Beginner</option>
                                 <option>Intermediate</option>
                                 <option>Advanced</option>
@@ -370,8 +370,8 @@ export default function CreateQuiz() {
                         </div>
                     </div>
 
-                    <button className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
-                        <Sparkles className="w-5 h-5" />
+                    <button className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] flex items-center justify-center gap-3">
+                        <Sparkles className="w-4 h-4" />
                         Generate Quiz
                     </button>
                 </div>
@@ -379,9 +379,9 @@ export default function CreateQuiz() {
 
             <button
                 onClick={() => setMode('selection')}
-                className="mt-8 text-slate-400 hover:text-white flex items-center justify-center gap-2 mx-auto transition-colors"
+                className="mt-8 text-neutral-500 hover:text-white flex items-center justify-center gap-2 mx-auto transition-colors text-[10px] font-bold uppercase tracking-widest"
             >
-                <ArrowLeft className="w-4 h-4" /> Back to selection
+                <ArrowLeft className="w-4 h-4" /> Selection mode
             </button>
         </div>
     );
@@ -392,8 +392,8 @@ export default function CreateQuiz() {
             subtitle={
                 mode === 'manual' ? "Create questions manually for your students" :
                     mode === 'pdf' ? "Convert PDF document to an interactive quiz" :
-                        mode === 'ai' ? "Harness AI to build comprehensive assessments" :
-                            "Choose your preferred way to create an assessment"
+                        mode === 'ai' ? "Harness AI to build comprehensive quizzes" :
+                            "Choose how you want to create your quiz"
             }
             breadcrumbLabel="Create Quiz"
             activeNav="none"
@@ -407,7 +407,7 @@ export default function CreateQuiz() {
                         className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Selection Mode
+                        Go Back
                     </button>
                 )}
 

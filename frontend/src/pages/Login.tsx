@@ -8,11 +8,11 @@ import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  
+
   // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,7 +23,6 @@ export default function Login() {
     setError("");
     setSuccess("");
 
-    // Validation
     if (!email || !password) {
       setError("Email and password are required");
       return;
@@ -37,7 +36,7 @@ export default function Login() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', //Include cookies for sessions
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
 
@@ -45,8 +44,6 @@ export default function Login() {
 
       if (response.ok) {
         setSuccess(data.message || 'Success!');
-
-        // Redirect after successful login based on userType
         setTimeout(() => {
           let dashboardPath = '/studentdashboard';
           if (data.user.userType === 'teacher' || data.user.userType === 'instructor') {
@@ -67,86 +64,71 @@ export default function Login() {
     }
   };
 
-  // Shared styles
-  const inputStyle = "bg-background/50 border-border/50 focus:border-accent transition-all duration-300 focus:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.3)]";
+  const inputStyle = "bg-neutral-950 border-neutral-800 text-neutral-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors duration-200 rounded-md";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 text-foreground flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent animate-glow-pulse" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-secondary/10 via-transparent to-transparent animate-glow-pulse" style={{ animationDelay: "1s" }} />
-      
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo */}
-        <Link to="/" className="block text-center mb-8 group">
-          <h1 className="text-4xl font-bold mb-2 animate-fade-in-up">
-            <span className="bg-gradient-to-r from-accent via-accent to-secondary bg-clip-text text-transparent animate-gradient-shift bg-300%">VRMTS</span>
+    <div className="min-h-screen bg-neutral-950 text-neutral-200 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Link to="/" className="block text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            <span className="text-white">VR</span>
+            <span className="text-emerald-500">MTS</span>
           </h1>
-          <p className="text-muted-foreground text-sm group-hover:text-accent transition-colors">← Back to home</p>
+          <span className="text-neutral-500 text-sm hover:text-white transition-colors">← Back to home</span>
         </Link>
-        
-        {/* Main card */}
-        <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-glow hover:shadow-elegant transition-all duration-500 animate-scale-in"
-             style={{ boxShadow: "0 0 40px -10px hsl(var(--accent) / 0.3)" }}>
-          
-          {/* Error/Success Messages */}
+
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
           {error && (
-            <Alert className="mb-4 bg-red-500/10 border-red-500/50 text-red-500">
+            <Alert className="mb-4 bg-red-500/10 border-red-500/50 text-red-500 rounded-md">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           {success && (
-            <Alert className="mb-4 bg-green-500/10 border-green-500/50 text-green-500">
+            <Alert className="mb-4 bg-emerald-500/10 border-emerald-500/50 text-emerald-500 rounded-md">
               <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
-          
 
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground/90">Email Address</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="you@example.com" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-neutral-300 font-medium text-sm">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 disabled={loading}
-                className={inputStyle} 
+                className={inputStyle}
               />
             </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground/90">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="••••••••" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-neutral-300 font-medium text-sm">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 disabled={loading}
-                className={inputStyle} 
+                className={inputStyle}
               />
             </div>
 
-            {/* Forgot password */}
-            <div className="flex justify-end">
-              <button type="button" className="text-sm text-accent hover:text-secondary transition-colors" disabled={loading}>
+            <div className="flex justify-between items-center pb-2">
+              <div />
+              <button type="button" className="text-sm text-neutral-400 hover:text-white transition-colors" disabled={loading}>
                 Forgot password?
               </button>
             </div>
 
-            {/* Submit button */}
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-accent to-secondary hover:opacity-90 text-background font-semibold shadow-glow hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]"
+              className="w-full bg-emerald-600 text-white hover:bg-emerald-700 font-medium rounded-md transition-colors h-10"
               disabled={loading}
             >
               {loading ? (
@@ -160,26 +142,24 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/50"></div>
+              <div className="w-full border-t border-neutral-800"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-4 text-muted-foreground" style={{ backgroundColor: 'hsl(228 45% 7%)' }}>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-4 text-neutral-500 bg-neutral-900">
                 Or continue with
               </span>
             </div>
           </div>
 
-          {/* Google login */}
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="w-full border-border/50 bg-background/30 hover:bg-background/50 hover:border-accent/50 transition-all duration-300"
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-neutral-800 bg-transparent hover:bg-neutral-800 text-neutral-200 transition-colors rounded-md h-10"
             disabled={loading}
           >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
               <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -189,12 +169,11 @@ export default function Login() {
           </Button>
         </div>
 
-        {/* Footer links */}
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-sm text-neutral-500 mt-6">
           By continuing, you agree to our{" "}
-          <Link to="/" className="text-accent hover:text-secondary transition-colors">Terms of Service</Link>{" "}
-          and{" "}
-          <Link to="/" className="text-accent hover:text-secondary transition-colors">Privacy Policy</Link>
+          <Link to="/" className="text-neutral-400 hover:text-white transition-colors">Terms of Service</Link>
+          {" "}and{" "}
+          <Link to="/" className="text-neutral-400 hover:text-white transition-colors">Privacy Policy</Link>
         </p>
       </div>
     </div>

@@ -135,10 +135,10 @@ export default function StudentAnalytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-slate-400 mx-auto mb-4" />
-          <p className="text-sm text-slate-400">Loading analytics...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+          <p className="text-xs text-neutral-500 font-medium tracking-tight uppercase">Processing analytics...</p>
         </div>
       </div>
     );
@@ -146,13 +146,16 @@ export default function StudentAnalytics() {
 
   if (error || !analyticsData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2 text-slate-200">Error loading analytics</h2>
-          <p className="text-slate-400 mb-4">{error || 'Analytics data not available'}</p>
-          <button onClick={() => navigate('/studentdashboard')} className="px-5 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors">
-            Back to dashboard
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-6" />
+          <h2 className="text-xl font-bold mb-2 text-white tracking-tight uppercase">Data link failure</h2>
+          <p className="text-neutral-500 text-sm mb-8">{error || 'Analytics data not available'}</p>
+          <button
+            onClick={() => navigate('/studentdashboard')}
+            className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-xs font-bold text-white transition-all uppercase tracking-widest"
+          >
+            Terminal Return
           </button>
         </div>
       </div>
@@ -181,416 +184,361 @@ export default function StudentAnalytics() {
       activeNav="analytics"
       userType="student"
       headerRight={
-        <button className="px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          <span className="hidden sm:inline">Export</span>
+        <button className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-widest text-white transition-all flex items-center gap-2">
+          <Download className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Export record</span>
         </button>
       }
     >
-        <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-slate-800/50 border border-white/10 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-slate-400" />
-            <span className="text-sm text-slate-400">Time Range:</span>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-              className="px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-sm focus:border-cyan-400 focus:outline-none"
-            >
-              <option value="week">Last Week</option>
-              <option value="month">Last Month</option>
-              <option value="3months">Last 3 Months</option>
-              <option value="year">This Year</option>
-              <option value="all">All Time</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-slate-400" />
-            <span className="text-sm text-slate-400">Module:</span>
-            <select
-              value={selectedModule}
-              onChange={(e) => setSelectedModule(e.target.value)}
-              className="px-3 py-2 bg-slate-800/60 border border-white/10 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-slate-600"
-            >
-              <option value="all">All Modules</option>
-              <option value="cardiovascular">Cardiovascular</option>
-              <option value="nervous">Nervous System</option>
-              <option value="skeletal">Skeletal</option>
-              <option value="muscular">Muscular</option>
-            </select>
-          </div>
+      <div className="flex flex-wrap items-center gap-6 mb-8 p-6 bg-neutral-900 border border-neutral-800 rounded-lg">
+        <div className="flex items-center gap-3">
+          <Calendar className="w-4 h-4 text-neutral-500" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Period:</span>
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="bg-neutral-950 border border-neutral-800 rounded px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white focus:border-emerald-500 focus:outline-none transition-all"
+          >
+            <option value="week">Past 7 days</option>
+            <option value="month">Past 30 days</option>
+            <option value="3months">Past quarter</option>
+            <option value="year">Current year</option>
+            <option value="all">Universal history</option>
+          </select>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2.5 rounded-lg bg-slate-700/80">
-                <Clock className="w-5 h-5 text-slate-300" />
-              </div>
-              <TrendingUp className="w-4 h-4 text-slate-500" />
-            </div>
-            <div className="text-xl font-semibold text-slate-100">{analyticsData.overview.totalStudyTime}h</div>
-            <div className="text-slate-500 text-sm">Total study time</div>
-          </div>
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2.5 rounded-lg bg-slate-700/80">
-                <Target className="w-5 h-5 text-slate-300" />
-              </div>
-              <span className="text-xs text-slate-500">+5%</span>
-            </div>
-            <div className="text-xl font-semibold text-slate-100">{analyticsData.overview.averageScore}%</div>
-            <div className="text-slate-500 text-sm">Average score</div>
-          </div>
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2.5 rounded-lg bg-slate-700/80">
-                <BookOpen className="w-5 h-5 text-slate-300" />
-              </div>
-            </div>
-            <div className="text-xl font-semibold text-slate-100">
-              {analyticsData.overview.modulesCompleted}/{analyticsData.overview.totalModules}
-            </div>
-            <div className="text-slate-500 text-sm">Modules completed</div>
-          </div>
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2.5 rounded-lg bg-slate-700/80">
-                <Zap className="w-5 h-5 text-slate-300" />
-              </div>
-            </div>
-            <div className="text-xl font-semibold text-slate-100">{analyticsData.overview.currentStreak}</div>
-            <div className="text-slate-500 text-sm">Day streak</div>
-          </div>
+        <div className="flex items-center gap-3">
+          <Filter className="w-4 h-4 text-neutral-500" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Scope:</span>
+          <select
+            value={selectedModule}
+            onChange={(e) => setSelectedModule(e.target.value)}
+            className="bg-neutral-950 border border-neutral-800 rounded px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white focus:border-emerald-500 focus:outline-none transition-all"
+          >
+            <option value="all">Global modules</option>
+            <option value="cardiovascular">Cardiovascular</option>
+            <option value="nervous">Nervous system</option>
+            <option value="skeletal">Skeletal structure</option>
+            <option value="muscular">Muscular system</option>
+          </select>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-slate-400" />
-              Score progress over time
-            </h3>
-            <div className="space-y-3">
-              {analyticsData.scoreProgress.map((item, idx) => (
-                <div key={idx} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">{item.month}</span>
-                    <span className="font-medium text-slate-200">{item.score}%</span>
-                  </div>
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-500 rounded-full transition-all" style={{ width: `${item.score}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 p-3 bg-slate-800/60 border border-white/5 rounded-lg">
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <TrendingUp className="w-4 h-4 text-slate-500" />
-                <span>+20% improvement since August</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[
+          { icon: Clock, value: `${analyticsData.overview.totalStudyTime}h`, label: 'Active engagement', trend: <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> },
+          { icon: Target, value: `${analyticsData.overview.averageScore}%`, label: 'Precision rating', trend: <span className="text-[8px] font-bold text-emerald-500">+5.2%</span> },
+          { icon: BookOpen, value: `${analyticsData.overview.modulesCompleted}/${analyticsData.overview.totalModules}`, label: 'Module verification' },
+          { icon: Zap, value: analyticsData.overview.currentStreak, label: 'Synchronous days' }
+        ].map((stat, i) => (
+          <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-2 rounded bg-neutral-950 border border-neutral-800">
+                <stat.icon className="w-4 h-4 text-neutral-400" />
               </div>
+              {stat.trend}
             </div>
+            <div className="text-2xl font-bold text-white tracking-tight mb-1">{stat.value}</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">{stat.label}</div>
           </div>
+        ))}
+      </div>
 
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-slate-400" />
-              Weekly study pattern
-            </h3>
-            <div className="flex items-end justify-between gap-2 h-40">
-              {analyticsData.studyTime.map((item, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full flex flex-col justify-end h-full">
-                    <div
-                      className="w-full bg-cyan-500 rounded-t transition-all hover:opacity-90"
-                      style={{ height: `${(item.hours / maxStudyHours) * 100}%` }}
-                      title={`${item.hours}h`}
-                    />
-                  </div>
-                  <span className="text-xs text-slate-500">{item.day}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <div className="p-3 bg-slate-800/60 rounded-lg">
-                <div className="text-slate-500 mb-0.5">Most active</div>
-                <div className="font-medium text-slate-200">{analyticsData.learningPattern.mostActiveDay}</div>
-              </div>
-              <div className="p-3 bg-slate-800/60 rounded-lg">
-                <div className="text-slate-500 mb-0.5">Avg session</div>
-                <div className="font-medium text-slate-200">{analyticsData.learningPattern.avgSessionLength}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-            <Brain className="w-5 h-5 text-slate-400" />
-            Module performance
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+            <TrendingUp className="w-4 h-4 text-emerald-500" />
+            Score progression
           </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-3 font-medium text-slate-500">Module</th>
-                  <th className="text-left py-3 px-3 font-medium text-slate-500">Progress</th>
-                  <th className="text-left py-3 px-3 font-medium text-slate-500">Avg score</th>
-                  <th className="text-left py-3 px-3 font-medium text-slate-500">Time spent</th>
-                  <th className="text-left py-3 px-3 font-medium text-slate-500">Last activity</th>
-                  <th className="text-left py-3 px-3 font-medium text-slate-500">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {analyticsData.modulePerformance.map((module, idx) => (
-                  <tr key={idx} className="border-b border-white/5 hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-3 font-medium text-slate-200">{module.module}</td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 max-w-28 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${module.progress}%` }} />
-                        </div>
-                        <span className="text-slate-400 w-8">{module.progress}%</span>
+          <div className="space-y-6">
+            {analyticsData.scoreProgress.map((item, idx) => (
+              <div key={idx} className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">{item.month}</span>
+                  <span className="text-xs font-mono font-bold text-white">{item.score}%</span>
+                </div>
+                <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${item.score}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 p-4 bg-neutral-950 border border-neutral-800 rounded-lg flex items-center gap-3">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80">A-Grade improvement detected since baseline</span>
+          </div>
+        </div>
+
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+            <Activity className="w-4 h-4 text-emerald-500" />
+            Synchronous activity cycle
+          </h3>
+          <div className="flex items-end justify-between gap-3 h-48 mb-8">
+            {analyticsData.studyTime.map((item, idx) => (
+              <div key={idx} className="flex-1 flex flex-col items-center gap-4 group">
+                <div className="w-full flex-1 flex flex-col justify-end">
+                  <div
+                    className="w-full bg-neutral-800 group-hover:bg-emerald-500 transition-all rounded-t duration-500"
+                    style={{ height: `${(item.hours / maxStudyHours) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-600 group-hover:text-white transition-colors">{item.day}</span>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-neutral-950 border border-neutral-800 rounded-lg">
+              <div className="text-[8px] font-bold uppercase tracking-widest text-neutral-600 mb-1">Peak day</div>
+              <div className="text-xs font-bold text-white uppercase">{analyticsData.learningPattern.mostActiveDay}</div>
+            </div>
+            <div className="p-4 bg-neutral-950 border border-neutral-800 rounded-lg">
+              <div className="text-[8px] font-bold uppercase tracking-widest text-neutral-600 mb-1">Avg session</div>
+              <div className="text-xs font-bold text-white uppercase">{analyticsData.learningPattern.avgSessionLength}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 mb-8">
+        <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+          <Brain className="w-4 h-4 text-emerald-500" />
+          Module proficiency index
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-neutral-800">
+                <th className="text-left py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-600">Module</th>
+                <th className="text-left py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-600">Completion</th>
+                <th className="text-left py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-600">Avg Precision</th>
+                <th className="text-left py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-600">Session load</th>
+                <th className="text-left py-4 px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-600">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-800/30">
+              {analyticsData.modulePerformance.map((module, idx) => (
+                <tr key={idx} className="group hover:bg-neutral-950/40 transition-colors">
+                  <td className="py-5 px-4">
+                    <div className="text-xs font-bold text-white uppercase tracking-tight">{module.module}</div>
+                  </td>
+                  <td className="py-5 px-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 w-24 h-1 bg-neutral-950 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${module.progress}%` }} />
                       </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className={`font-medium ${
-                        module.avgScore >= 90 ? 'text-emerald-400' :
-                        module.avgScore >= 80 ? 'text-slate-200' :
-                        module.avgScore >= 70 ? 'text-amber-400' : 'text-rose-400'
-                      }`}>
-                        {module.avgScore}%
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-slate-500">{module.timeSpent}</td>
-                    <td className="py-3 px-3 text-slate-500 text-xs">{module.lastAttempt}</td>
-                    <td className="py-3 px-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
-                        module.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-600/50 text-slate-400'
-                      }`}>
-                        {module.status === 'completed' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                        {module.status === 'completed' ? 'Completed' : 'In progress'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-              <Target className="w-5 h-5 text-slate-400" />
-              Question type performance
-            </h3>
-            <div className="space-y-4">
-              {analyticsData.questionTypePerformance.map((item, idx) => (
-                <div key={idx}>
-                  <div className="flex items-center justify-between mb-2 text-sm">
-                    <div>
-                      <div className="font-medium text-slate-200">{item.type}</div>
-                      <div className="text-slate-500">{item.correct} of {item.total} correct</div>
+                      <span className="text-[10px] font-mono font-bold text-neutral-500 w-8">{module.progress}%</span>
                     </div>
-                    <span className="font-medium text-slate-200">{item.percentage}%</span>
-                  </div>
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${
-                        item.percentage >= 85 ? 'bg-emerald-500' :
-                        item.percentage >= 75 ? 'bg-cyan-500' : 'bg-amber-500'
-                      }`}
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                </div>
+                  </td>
+                  <td className="py-5 px-4">
+                    <span className={`text-xs font-mono font-bold ${
+                      module.avgScore >= 90 ? 'text-emerald-500' :
+                      module.avgScore >= 75 ? 'text-white' : 'text-neutral-500'
+                    }`}>
+                      {module.avgScore}%
+                    </span>
+                  </td>
+                  <td className="py-5 px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-600">{module.timeSpent}</td>
+                  <td className="py-5 px-4">
+                    <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded text-[8px] font-bold uppercase tracking-widest ${
+                      module.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-neutral-950 text-neutral-600 border border-neutral-800'
+                    }`}>
+                      {module.status === 'completed' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                      {module.status === 'completed' ? 'Success' : 'Active'}
+                    </span>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-              <Eye className="w-5 h-5 text-slate-400" />
-              Your learning pattern
-            </h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-slate-800/60 rounded-lg flex items-center justify-between">
-                <span className="text-slate-500 text-sm">Most active day</span>
-                <span className="font-medium text-slate-200">{analyticsData.learningPattern.mostActiveDay}</span>
-              </div>
-              <div className="p-3 bg-slate-800/60 rounded-lg flex items-center justify-between">
-                <span className="text-slate-500 text-sm">Peak study time</span>
-                <span className="font-medium text-slate-200">{analyticsData.learningPattern.mostActiveTime}</span>
-              </div>
-              <div className="p-3 bg-slate-800/60 rounded-lg flex items-center justify-between">
-                <span className="text-slate-500 text-sm">Avg session length</span>
-                <span className="font-medium text-slate-200">{analyticsData.learningPattern.avgSessionLength}</span>
-              </div>
-              <div className="p-3 bg-slate-800/60 rounded-lg flex items-center justify-between">
-                <span className="text-slate-500 text-sm">Preferred format</span>
-                <span className="font-medium text-slate-200">{analyticsData.learningPattern.preferredFormat}</span>
-              </div>
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-slate-400" />
-              Your strengths
-            </h3>
-            <div className="space-y-3">
-              {analyticsData.strengths.map((item, idx) => (
-                <div key={idx} className="p-3 bg-slate-800/60 border border-white/5 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-slate-200">{item.topic}</span>
-                    <span className="text-sm font-medium text-emerald-400">{item.mastery}%</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>{item.questions} questions answered</span>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500/80" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-slate-400" />
-              Areas for improvement
-            </h3>
-            <div className="space-y-3">
-              {analyticsData.weaknesses.map((item, idx) => (
-                <div key={idx} className="p-3 bg-slate-800/60 border border-white/5 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-slate-200">{item.topic}</span>
-                    <span className="text-sm font-medium text-amber-400">{item.mastery}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-500">{item.questions} questions answered</span>
-                    <button type="button" className="text-xs px-2.5 py-1 bg-slate-600 hover:bg-slate-500 rounded transition-colors">
-                      Practice
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-slate-400" />
-            Recent activity
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+            <Target className="w-4 h-4 text-emerald-500" />
+            Taxonomy performance
           </h3>
-          <div className="space-y-2">
-            {analyticsData.recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex gap-3 p-3 bg-slate-800/40 rounded-lg hover:bg-slate-800/60 transition-colors">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-500 mt-2 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <span className="font-medium text-slate-200 text-sm">{activity.action}</span>
-                    <span className="text-xs text-slate-500 flex-shrink-0">{activity.date}</span>
+          <div className="space-y-6">
+            {analyticsData.questionTypePerformance.map((item, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between mb-2 text-[10px] font-bold uppercase tracking-widest">
+                  <div>
+                    <div className="text-white mb-1">{item.type}</div>
+                    <div className="text-neutral-600">{item.correct} OUT OF {item.total} CORRECT</div>
                   </div>
-                  <div className="text-xs text-slate-500">{activity.module}</div>
-                  {activity.score != null && (
-                    <div className="text-xs text-slate-400 mt-1">Score: {activity.score}%{activity.time ? ` • ${activity.time}` : ''}</div>
-                  )}
-                  {activity.duration && <div className="text-xs text-slate-500 mt-0.5">{activity.duration}</div>}
+                  <span className="text-white">{item.percentage}%</span>
+                </div>
+                <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-1000 ${
+                      item.percentage >= 85 ? 'bg-emerald-500' :
+                      item.percentage >= 70 ? 'bg-emerald-500/60' : 'bg-neutral-700'
+                    }`}
+                    style={{ width: `${item.percentage}%` }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-slate-400" />
-            Achievements
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+            <Eye className="w-4 h-4 text-emerald-500" />
+            Cognitive patterns
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {analyticsData.achievements.map((achievement, idx) => {
-              const IconComponent = getAchievementIcon(achievement.icon);
-              return (
-                <div
-                  key={idx}
-                  className={`p-3 rounded-lg border transition-colors ${
-                    achievement.unlocked ? 'bg-slate-800/60 border-white/10' : 'bg-slate-800/40 border-white/5 opacity-70'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg flex-shrink-0 ${achievement.unlocked ? 'bg-slate-600' : 'bg-slate-700'}`}>
-                      <IconComponent className="w-4 h-4 text-slate-200" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-medium text-sm ${achievement.unlocked ? 'text-slate-200' : 'text-slate-500'}`}>
-                        {achievement.name}
-                      </div>
-                      {achievement.unlocked && achievement.date && (
-                        <div className="text-xs text-slate-500">{achievement.date}</div>
-                      )}
-                      {!achievement.unlocked && <div className="text-xs text-slate-500">Locked</div>}
-                    </div>
-                  </div>
+          <div className="space-y-4">
+            {[
+              { label: 'Active node', value: analyticsData.learningPattern.mostActiveDay },
+              { label: 'Peak frequency', value: analyticsData.learningPattern.mostActiveTime },
+              { label: 'Load duration', value: analyticsData.learningPattern.avgSessionLength },
+              { label: 'Protocol', value: analyticsData.learningPattern.preferredFormat }
+            ].map((pattern, idx) => (
+              <div key={idx} className="p-4 bg-neutral-950 border border-neutral-800 rounded flex items-center justify-between group">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 group-hover:text-neutral-400 transition-colors">{pattern.label}</span>
+                <span className="text-xs font-bold text-white uppercase">{pattern.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+            <Trophy className="w-4 h-4 text-emerald-500" />
+            Subject mastery
+          </h3>
+          <div className="space-y-4">
+            {analyticsData.strengths.map((item, idx) => (
+              <div key={idx} className="p-4 bg-neutral-950 border border-neutral-800 rounded">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-white uppercase tracking-tight">{item.topic}</span>
+                  <span className="text-xs font-mono font-bold text-emerald-500">{item.mastery}%</span>
                 </div>
-              );
-            })}
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+                  <span>{item.questions} VERIFIED QUERIES</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-slate-700/80 flex items-center justify-center flex-shrink-0">
-              <Brain className="w-5 h-5 text-slate-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-slate-100 mb-3">AI-powered insights</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-white/5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <TrendingUp className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium text-sm text-slate-200">Strong progress</span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Your score has improved by 20% over the last 3 months. Excelling in visual identification questions.
-                  </p>
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+            <AlertCircle className="w-4 h-4 text-rose-500" />
+            Optimization targets
+          </h3>
+          <div className="space-y-4">
+            {analyticsData.weaknesses.map((item, idx) => (
+              <div key={idx} className="p-4 bg-neutral-950 border border-neutral-800 rounded">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-white uppercase tracking-tight">{item.topic}</span>
+                  <span className="text-xs font-mono font-bold text-rose-500">{item.mastery}%</span>
                 </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-white/5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium text-sm text-slate-200">Optimal study time</span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Performance is 15% higher during afternoon sessions (2PM–6PM). Consider scheduling quizzes then.
-                  </p>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-white/5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <AlertCircle className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium text-sm text-slate-200">Focus area</span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Heart Valves questions need attention. Accuracy is 20% below average. We recommend reviewing this topic.
-                  </p>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-white/5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Zap className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium text-sm text-slate-200">Study consistency</span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Excellent consistency with a 12-day streak. Similar patterns show 25% better retention.
-                  </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-600">{item.questions} QUERIES LOGGED</span>
+                  <button type="button" className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded text-white transition-all">
+                    Initiate review
+                  </button>
                 </div>
               </div>
-              <button type="button" className="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Get personalized study plan
-              </button>
-            </div>
+            ))}
           </div>
         </div>
+      </div>
+
+      <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 mb-8">
+        <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+          <Clock className="w-4 h-4 text-emerald-500" />
+          Neural activity log
+        </h3>
+        <div className="space-y-3">
+          {analyticsData.recentActivity.map((activity, idx) => (
+            <div key={idx} className="flex gap-4 p-4 bg-neutral-950/40 border border-neutral-800/50 rounded-lg hover:border-neutral-700 transition-all group">
+              <div className="w-1 h-1 rounded-full bg-emerald-500 mt-2 flex-shrink-0 group-hover:scale-125 transition-transform" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-4 mb-1">
+                  <span className="text-xs font-bold text-white uppercase tracking-tight">{activity.action}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-600">{activity.date}</span>
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">{activity.module}</div>
+                {activity.score != null && (
+                  <div className="text-[10px] font-mono font-bold text-emerald-500/80 mt-2">RESULT_SCORE: {activity.score}%{activity.time ? ` // ${activity.time}` : ''}</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 mb-8">
+        <h3 className="text-sm font-bold text-white uppercase tracking-tight mb-8 flex items-center gap-3">
+          <Trophy className="w-4 h-4 text-emerald-500" />
+          Milestone decryption
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {analyticsData.achievements.map((achievement, idx) => {
+            const IconComponent = getAchievementIcon(achievement.icon);
+            return (
+              <div
+                key={idx}
+                className={`p-4 rounded-lg border transition-all ${
+                  achievement.unlocked ? 'bg-neutral-950 border-emerald-500/30' : 'bg-neutral-950/40 border-neutral-800/50 opacity-40 grayscale'
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`p-2.5 rounded bg-neutral-900 border ${achievement.unlocked ? 'border-emerald-500/50 text-emerald-500' : 'border-neutral-800 text-neutral-600'}`}>
+                    <IconComponent className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${achievement.unlocked ? 'text-white' : 'text-neutral-600'}`}>
+                      {achievement.name}
+                    </div>
+                    {achievement.unlocked && achievement.date && (
+                      <div className="text-[8px] font-bold text-emerald-500/60 uppercase">{achievement.date}</div>
+                    )}
+                    {!achievement.unlocked && <div className="text-[8px] font-bold text-neutral-700 uppercase">ACCESS_DENIED</div>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-10">
+        <div className="flex items-start gap-8">
+          <div className="w-12 h-12 rounded bg-neutral-950 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <Brain className="w-6 h-6 text-emerald-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-bold text-white uppercase tracking-tight mb-8">Adaptive proficiency analysis</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+              {[
+                { icon: TrendingUp, label: 'Velocity report', desc: 'Sustained score elevation of 20% over 90 cycles. Peak identification accuracy detected.' },
+                { icon: Clock, label: 'Temporal sync', desc: 'Maximum cognitive performance observed between 14:00 and 18:00. Schedule primary tests accordingly.' },
+                { icon: AlertCircle, label: 'Deviation alert', desc: 'Heart valve metrics showing sub-baseline precision. Critical topic review recommended.' },
+                { icon: Zap, label: 'Neural consistency', desc: '12-day active sequence maintained. Retention probability increased by 25%.' }
+              ].map((insight, i) => (
+                <div key={i} className="p-5 bg-neutral-950 border border-neutral-800 rounded-lg group hover:border-emerald-500/50 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <insight.icon className="w-4 h-4 text-emerald-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white">{insight.label}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-neutral-500 font-medium">
+                    {insight.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="px-8 py-3 bg-white hover:bg-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded transition-all shadow-lg active:scale-95">
+              Protocol: Generate study plan
+            </button>
+          </div>
+        </div>
+      </div>
     </PageLayout>
   );
 }

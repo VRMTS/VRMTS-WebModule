@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Users, Search, Filter, Download, Upload, Mail, MoreVertical, TrendingUp, TrendingDown, Clock, Target, BookOpen, Award, AlertTriangle, CheckCircle, XCircle, Eye, Edit, Trash2, Send, X, Calendar, BarChart3, Activity, MessageSquare } from 'lucide-react';
+import { Users, Search, Filter, Download, Upload, Mail, MoreVertical, TrendingUp, TrendingDown, Clock, Target, BookOpen, Award, AlertTriangle, CheckCircle, XCircle, Eye, Edit, Trash2, Send, X, Calendar, BarChart3, Activity, MessageSquare, Loader2 } from 'lucide-react';
+import { PageLayout } from '@/components/PageLayout';
 
 interface Activity {
   type: 'quiz' | 'study';
@@ -207,20 +208,20 @@ export default function VRMTSStudentManagement() {
 
   const getStatusColor = (status: Student['status']): string => {
     const colors: Record<Student['status'], string> = {
-      'excellent': 'from-emerald-500 to-green-500',
-      'good': 'from-cyan-500 to-teal-500',
-      'average': 'from-yellow-500 to-orange-500',
-      'at-risk': 'from-red-500 to-orange-500'
+      'excellent': 'bg-emerald-500',
+      'good': 'bg-emerald-500/60',
+      'average': 'bg-neutral-600',
+      'at-risk': 'bg-rose-500/60'
     };
     return colors[status];
   };
 
   const getStatusBadge = (status: Student['status']): string => {
     const badges: Record<Student['status'], string> = {
-      'excellent': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-      'good': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      'average': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      'at-risk': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'excellent': 'bg-neutral-950 text-emerald-500 border-emerald-500/20',
+      'good': 'bg-neutral-950 text-emerald-400 border-emerald-500/10',
+      'average': 'bg-neutral-950 text-neutral-400 border-neutral-800',
+      'at-risk': 'bg-neutral-950 text-rose-500 border-rose-500/10'
     };
     return badges[status];
   };
@@ -233,50 +234,34 @@ export default function VRMTSStudentManagement() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-bold">
-              <span className="text-white">VRMTS</span>
-            </h1>
-            <nav className="hidden md:flex gap-6">
-              <button className="text-slate-400 hover:text-white transition-colors">Dashboard</button>
-              <button className="text-cyan-400 font-medium">Students</button>
-              <button className="text-slate-400 hover:text-white transition-colors">Modules</button>
-              <button className="text-slate-400 hover:text-white transition-colors">Analytics</button>
-            </nav>
-          </div>
-          
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center font-bold">
-            DR
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-8">
+    <PageLayout
+      title="Student Management"
+      subtitle="Global student registry and performance metrics"
+      breadcrumbLabel="Students"
+      activeNav="students"
+      userType="instructor"
+    >
         {/* Page Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <Users className="w-8 h-8 text-cyan-400" />
-              Student Management
-            </h2>
-            <p className="text-slate-400">Manage and monitor student progress</p>
+        <div className="mb-12 flex items-end justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Users className="w-4 h-4 text-emerald-500" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-tight">Manage Students</h2>
+            </div>
+            <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">Student Directory and performance metrics</p>
           </div>
-          <div className="flex gap-3">
-            <button className="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-400/50 transition-all flex items-center gap-2">
-              <Download className="w-4 h-4" />
+          <div className="flex gap-4">
+            <button className="px-6 py-3 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-500 hover:text-white text-[10px] font-bold uppercase tracking-widest rounded transition-all flex items-center gap-3">
+              <Download className="w-3 h-3" />
               Export
             </button>
-            <button className="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-400/50 transition-all flex items-center gap-2">
-              <Upload className="w-4 h-4" />
+            <button className="px-6 py-3 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-500 hover:text-white text-[10px] font-bold uppercase tracking-widest rounded transition-all flex items-center gap-3">
+              <Upload className="w-3 h-3" />
               Import
             </button>
-            <button className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              Email All
+            <button className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 text-[10px] font-bold uppercase tracking-[0.2em] rounded transition-all flex items-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+              <Mail className="w-3 h-3" />
+              Email all
             </button>
           </div>
         </div>
@@ -285,13 +270,13 @@ export default function VRMTSStudentManagement() {
         <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div className="flex flex-1 gap-3 w-full md:w-auto">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
               <input
                 type="text"
-                placeholder="Search students by name or email..."
+                placeholder="Search students..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400/50 transition-colors"
+                className="w-full pl-10 pr-4 py-2 bg-neutral-950 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-neutral-700 transition-colors"
               />
             </div>
             <select
@@ -303,7 +288,7 @@ export default function VRMTSStudentManagement() {
                   setFilterStatus(value as typeof statusOptions[number]);
                 }
               }}
-              className="px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400/50"
+              className="px-4 py-2 bg-neutral-950 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-neutral-700"
             >
               <option value="all">All Status</option>
               <option value="excellent">Excellent</option>
@@ -316,46 +301,23 @@ export default function VRMTSStudentManagement() {
           <div className="flex gap-2">
             <button 
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800/50 text-slate-400 hover:text-white'}`}
+              className={`p-2 rounded transition-all ${viewMode === 'grid' ? 'bg-neutral-900 text-emerald-500 border border-neutral-800' : 'bg-neutral-950 text-neutral-600 border border-neutral-800 hover:text-neutral-400'}`}
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zM11 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM11 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
               </svg>
             </button>
             <button 
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800/50 text-slate-400 hover:text-white'}`}
+              className={`p-2 rounded transition-all ${viewMode === 'table' ? 'bg-neutral-900 text-emerald-500 border border-neutral-800' : 'bg-neutral-950 text-neutral-600 border border-neutral-800 hover:text-neutral-400'}`}
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Stats Summary */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-            <div className="text-2xl font-bold mb-1">{students.length}</div>
-            <div className="text-sm text-slate-400">Total Students</div>
-          </div>
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-            <div className="text-2xl font-bold text-emerald-400 mb-1">
-              {students.filter(s => s.status === 'excellent' || s.status === 'good').length}
-            </div>
-            <div className="text-sm text-slate-400">Performing Well</div>
-          </div>
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-            <div className="text-2xl font-bold text-red-400 mb-1">
-              {students.filter(s => s.status === 'at-risk').length}
-            </div>
-            <div className="text-sm text-slate-400">At Risk</div>
-          </div>
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-            <div className="text-2xl font-bold text-cyan-400 mb-1">78%</div>
-            <div className="text-sm text-slate-400">Avg Class Score</div>
-          </div>
-        </div>
 
         {/* Students Grid/Table View */}
         {viewMode === 'grid' ? (
@@ -363,17 +325,17 @@ export default function VRMTSStudentManagement() {
             {filteredStudents.map((student) => (
               <div
                 key={student.id}
-                className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:border-cyan-400/50 transition-all cursor-pointer"
+                className="bg-neutral-900 border border-neutral-800 rounded-lg p-5 hover:border-neutral-700 transition-all cursor-pointer group"
                 onClick={() => setSelectedStudent(student)}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getStatusColor(student.status)} flex items-center justify-center font-bold`}>
+                    <div className={`w-12 h-12 rounded-full ${getStatusColor(student.status)} flex items-center justify-center font-bold text-neutral-950`}>
                       {student.avatar}
                     </div>
                     <div>
-                      <h4 className="font-semibold">{student.name}</h4>
-                      <p className="text-xs text-slate-400">{student.email}</p>
+                      <h4 className="font-bold text-white tracking-tight">{student.name}</h4>
+                      <p className="text-xs text-neutral-500">{student.email}</p>
                     </div>
                   </div>
                   <button className="p-1 hover:bg-white/5 rounded transition-colors">
@@ -383,29 +345,29 @@ export default function VRMTSStudentManagement() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">Status</span>
-                    <span className={`px-2 py-1 rounded-full text-xs border ${getStatusBadge(student.status)}`}>
+                    <span className="text-neutral-500 font-medium">Status</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${getStatusBadge(student.status)}`}>
                       {student.status.replace('-', ' ')}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">Average Score</span>
+                    <span className="text-neutral-500 font-medium">Average Score</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold">{student.avgScore}%</span>
-                      {student.trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-400" />}
-                      {student.trend === 'down' && <TrendingDown className="w-4 h-4 text-red-400" />}
+                      <span className="font-bold text-white">{student.avgScore}%</span>
+                      {student.trend === 'up' && <TrendingUp className="w-3 h-3 text-emerald-500" />}
+                      {student.trend === 'down' && <TrendingDown className="w-3 h-3 text-rose-500" />}
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex justify-between text-xs text-slate-400 mb-1">
+                    <div className="flex justify-between text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-1.5">
                       <span>Progress</span>
                       <span>{student.modulesCompleted}/{student.totalModules} modules</span>
                     </div>
-                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
                       <div 
-                        className={`h-full bg-gradient-to-r ${getStatusColor(student.status)}`}
+                        className={`h-full ${getStatusColor(student.status)}`}
                         style={{ width: `${(student.modulesCompleted / student.totalModules) * 100}%` }}
                       />
                     </div>
@@ -423,12 +385,12 @@ export default function VRMTSStudentManagement() {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-white/5 flex gap-2">
-                  <button className="flex-1 py-2 px-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
+                <div className="mt-4 pt-4 border-t border-neutral-800 flex gap-2">
+                  <button className="flex-1 py-2 px-3 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-all flex items-center justify-center gap-2">
                     <Eye className="w-3 h-3" />
                     View
                   </button>
-                  <button className="flex-1 py-2 px-3 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
+                  <button className="flex-1 py-2 px-3 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-emerald-500 transition-all flex items-center justify-center gap-2">
                     <Send className="w-3 h-3" />
                     Message
                   </button>
@@ -437,74 +399,71 @@ export default function VRMTSStudentManagement() {
             ))}
           </div>
         ) : (
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left p-4 text-sm font-semibold text-slate-400">Student</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-400">Status</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-400">Avg Score</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-400">Progress</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-400">Study Time</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-400">Last Active</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-400">Actions</th>
+                  <tr className="border-b border-neutral-800">
+                    <th className="text-left p-4 text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Student</th>
+                    <th className="text-left p-4 text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Status</th>
+                    <th className="text-left p-4 text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Avg Score</th>
+                    <th className="text-left p-4 text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Progress</th>
+                    <th className="text-left p-4 text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Study Time</th>
+                    <th className="text-left p-4 text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Last Active</th>
+                    <th className="text-left p-4 text-[10px] font-bold text-neutral-600 uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-neutral-800/50">
                   {filteredStudents.map((student) => (
-                    <tr key={student.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr key={student.id} className="hover:bg-neutral-950 transition-colors group">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getStatusColor(student.status)} flex items-center justify-center font-bold text-sm`}>
+                          <div className={`w-8 h-8 rounded-full ${getStatusColor(student.status)} flex items-center justify-center font-bold text-[10px] text-neutral-950`}>
                             {student.avatar}
                           </div>
                           <div>
-                            <div className="font-semibold">{student.name}</div>
-                            <div className="text-xs text-slate-400">{student.email}</div>
+                            <div className="text-sm font-bold text-neutral-200 group-hover:text-white transition-colors">{student.name}</div>
+                            <div className="text-[10px] text-neutral-600 font-medium">{student.email}</div>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-xs border ${getStatusBadge(student.status)}`}>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${getStatusBadge(student.status)}`}>
                           {student.status.replace('-', ' ')}
                         </span>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold">{student.avgScore}%</span>
-                          {student.trend === 'up' && <TrendingUp className="w-4 h-4 text-emerald-400" />}
-                          {student.trend === 'down' && <TrendingDown className="w-4 h-4 text-red-400" />}
+                          <span className="text-sm font-bold text-white">{student.avgScore}%</span>
+                          {student.trend === 'up' && <TrendingUp className="w-3 h-3 text-emerald-500" />}
+                          {student.trend === 'down' && <TrendingDown className="w-3 h-3 text-rose-500" />}
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="w-32">
-                          <div className="text-xs text-slate-400 mb-1">
-                            {student.modulesCompleted}/{student.totalModules}
+                          <div className="flex justify-between text-[9px] font-bold text-neutral-600 uppercase tracking-widest mb-1.5">
+                            <span>{student.modulesCompleted}/{student.totalModules}</span>
                           </div>
-                          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
                             <div 
-                              className={`h-full bg-gradient-to-r ${getStatusColor(student.status)}`}
+                              className={`h-full ${getStatusColor(student.status)}`}
                               style={{ width: `${(student.modulesCompleted / student.totalModules) * 100}%` }}
                             />
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 text-sm">{student.studyTime}</td>
-                      <td className="p-4 text-sm text-slate-400">{student.lastActive}</td>
+                      <td className="p-4 text-xs font-bold text-neutral-400">{student.studyTime}</td>
+                      <td className="p-4 text-xs font-medium text-neutral-600">{student.lastActive}</td>
                       <td className="p-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 justify-end">
                           <button 
                             onClick={() => setSelectedStudent(student)}
-                            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            className="p-2 hover:bg-neutral-800 rounded transition-colors text-neutral-500 hover:text-emerald-500"
                           >
-                            <Eye className="w-4 h-4 text-cyan-400" />
+                            <Eye className="w-4 h-4" />
                           </button>
-                          <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                            <Send className="w-4 h-4 text-slate-400" />
-                          </button>
-                          <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                            <MoreVertical className="w-4 h-4 text-slate-400" />
+                          <button className="p-2 hover:bg-neutral-800 rounded transition-colors text-neutral-500 hover:text-white">
+                            <Send className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -519,49 +478,57 @@ export default function VRMTSStudentManagement() {
         {/* Student Detail Modal */}
         {selectedStudent && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-900 border border-white/10 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-slate-900 border-b border-white/10 p-6 flex items-center justify-between z-10">
-                <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getStatusColor(selectedStudent.status)} flex items-center justify-center font-bold text-xl`}>
+            <div className="bg-neutral-900 border border-neutral-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+              <button 
+                onClick={() => setSelectedStudent(null)}
+                className="absolute top-6 right-6 p-2 hover:bg-neutral-800 rounded-lg transition-colors z-10"
+              >
+                <X className="w-5 h-5 text-neutral-500" />
+              </button>
+
+              <div className="p-8">
+                {/* Modal Header */}
+                <div className="flex items-center gap-6 mb-8">
+                  <div className={`w-20 h-20 rounded-full ${getStatusColor(selectedStudent.status)} flex items-center justify-center text-2xl font-bold text-neutral-950`}>
                     {selectedStudent.avatar}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold">{selectedStudent.name}</h3>
-                    <p className="text-slate-400">{selectedStudent.email}</p>
+                    <h3 className="text-2xl font-bold text-white tracking-tight">{selectedStudent.name}</h3>
+                    <p className="text-neutral-500 font-medium">{selectedStudent.email}</p>
+                    <div className="flex gap-2 mt-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${getStatusBadge(selectedStudent.status)}`}>
+                        {selectedStudent.status.replace('-', ' ')}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-neutral-950 text-neutral-500 border border-neutral-800 text-[10px] font-bold uppercase tracking-tight">
+                        Batch 2024
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedStudent(null)}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
 
-              <div className="p-6 space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-slate-800/50 rounded-xl p-4">
+                  <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-cyan-400 mb-2">
                       <Target className="w-5 h-5" />
                       <span className="text-xs">Avg Score</span>
                     </div>
                     <div className="text-2xl font-bold">{selectedStudent.avgScore}%</div>
                   </div>
-                  <div className="bg-slate-800/50 rounded-xl p-4">
+                  <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-emerald-400 mb-2">
                       <BookOpen className="w-5 h-5" />
                       <span className="text-xs">Modules</span>
                     </div>
                     <div className="text-2xl font-bold">{selectedStudent.modulesCompleted}/{selectedStudent.totalModules}</div>
                   </div>
-                  <div className="bg-slate-800/50 rounded-xl p-4">
+                  <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-purple-400 mb-2">
                       <Clock className="w-5 h-5" />
                       <span className="text-xs">Study Time</span>
                     </div>
                     <div className="text-2xl font-bold">{selectedStudent.studyTime}</div>
                   </div>
-                  <div className="bg-slate-800/50 rounded-xl p-4">
+                  <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-yellow-400 mb-2">
                       <Award className="w-5 h-5" />
                       <span className="text-xs">Achievements</span>
@@ -570,31 +537,31 @@ export default function VRMTSStudentManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-slate-800/30 rounded-xl p-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-5">
                     <h4 className="font-semibold mb-4 flex items-center gap-2">
                       <Activity className="w-5 h-5 text-cyan-400" />
                       Recent Activity
                     </h4>
                     <div className="space-y-3">
                       {selectedStudent.recentActivity.map((activity, idx) => (
-                        <div key={idx} className="flex gap-3 pb-3 border-b border-white/5 last:border-0">
+                        <div key={idx} className="flex gap-3 pb-3 border-b border-neutral-800 last:border-0">
                           <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                             {activity.type === 'quiz' ? <Target className="w-4 h-4 text-cyan-400" /> : <BookOpen className="w-4 h-4 text-cyan-400" />}
                           </div>
                           <div className="flex-1">
                             <p className="text-sm font-medium">{activity.type === 'quiz' ? 'Quiz' : 'Study Session'}</p>
-                            <p className="text-xs text-slate-400">{activity.module}</p>
+                            <p className="text-xs text-neutral-500">{activity.module}</p>
                             {activity.score && <p className="text-xs text-emerald-400 font-medium">Score: {activity.score}%</p>}
-                            {activity.duration && <p className="text-xs text-slate-400">{activity.duration}</p>}
-                            <p className="text-xs text-slate-500 mt-1">{activity.date}</p>
+                            {activity.duration && <p className="text-xs text-neutral-500">{activity.duration}</p>}
+                            <p className="text-xs text-neutral-600 mt-1">{activity.date}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="bg-slate-800/30 rounded-xl p-5">
+                  <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-5">
                     <h4 className="font-semibold mb-4 flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-orange-400" />
                       Areas Needing Attention
@@ -614,7 +581,7 @@ export default function VRMTSStudentManagement() {
                   </div>
                 </div>
 
-                <div className="bg-slate-800/30 rounded-xl p-5">
+                <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-5 mt-6">
                   <h4 className="font-semibold mb-4 flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-purple-400" />
                     Performance Overview
@@ -622,24 +589,24 @@ export default function VRMTSStudentManagement() {
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-slate-400">Quiz Performance</span>
+                        <span className="text-neutral-500">Quiz Performance</span>
                         <span className="font-semibold">{selectedStudent.avgScore}%</span>
                       </div>
-                      <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full bg-gradient-to-r ${getStatusColor(selectedStudent.status)}`}
+                          className={`h-full ${getStatusColor(selectedStudent.status)}`}
                           style={{ width: `${selectedStudent.avgScore}%` }}
                         />
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-slate-400">Module Completion</span>
+                        <span className="text-neutral-500">Module Completion</span>
                         <span className="font-semibold">{Math.round((selectedStudent.modulesCompleted / selectedStudent.totalModules) * 100)}%</span>
                       </div>
-                      <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-cyan-500 to-teal-500"
+                          className="h-full bg-emerald-500"
                           style={{ width: `${(selectedStudent.modulesCompleted / selectedStudent.totalModules) * 100}%` }}
                         />
                       </div>
@@ -647,16 +614,16 @@ export default function VRMTSStudentManagement() {
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <button className="flex-1 py-3 px-4 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2">
+                <div className="flex gap-3 mt-6">
+                   <button className="flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                     <Send className="w-4 h-4" />
                     Send Message
                   </button>
-                  <button className="flex-1 py-3 px-4 bg-slate-800/50 hover:bg-slate-800 border border-white/10 rounded-lg font-medium transition-all flex items-center justify-center gap-2">
+                  <button className="flex-1 py-3 px-4 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-lg font-medium transition-all flex items-center justify-center gap-2">
                     <BarChart3 className="w-4 h-4" />
                     View Full Analytics
                   </button>
-                  <button className="py-3 px-4 bg-slate-800/50 hover:bg-slate-800 border border-white/10 rounded-lg transition-all">
+                  <button className="py-3 px-4 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-lg transition-all">
                     <Edit className="w-4 h-4" />
                   </button>
                 </div>
@@ -664,7 +631,6 @@ export default function VRMTSStudentManagement() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </PageLayout>
   );
 }

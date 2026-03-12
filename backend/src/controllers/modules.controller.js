@@ -3,49 +3,70 @@ const db = require('../config/db');
 // Get all modules for the current student
 const getModules = async (req, res) => {
   try {
-    const userId = req.session.user.userId;
+    const user = req.session.user;
+    const userId = user.userId;
+    const userType = user.userType;
 
     const connection = await db();
 
-    // First get the studentId from the Student table
-    const [students] = await connection.execute(
-      'SELECT studentId FROM Student WHERE userId = ?',
-      [userId]
-    );
+    let modules;
+    if (userType === 'student') {
+      // Original student logic - Filter by assigned modules
+      const [students] = await connection.execute(
+        'SELECT studentId FROM Student WHERE userId = ?',
+        [userId]
+      );
 
-    if (students.length === 0) {
-      await connection.end();
-      return res.status(403).json({
-        success: false,
-        message: 'User is not a student'
-      });
+      if (students.length === 0) {
+        await connection.end();
+        return res.status(403).json({
+          success: false,
+          message: 'User is not a student'
+        });
+      }
+
+      const studentId = students[0].studentId;
+      [modules] = await connection.execute(`
+        SELECT
+          m.moduleId,
+          m.title as name,
+          m.description,
+          m.difficultyLevel as difficulty,
+          m.createdAt,
+          sma.hoursSpent,
+          sma.knowledge,
+          sma.progress,
+          sma.status,
+          sma.completedAt,
+          sma.assignedAt
+        FROM Module m
+        LEFT JOIN StudentModuleAssignment sma ON m.moduleId = sma.moduleId AND sma.studentId = ?
+        WHERE sma.studentId IS NOT NULL
+        ORDER BY m.createdAt DESC
+      `, [studentId]);
+    } else {
+      // Teacher or Admin - Give access to all modules
+      [modules] = await connection.execute(`
+        SELECT
+          moduleId,
+          title as name,
+          description,
+          difficultyLevel as difficulty,
+          createdAt,
+          NULL as hoursSpent,
+          NULL as knowledge,
+          0 as progress,
+          'not_started' as status,
+          NULL as completedAt,
+          NULL as assignedAt
+        FROM Module
+        ORDER BY createdAt DESC
+      `);
     }
-
-    const studentId = students[0].studentId;
-
-    // Get all modules with their assignment status for the student
-    const [modules] = await connection.execute(`
-      SELECT
-        m.moduleId,
-        m.title as name,
-        m.description,
-        m.difficultyLevel as difficulty,
-        m.createdAt,
-        sma.hoursSpent,
-        sma.knowledge,
-        sma.progress,
-        sma.status,
-        sma.completedAt,
-        sma.assignedAt
-      FROM Module m
-      LEFT JOIN StudentModuleAssignment sma ON m.moduleId = sma.moduleId AND sma.studentId = ?
-      WHERE sma.studentId IS NOT NULL
-      ORDER BY m.createdAt DESC
-    `, [studentId]);
 
     // Transform data to match frontend interface
     const transformedModules = modules.map(module => {
-      // Derive category from name
+      // ... transformation logic remains the same ...
       const name = module.name.toLowerCase();
       let category = 'other';
       if (name.includes('cardio') || name.includes('lymph')) category = 'cardiovascular';
@@ -55,7 +76,6 @@ const getModules = async (req, res) => {
       else if (name.includes('respiratory') || name.includes('lung')) category = 'respiratory';
       else if (name.includes('visual') || name.includes('auditory') || name.includes('sensory')) category = 'sensory';
 
-      // Derive icon from name
       let icon = '📚';
       if (name.includes('cardio') || name.includes('heart')) icon = '🫀';
       else if (name.includes('nervous') || name.includes('brain')) icon = '🧠';
@@ -70,8 +90,7 @@ const getModules = async (req, res) => {
       else if (name.includes('integumentary') || name.includes('skin')) icon = '🖐️';
       else if (name.includes('urinary') || name.includes('kidney')) icon = '🫘';
 
-      // Calculate duration and parts (simplified)
-      const parts = 10; // Assume 10 parts per module
+      const parts = 10;
       const completedParts = Math.floor((module.progress || 0) / 10);
       const duration = `${Math.ceil(parts * 0.3)}-${Math.ceil(parts * 0.4)} hours`;
 
@@ -85,7 +104,7 @@ const getModules = async (req, res) => {
         status: module.status || 'not_started',
         duration,
         difficulty: module.difficulty,
-        quizScore: null, // TODO: Implement quiz scores later
+        quizScore: null,
         parts,
         completedParts,
         hoursSpent: module.hoursSpent || 0
@@ -170,52 +189,57 @@ const getModulesStats = async (req, res) => {
 // Start a module for the current student
 const startModule = async (req, res) => {
   try {
-    const userId = req.session.user.userId;
-    const moduleId = req.params.moduleId;
+    const user = req.session.user;
+    const userId = user.userId;
+    const userType = user.userType;
 
     const connection = await db();
 
-    // First get the studentId from the Student table
-    const [students] = await connection.execute(
-      'SELECT studentId FROM Student WHERE userId = ?',
-      [userId]
-    );
+    // If student, manage assignments
+    if (userType === 'student') {
+      // First get the studentId from the Student table
+      const [students] = await connection.execute(
+        'SELECT studentId FROM Student WHERE userId = ?',
+        [userId]
+      );
 
-    if (students.length === 0) {
-      await connection.end();
-      return res.status(403).json({
-        success: false,
-        message: 'User is not a student'
-      });
-    }
+      if (students.length === 0) {
+        await connection.end();
+        return res.status(403).json({
+          success: false,
+          message: 'User is not a student'
+        });
+      }
 
-    const studentId = students[0].studentId;
+      const studentId = students[0].studentId;
+      const moduleId = req.params.moduleId;
 
-    // Check if assignment already exists
-    const [existing] = await connection.execute(
-      'SELECT * FROM StudentModuleAssignment WHERE studentId = ? AND moduleId = ?',
-      [studentId, moduleId]
-    );
-
-    if (existing.length > 0) {
-      // Update existing assignment to in_progress
-      await connection.execute(
-        'UPDATE StudentModuleAssignment SET status = "in_progress", assignedAt = NOW() WHERE studentId = ? AND moduleId = ?',
+      // Check if assignment already exists
+      const [existing] = await connection.execute(
+        'SELECT * FROM StudentModuleAssignment WHERE studentId = ? AND moduleId = ?',
         [studentId, moduleId]
       );
-    } else {
-      // Create new assignment
-      await connection.execute(
-        'INSERT INTO StudentModuleAssignment (studentId, moduleId, status, assignedAt) VALUES (?, ?, "in_progress", NOW())',
-        [studentId, moduleId]
-      );
+
+      if (existing.length > 0) {
+        // Update existing assignment to in_progress
+        await connection.execute(
+          'UPDATE StudentModuleAssignment SET status = "in_progress", assignedAt = NOW() WHERE studentId = ? AND moduleId = ?',
+          [studentId, moduleId]
+        );
+      } else {
+        // Create new assignment
+        await connection.execute(
+          'INSERT INTO StudentModuleAssignment (studentId, moduleId, status, assignedAt) VALUES (?, ?, "in_progress", NOW())',
+          [studentId, moduleId]
+        );
+      }
     }
 
     await connection.end();
 
     res.json({
       success: true,
-      message: 'Module started successfully'
+      message: userType === 'student' ? 'Module started successfully' : 'Access granted'
     });
 
   } catch (error) {

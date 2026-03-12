@@ -54,12 +54,6 @@ export default function QuizSelection() {
   const [loading, setLoading] = useState(true);
   const [, setError] = useState('');
   const [modules, setModules] = useState<Module[]>([]);
-  const [stats, setStats] = useState<QuizStats>({
-    quizzesTaken: 0,
-    averageScore: 0,
-    passRate: 0,
-    totalTime: 0
-  });
   const [previousAttempts, setPreviousAttempts] = useState<QuizAttempt[]>([]);
   const [startingQuiz, setStartingQuiz] = useState(false);
   const [customQuizzes, setCustomQuizzes] = useState<Quiz[]>([]);
@@ -101,23 +95,6 @@ export default function QuizSelection() {
           setSelectedModule(modulesData.data[0]);
         }
 
-        // Fetch stats
-        const statsResponse = await fetch(`${API_BASE_URL}/quiz/stats`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json();
-          setStats(statsData.data || {
-            quizzesTaken: 0,
-            averageScore: 0,
-            passRate: 0,
-            totalTime: 0
-          });
-        }
 
         // Fetch attempts
         const attemptsResponse = await fetch(`${API_BASE_URL}/quiz/attempts`, {
@@ -141,7 +118,7 @@ export default function QuizSelection() {
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
 
   // Fetch custom quizzes when module changes
   useEffect(() => {
@@ -278,19 +255,13 @@ export default function QuizSelection() {
     );
   };
 
-  const statsDisplay = [
-    { label: 'Quizzes Taken', value: stats.quizzesTaken.toString(), icon: Trophy, color: 'from-yellow-500 to-orange-500' },
-    { label: 'Average Score', value: `${stats.averageScore}%`, icon: Target, color: 'from-cyan-500 to-teal-500' },
-    { label: 'Pass Rate', value: `${stats.passRate}%`, icon: TrendingUp, color: 'from-emerald-500 to-green-500' },
-    { label: 'Total Time', value: `${stats.totalTime}h`, icon: Clock, color: 'from-purple-500 to-indigo-500' }
-  ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-slate-400 mx-auto mb-4" />
-          <p className="text-sm text-slate-400">Loading...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+          <p className="text-sm text-neutral-500 font-medium tracking-tight">Loading quizzes...</p>
         </div>
       </div>
     );
@@ -305,46 +276,33 @@ export default function QuizSelection() {
         activeNav="quiz"
         userType="student"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {statsDisplay.map((stat, idx) => (
-            <div key={idx} className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-              <div className="flex items-start justify-between mb-2">
-                <div className="p-2.5 rounded-lg bg-slate-700/80">
-                  <stat.icon className="w-5 h-5 text-slate-300" />
-                </div>
-              </div>
-              <div className="text-xl font-semibold text-slate-100">{stat.value}</div>
-              <div className="text-slate-500 text-sm">{stat.label}</div>
-            </div>
-          ))}
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           <div
             onClick={handleStartModuleQuiz}
-            className="bg-slate-800/50 border border-white/10 rounded-lg p-6 hover:border-slate-600 transition-colors cursor-pointer group"
+            className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 hover:border-neutral-700 transition-all cursor-pointer group"
           >
-            <div className="mb-4">
-              <div className="w-12 h-12 rounded-lg bg-slate-700/80 flex items-center justify-center mb-3">
-                <Brain className="w-6 h-6 text-slate-400" />
+            <div className="mb-6">
+              <div className="w-12 h-12 rounded bg-neutral-950 border border-neutral-800 text-neutral-500 flex items-center justify-center mb-4 group-hover:text-emerald-500 transition-colors">
+                <Brain className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-100 mb-1">Module quiz</h3>
-              <p className="text-slate-500 text-sm">Test your knowledge on a specific anatomy module</p>
+              <h3 className="text-lg font-bold text-white mb-1 tracking-tight">Module Quiz</h3>
+              <p className="text-neutral-500 text-sm font-medium">Test your knowledge on a specific module</p>
             </div>
-            <div className="space-y-3 mb-4 text-sm text-slate-400">
-              <div className="flex justify-between"><span>Question type</span><span className="text-slate-200">MCQ & Labeling</span></div>
-              <div className="flex justify-between"><span>Duration</span><span className="text-slate-200">15-20 mins</span></div>
-              <div className="flex justify-between"><span>Questions</span><span className="text-slate-200">10-15</span></div>
+            <div className="space-y-3 mb-6 text-xs font-bold text-neutral-400 uppercase tracking-tight">
+              <div className="flex justify-between"><span>Format</span><span className="text-neutral-200">MCQ & Labeling</span></div>
+              <div className="flex justify-between"><span>Duration</span><span className="text-neutral-200">15-20 mins</span></div>
+              <div className="flex justify-between"><span>Questions</span><span className="text-neutral-200">10-15</span></div>
             </div>
-            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
-              <label className="block text-sm font-medium mb-2 text-slate-400">Select module</label>
+            <div className="mb-6" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-xs font-bold mb-2 text-neutral-500 uppercase tracking-wider">Select Module</label>
               <select
                 value={selectedModule?.moduleId || ''}
                 onChange={(e) => {
                   const module = modules.find(m => m.moduleId === parseInt(e.target.value));
                   setSelectedModule(module || null);
                 }}
-                className="w-full px-3 py-2 bg-slate-800/60 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:border-slate-600 text-sm"
+                className="w-full px-3 py-2.5 bg-neutral-950 border border-neutral-800 rounded-md text-neutral-200 focus:outline-none focus:border-neutral-700 text-sm font-medium"
                 disabled={loading}
               >
                 {modules.length === 0 ? (
@@ -358,175 +316,174 @@ export default function QuizSelection() {
                 )}
               </select>
             </div>
-            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
-              <label className="block text-sm font-medium mb-2 text-slate-400">Select quiz</label>
+            <div className="mb-6" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-xs font-bold mb-2 text-neutral-500 uppercase tracking-wider">Assessment Type</label>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                 <button
                   onClick={() => setSelectedQuizId(null)}
-                  className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${selectedQuizId === null ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'bg-slate-800/60 border-white/10 text-slate-300 hover:border-slate-600'}`}
+                  className={`w-full text-left px-3 py-3 rounded-md border transition-all ${selectedQuizId === null ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                 >
-                  <div className="text-sm font-medium">Random Practice</div>
-                  <div className="text-xs text-slate-500">10-15 random questions from bank</div>
+                  <div className="text-sm font-bold tracking-tight">Practice Quiz</div>
+                  <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">Random questions from module</div>
                 </button>
 
                 {customQuizzes.map(quiz => (
                   <button
                     key={quiz.quizId}
                     onClick={() => setSelectedQuizId(quiz.quizId)}
-                    className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${selectedQuizId === quiz.quizId ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-slate-800/60 border-white/10 text-slate-300 hover:border-slate-600'}`}
+                    className={`w-full text-left px-3 py-3 rounded-md border transition-all ${selectedQuizId === quiz.quizId ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700'}`}
                   >
-                    <div className="text-sm font-medium">{quiz.title}</div>
-                    <div className="text-xs text-slate-500">{quiz.totalQuestions} questions • {quiz.timeLimit} mins</div>
+                    <div className="text-sm font-bold tracking-tight">{quiz.title}</div>
+                    <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">{quiz.totalQuestions} questions • {quiz.timeLimit} mins</div>
                   </button>
                 ))}
 
-                {loadingCustom && <div className="text-center py-2"><Loader2 className="w-4 h-4 animate-spin mx-auto text-slate-500" /></div>}
-                {!loadingCustom && customQuizzes.length === 0 && <div className="text-xs text-slate-600 text-center py-2 italic whitespace-normal">No custom quizzes found for this module</div>}
+                {loadingCustom && <div className="text-center py-2"><Loader2 className="w-4 h-4 animate-spin mx-auto text-emerald-500" /></div>}
+                {!loadingCustom && customQuizzes.length === 0 && <div className="text-[10px] text-neutral-600 text-center py-2 font-bold uppercase tracking-widest italic">No custom quizzes found</div>}
               </div>
             </div>
             <button
               disabled={startingQuiz}
-              className={`w-full py-2.5 px-3 rounded-md font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${previousAttempts.some(a => a.status === 'in_progress' && (
+              className={`w-full py-3 px-4 rounded-md font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${previousAttempts.some(a => a.status === 'in_progress' && (
                 selectedQuizId
                   ? a.quizId === selectedQuizId
                   : (a.type === 'Practice' && (a.module === selectedModule?.name || a.module === `Practice: ${selectedModule?.name}`))
               ))
-                ? 'bg-amber-600 hover:bg-amber-500'
-                : 'bg-slate-600 hover:bg-slate-500'
+                ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                : 'bg-neutral-950 hover:bg-neutral-800 text-white border border-neutral-800 hover:border-neutral-700'
                 }`}
             >
               {startingQuiz ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {previousAttempts.some(a => a.status === 'in_progress' && (
                 selectedQuizId
                   ? a.quizId === selectedQuizId
-                  : (a.type === 'Practice' && (a.module === selectedModule?.name || a.module === `Practice: ${selectedModule?.name}`))
+                  : (a.type === 'Practice Quiz' && (a.module === selectedModule?.name || a.module === `Practice Quiz: ${selectedModule?.name}`))
               ))
-                ? (selectedQuizId ? 'Resume assessment' : 'Resume practice')
-                : (selectedQuizId ? 'Start assessment' : 'Start practice')
+                ? (selectedQuizId ? 'Resume quiz' : 'Resume practice quiz')
+                : (selectedQuizId ? 'Start quiz' : 'Start practice quiz')
               }
             </button>
           </div>
 
           <div
             onClick={handleStartTimedExam}
-            className="bg-slate-800/50 border border-white/10 rounded-lg p-6 hover:border-slate-600 transition-colors cursor-pointer group"
+            className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 hover:border-neutral-700 transition-all cursor-pointer group"
           >
-            <div className="mb-4">
-              <div className="w-12 h-12 rounded-lg bg-slate-700/80 flex items-center justify-center mb-3">
-                <Clock className="w-6 h-6 text-slate-400" />
+            <div className="mb-6">
+              <div className="w-12 h-12 rounded bg-neutral-950 border border-neutral-800 text-neutral-500 flex items-center justify-center mb-4 group-hover:text-emerald-500 transition-colors">
+                <Clock className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-100 mb-1">Timed examination</h3>
-              <p className="text-slate-500 text-sm">Comprehensive test with a strict time limit</p>
+              <h3 className="text-lg font-bold text-white mb-1 tracking-tight">Timed Exam</h3>
+              <p className="text-neutral-500 text-sm font-medium">Standardized comprehensive assessment</p>
             </div>
 
-            <div className="space-y-3 mb-4 text-sm text-slate-400">
-              <div className="flex justify-between"><span>Question type</span><span className="text-slate-200">All types</span></div>
-              <div className="flex justify-between"><span>Duration</span><span className="text-slate-200">Custom</span></div>
-              <div className="flex justify-between"><span>Questions</span><span className="text-slate-200">20-30</span></div>
+            <div className="space-y-3 mb-6 text-xs font-bold text-neutral-400 uppercase tracking-tight">
+              <div className="flex justify-between"><span>Format</span><span className="text-neutral-200">Mixed Types</span></div>
+              <div className="flex justify-between"><span>Duration</span><span className="text-neutral-200">Adaptive</span></div>
+              <div className="flex justify-between"><span>Questions</span><span className="text-neutral-200">20-30</span></div>
             </div>
-            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
-              <label className="block text-sm font-medium mb-2 text-slate-400">Select modules</label>
+            <div className="mb-6" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-xs font-bold mb-2 text-neutral-500 uppercase tracking-wider">Select Modules</label>
               <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {modules.map(module => (
-                  <label key={module.moduleId} className="flex items-center gap-2 p-2 bg-slate-800/40 rounded-md cursor-pointer hover:bg-slate-800/60 transition-colors">
-                    <input type="checkbox" checked={selectedModules.includes(module.moduleId)} onChange={() => toggleModuleSelection(module.moduleId)} className="w-4 h-4 accent-slate-500" />
-                    <span className="text-sm text-slate-200">{module.name.split(' ')[0]}</span>
+                  <label key={module.moduleId} className="flex items-center gap-2 p-2 bg-neutral-950 border border-neutral-800 rounded-md cursor-pointer hover:border-neutral-700 transition-all">
+                    <input type="checkbox" checked={selectedModules.includes(module.moduleId)} onChange={() => toggleModuleSelection(module.moduleId)} className="w-3.5 h-3.5 accent-emerald-500 bg-neutral-900 border-neutral-800 rounded" />
+                    <span className="text-[10px] font-bold text-neutral-300 uppercase truncate">{module.name.split(' ')[0]}</span>
                   </label>
                 ))}
               </div>
             </div>
-            <div className="mb-4" onClick={(e) => e.stopPropagation()}>
-              <label className="block text-sm font-medium mb-2 text-slate-400">Time limit (minutes)</label>
-              <input type="number" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} className="w-full px-3 py-2 bg-slate-800/60 border border-white/10 rounded-md text-slate-200 focus:outline-none focus:border-slate-600 text-sm" min="15" max="120" />
+            <div className="mb-6" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-xs font-bold mb-2 text-neutral-500 uppercase tracking-wider">Time Limit (Min)</label>
+              <input type="number" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} className="w-full px-3 py-2.5 bg-neutral-950 border border-neutral-800 rounded-md text-neutral-200 focus:outline-none focus:border-neutral-700 text-sm font-medium" min="15" max="120" />
             </div>
-            <button disabled={startingQuiz} className="w-full py-2.5 px-3 bg-slate-600 hover:bg-slate-500 rounded-md font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button disabled={startingQuiz} className="w-full py-3 px-4 bg-neutral-950 hover:bg-neutral-800 text-white rounded-md font-bold text-sm border border-neutral-800 hover:border-neutral-700 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
               {startingQuiz ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              Start exam
+              Start Exam
             </button>
           </div>
 
-          <div onClick={handleStartAdaptiveTest} className="bg-slate-800/50 border border-white/10 rounded-lg p-6 hover:border-slate-600 transition-colors cursor-pointer group">
-            <div className="mb-4">
-              <div className="w-12 h-12 rounded-lg bg-slate-700/80 flex items-center justify-center mb-3">
-                <Zap className="w-6 h-6 text-slate-400" />
+          <div onClick={handleStartAdaptiveTest} className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 hover:border-neutral-700 transition-all cursor-pointer group">
+            <div className="mb-6">
+              <div className="w-12 h-12 rounded bg-neutral-950 border border-neutral-800 text-neutral-500 flex items-center justify-center mb-4 group-hover:text-emerald-500 transition-colors">
+                <Zap className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-100 mb-1">Adaptive test</h3>
-              <p className="text-slate-500 text-sm">AI-adjusted difficulty based on your performance</p>
+              <h3 className="text-lg font-bold text-white mb-1 tracking-tight">Adaptive Test</h3>
+              <p className="text-neutral-500 text-sm font-medium">Difficulty scales with your performance</p>
             </div>
-            <div className="space-y-3 mb-4 text-sm text-slate-400">
-              <div className="flex justify-between"><span>Question type</span><span className="text-slate-200">Dynamic</span></div>
-              <div className="flex justify-between"><span>Duration</span><span className="text-slate-200">20-25 mins</span></div>
-              <div className="flex justify-between"><span>Questions</span><span className="text-slate-200">15-20</span></div>
+            <div className="space-y-3 mb-6 text-xs font-bold text-neutral-400 uppercase tracking-tight">
+              <div className="flex justify-between"><span>Method</span><span className="text-neutral-200">AI Driven</span></div>
+              <div className="flex justify-between"><span>Duration</span><span className="text-neutral-200">20-25 mins</span></div>
+              <div className="flex justify-between"><span>Questions</span><span className="text-neutral-200">15-20</span></div>
             </div>
-            <div className="mb-4 p-3 bg-slate-800/60 border border-white/5 rounded-md">
-              <div className="flex items-start gap-2">
-                <Target className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 bg-neutral-950 border border-neutral-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Target className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-xs text-slate-300 mb-0.5">AI recommendation</h4>
-                  <p className="text-xs text-slate-500">Based on your performance, we recommend focusing on Cardiovascular and Respiratory systems.</p>
+                  <h4 className="font-bold text-[10px] text-neutral-300 uppercase tracking-widest mb-1">AI Recommendation</h4>
+                  <p className="text-[10px] text-neutral-500 font-bold leading-relaxed uppercase">Focus on Cardiovascular and Respiratory systems based on recent trends.</p>
                 </div>
               </div>
             </div>
-            <div className="mb-4">
-              <div className="flex justify-between text-xs text-slate-500 mb-1"><span>Estimated duration</span><span>~22 mins</span></div>
-              <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: '75%' }} />
+            <div className="mb-6">
+              <div className="flex justify-between text-[10px] font-bold text-neutral-600 mb-2 uppercase tracking-tight"><span>Progress Readiness</span><span>75%</span></div>
+              <div className="h-1 bg-neutral-950 rounded-full overflow-hidden border border-neutral-800/30">
+                <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: '75%' }} />
               </div>
             </div>
-            <button disabled={startingQuiz} className="w-full py-2.5 px-3 bg-slate-600 hover:bg-slate-500 rounded-md font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button disabled={startingQuiz} className="w-full py-3 px-4 bg-neutral-950 hover:bg-neutral-800 text-white rounded-md font-bold text-sm border border-neutral-800 hover:border-neutral-700 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
               {startingQuiz ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              Begin test
+              Begin Test
             </button>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-slate-400" />
-              Previous attempts
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+              Previous Attempts
             </h3>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setShowFilters(!showFilters)} className={`p-2 rounded-md transition-colors ${showFilters ? 'bg-slate-600 text-white' : 'bg-slate-800/60 text-slate-500 hover:text-slate-300'}`}>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowFilters(!showFilters)} className={`p-2 rounded transition-all ${showFilters ? 'bg-neutral-800 text-emerald-500' : 'bg-neutral-950 border border-neutral-800 text-neutral-500 hover:text-white'}`}>
                 <Filter className="w-4 h-4" />
               </button>
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type="text" placeholder="Search attempts..." className="pl-9 pr-3 py-2 bg-slate-800/60 border border-white/10 rounded-md focus:outline-none focus:border-slate-600 text-sm w-48 text-slate-200 placeholder-slate-500" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600" />
+                <input type="text" placeholder="SEARCH HISTORY..." className="pl-9 pr-3 py-2 bg-neutral-950 border border-neutral-800 rounded-md focus:outline-none focus:border-neutral-700 text-[10px] font-bold w-48 text-neutral-200 placeholder-neutral-600 uppercase tracking-widest" />
               </div>
             </div>
           </div>
 
           {showFilters && (
-            <div className="mb-4 p-4 bg-slate-800/40 rounded-lg border border-white/10">
-              <div className="flex items-center gap-4">
+            <div className="mb-8 p-6 bg-neutral-950/50 rounded-lg border border-neutral-800">
+              <div className="flex items-center gap-6">
                 <div className="flex-1">
-                  <label className="block text-xs font-medium mb-2 text-slate-400">Difficulty</label>
+                  <label className="block text-[10px] font-bold mb-2 text-neutral-500 uppercase tracking-widest">Difficulty</label>
                   <select
                     value={difficultyFilter}
                     onChange={(e) => setDifficultyFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg focus:border-cyan-400 focus:outline-none transition-colors text-sm"
+                    className="w-full px-3 py-2.5 bg-neutral-950 border border-neutral-800 rounded-md focus:border-neutral-700 focus:outline-none transition-all text-xs font-bold text-neutral-300"
                   >
-                    <option value="all">All Levels</option>
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
+                    <option value="all">ALL LEVELS</option>
+                    <option value="beginner">BEGINNER</option>
+                    <option value="intermediate">INTERMEDIATE</option>
+                    <option value="advanced">ADVANCED</option>
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs font-medium mb-2 text-slate-400">Status</label>
-                  <select className="w-full px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg focus:border-cyan-400 focus:outline-none transition-colors text-sm">
-                    <option>All Status</option>
-                    <option>Passed</option>
-                    <option>Failed</option>
+                  <label className="block text-[10px] font-bold mb-2 text-neutral-500 uppercase tracking-widest">Status</label>
+                  <select className="w-full px-3 py-2.5 bg-neutral-950 border border-neutral-800 rounded-md focus:border-neutral-700 focus:outline-none transition-all text-xs font-bold text-neutral-300">
+                    <option>ALL STATUS</option>
+                    <option>PASSED</option>
+                    <option>FAILED</option>
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs font-medium mb-2 text-slate-400">Date Range</label>
-                  <select className="w-full px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg focus:border-cyan-400 focus:outline-none transition-colors text-sm">
-                    <option>Last 30 days</option>
-                    <option>Last 3 months</option>
-                    <option>All time</option>
+                  <label className="block text-[10px] font-bold mb-2 text-neutral-500 uppercase tracking-widest">Date Range</label>
+                  <select className="w-full px-3 py-2.5 bg-neutral-950 border border-neutral-800 rounded-md focus:border-neutral-700 focus:outline-none transition-all text-xs font-bold text-neutral-300">
+                    <option>LAST 30 DAYS</option>
+                    <option>LAST 3 MONTHS</option>
+                    <option>ALL TIME</option>
                   </select>
                 </div>
               </div>
@@ -537,100 +494,95 @@ export default function QuizSelection() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-slate-400">Date</th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-slate-400">Type</th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-slate-400">Module</th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-slate-400">Score</th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-slate-400">Time</th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-slate-400">Status</th>
-                  <th className="text-right py-4 px-4 text-sm font-semibold text-slate-400">Action</th>
+                <tr className="border-b border-neutral-800">
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Date</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Type</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Module</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Score</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Time</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Status</th>
+                  <th className="text-right py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Action</th>
                 </tr>
               </thead>
-              <tbody>
-                {paginatedAttempts.map((attempt, idx) => (
-                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm">{attempt.date}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm font-medium">{attempt.type}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm">{attempt.module}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className={`text-sm font-bold ${attempt.score >= 80 ? 'text-emerald-400' :
-                        attempt.score >= 70 ? 'text-yellow-400' :
-                          'text-red-400'
-                        }`}>
-                        {attempt.score}%
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm text-slate-400">{attempt.time}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${attempt.status === 'passed'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                        }`}>
-                        {attempt.status === 'passed' ? (
-                          <CheckCircle2 className="w-3 h-3" />
-                        ) : (
-                          <XCircle className="w-3 h-3" />
-                        )}
-                        {attempt.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => attempt.attemptId && navigate(`/quizresult/${attempt.attemptId}`)}
-                        className="text-cyan-400 hover:text-cyan-300 text-sm font-medium flex items-center gap-1 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!attempt.attemptId || (attempt.status !== 'passed' && attempt.status !== 'failed')}
-                      >
-                        Review <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </td>
+              <tbody className="divide-y divide-neutral-800/50">
+                {paginatedAttempts.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-neutral-600 text-[10px] font-bold uppercase tracking-widest">No quiz history found</td>
                   </tr>
-                ))}
+                ) : (
+                  paginatedAttempts.map((attempt, idx) => (
+                    <tr key={idx} className="group hover:bg-neutral-800/30 transition-colors">
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-2 text-xs font-bold text-neutral-400">
+                          <Calendar className="w-3.5 h-3.5 text-neutral-600" />
+                          <span>{attempt.date}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-xs font-bold text-neutral-300 uppercase tracking-tight">{attempt.type}</td>
+                      <td className="py-4 px-4 text-xs font-bold text-neutral-400">{attempt.module}</td>
+                      <td className="py-4 px-4">
+                        <span className={`text-sm font-bold tracking-tight ${attempt.score >= 80 ? 'text-emerald-500' :
+                            attempt.score >= 70 ? 'text-amber-500' : 'text-rose-500'
+                          }`}>
+                          {attempt.score}%
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-[10px] font-bold text-neutral-500 uppercase">{attempt.time}</td>
+                      <td className="py-4 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight border ${attempt.status === 'passed'
+                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                            : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                          }`}>
+                          {attempt.status === 'passed' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                          {attempt.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <button
+                          onClick={() => attempt.attemptId && navigate(`/quizresult/${attempt.attemptId}`)}
+                          className="text-neutral-400 hover:text-emerald-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ml-auto disabled:opacity-50 transition-colors"
+                          disabled={!attempt.attemptId || (attempt.status !== 'passed' && attempt.status !== 'failed')}
+                        >
+                          Details <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
-            <p className="text-sm text-slate-400">
+          <div className="flex items-center justify-between mt-10 pt-8 border-t border-neutral-800">
+            <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
               Showing {previousAttempts.length === 0 ? 0 : (attemptsPage - 1) * ATTEMPTS_PER_PAGE + 1}-
-              {Math.min(attemptsPage * ATTEMPTS_PER_PAGE, previousAttempts.length)} of {previousAttempts.length} attempts
+              {Math.min(attemptsPage * ATTEMPTS_PER_PAGE, previousAttempts.length)} / {previousAttempts.length} entries
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setAttemptsPage(p => Math.max(1, p - 1))}
                 disabled={attemptsPage <= 1}
-                className="p-2 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 border border-neutral-800 hover:bg-neutral-800 rounded transition-all disabled:opacity-30"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 text-neutral-400" />
               </button>
               {Array.from({ length: totalAttemptsPages }, (_, i) => i + 1).map((p) => (
                 <button
                   key={p}
                   onClick={() => setAttemptsPage(p)}
-                  className={`px-3 py-1 rounded-md font-medium text-sm transition-colors ${attemptsPage === p ? 'bg-slate-600 text-white' : 'hover:bg-slate-800/60 text-slate-300'
+                  className={`min-w-[32px] h-8 rounded text-[10px] font-bold tracking-tight transition-all ${attemptsPage === p ? 'bg-neutral-800 text-emerald-500 border border-emerald-500/30' : 'text-neutral-500 hover:text-white hover:bg-neutral-800'
                     }`}
                 >
-                  {p}
+                  {p.toString().padStart(2, '0')}
                 </button>
               ))}
               <button
                 onClick={() => setAttemptsPage(p => Math.min(totalAttemptsPages, p + 1))}
                 disabled={attemptsPage >= totalAttemptsPages}
-                className="p-2 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 border border-neutral-800 hover:bg-neutral-800 rounded transition-all disabled:opacity-30"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
               </button>
             </div>
           </div>

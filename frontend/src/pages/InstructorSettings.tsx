@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Calendar, Shield, Bell, Globe, Monitor, Sun, Moon, Eye, Lock, Key, Smartphone, Clock, Save, Camera, AlertCircle, Check, BookOpen, Users, Award } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Shield, Bell, Globe, Monitor, Sun, Moon, Eye, Lock, Key, Smartphone, Clock, Save, Camera, AlertCircle, Check, BookOpen, Users, Award, Activity } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function InstructorSettings() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('account');
-  const [theme, setTheme] = useState('dark');
+  const { theme, setTheme } = useTheme();
   const [language, setLanguage] = useState('en');
   const [notifications, setNotifications] = useState({
     studentProgress: true,
@@ -161,656 +162,494 @@ export default function InstructorSettings() {
 
   return (
     <PageLayout
-      title="Instructor settings"
-      subtitle="Manage your account and preferences"
+      title="Settings"
+      subtitle="Manage your account settings and preferences"
       breadcrumbLabel="Settings"
       userType="instructor"
       headerRight={
-        <div className="w-9 h-9 rounded-full bg-slate-600 flex items-center justify-center text-sm font-medium text-slate-200">
+        <div className="w-10 h-10 rounded bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xs font-bold text-white shadow-inner">
           {userData.firstName[0]}{userData.lastName[0]}
         </div>
       }
     >
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <nav className="space-y-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-slate-600 text-white'
-                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4 flex-shrink-0" />
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1">
+          <nav className="space-y-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded text-left transition-all group ${
+                  activeTab === tab.id
+                    ? 'bg-neutral-900 border border-neutral-800 text-emerald-500'
+                    : 'text-neutral-600 hover:text-neutral-400 hover:bg-neutral-900'
+                }`}
+              >
+                <tab.icon className={`w-4 h-4 flex-shrink-0 ${activeTab === tab.id ? 'text-emerald-500' : 'text-neutral-600 group-hover:text-neutral-400'}`} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
 
           {/* Content */}
-          <div className="lg:col-span-3">
-            {/* Account Tab */}
-            {activeTab === 'account' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <User className="w-5 h-5 text-slate-400" />
-                    Account Information
-                  </h3>
-                </div>
+        <div className="lg:col-span-3">
+          {activeTab === 'account' && (
+            <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-8">
+              <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3 mb-8">
+                <User className="w-4 h-4 text-emerald-500" />
+                Account Information
+              </h3>
 
-                {/* First Name and Last Name */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300 flex items-center gap-2">
-                      <User className="w-4 h-4 text-slate-400" />
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      value={userData.firstName || ''}
-                      onChange={(e) => setUserData({...userData, firstName: e.target.value})}
-                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Last Name
-                    </label>
-                    <input
-                      type="text"
-                      value={userData.lastName || ''}
-                      onChange={(e) => setUserData({...userData, lastName: e.target.value})}
-                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-slate-300 flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-slate-400" />
-                    Email Address
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    First name
                   </label>
+                  <input
+                    type="text"
+                    value={userData.firstName || ''}
+                    onChange={(e) => setUserData({...userData, firstName: e.target.value})}
+                    className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-medium focus:outline-none focus:border-emerald-500/50 transition-all"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Last name
+                  </label>
+                  <input
+                    type="text"
+                    value={userData.lastName || ''}
+                    onChange={(e) => setUserData({...userData, lastName: e.target.value})}
+                    className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-medium focus:outline-none focus:border-emerald-500/50 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
                   <input
                     type="email"
                     value={userData.email || ''}
                     onChange={(e) => setUserData({...userData, email: e.target.value})}
-                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
+                    className="w-full pl-12 pr-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-medium focus:outline-none focus:border-emerald-500/50 transition-all"
                   />
                 </div>
+              </div>
 
-                {/* Phone Number */}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-slate-300 flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                    Phone Number
-                  </label>
+              <div className="space-y-3">
+                <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
                   <input
                     type="tel"
                     value={userData.phone || ''}
                     onChange={(e) => setUserData({...userData, phone: e.target.value})}
-                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
+                    className="w-full pl-12 pr-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-medium focus:outline-none focus:border-emerald-500/50 transition-all"
                   />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
-                      Institution
-                    </label>
-                    <input
-                      type="text"
-                      value={userData.institution || ''}
-                      onChange={(e) => setUserData({...userData, institution: e.target.value})}
-                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-slate-400" />
-                      Department
-                    </label>
-                    <input
-                      type="text"
-                      value={userData.department || ''}
-                      onChange={(e) => setUserData({...userData, department: e.target.value})}
-                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-slate-300 flex items-center gap-2">
-                    <Award className="w-4 h-4 text-slate-400" />
-                    Specialization
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Institution
                   </label>
                   <input
                     type="text"
-                    value={userData.specialization || ''}
-                    onChange={(e) => setUserData({...userData, specialization: e.target.value})}
-                    placeholder="e.g., Human Anatomy, Physiology"
-                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
+                    value={userData.institution || ''}
+                    onChange={(e) => setUserData({...userData, institution: e.target.value})}
+                    className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-medium focus:outline-none focus:border-emerald-500/50 transition-all"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Department
+                  </label>
+                  <input
+                    type="text"
+                    value={userData.department || ''}
+                    onChange={(e) => setUserData({...userData, department: e.target.value})}
+                    className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-medium focus:outline-none focus:border-emerald-500/50 transition-all"
                   />
                 </div>
               </div>
-            )}
 
-            {/* Preferences Tab */}
+              <div className="space-y-3">
+                <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                  Specialization
+                </label>
+                <input
+                  type="text"
+                  value={userData.specialization || ''}
+                  onChange={(e) => setUserData({...userData, specialization: e.target.value})}
+                  placeholder="e.g. Human Anatomy, Physiology"
+                  className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-neutral-700"
+                />
+              </div>
+            </div>
+          )}
+
             {activeTab === 'preferences' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Monitor className="w-5 h-5 text-slate-400" />
-                    Preferences
-                  </h3>
-                </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-12">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                  <Globe className="w-4 h-4 text-emerald-500" />
+                  Preferences
+                </h3>
 
-                {/* Theme Selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-4 text-slate-300">
-                    Theme
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    App theme
                   </label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <button
-                      onClick={() => setTheme('light')}
-                      className={`p-6 rounded-lg border-2 transition-all ${
-                        theme === 'light'
-                          ? 'border-slate-500 bg-slate-700/80 text-white'
-                          : 'border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <Sun className="w-8 h-8 mx-auto mb-3 text-yellow-400" />
-                      <div className="font-medium">Light</div>
-                    </button>
-                    <button
-                      onClick={() => setTheme('dark')}
-                      className={`p-6 rounded-lg border-2 transition-all ${
-                        theme === 'dark'
-                          ? 'border-slate-500 bg-slate-700/80 text-white'
-                          : 'border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <Moon className="w-8 h-8 mx-auto mb-3 text-cyan-400" />
-                      <div className="font-medium">Dark</div>
-                    </button>
-                    <button
-                      onClick={() => setTheme('auto')}
-                      className={`p-6 rounded-lg border-2 transition-all ${
-                        theme === 'auto'
-                          ? 'border-slate-500 bg-slate-700/80 text-white'
-                          : 'border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <Monitor className="w-8 h-8 mx-auto mb-3 text-purple-400" />
-                      <div className="font-medium">Auto</div>
-                    </button>
+                  <div className="grid grid-cols-3 gap-6">
+                    {[
+                      { id: 'light', icon: Sun, label: 'Light' as const },
+                      { id: 'dark', icon: Moon, label: 'Dark' as const }
+                    ].map((mode) => (
+                      <button
+                        key={mode.id}
+                        onClick={() => setTheme(mode.id as 'light' | 'dark')}
+                        className={`p-6 rounded border transition-all flex flex-col items-center gap-3 group ${
+                          theme === mode.id
+                            ? 'border-emerald-500/50 bg-neutral-950 text-emerald-500'
+                            : 'border-neutral-800 bg-neutral-950/20 text-neutral-600 hover:border-neutral-700 hover:text-neutral-400'
+                        }`}
+                      >
+                        <mode.icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${theme === mode.id ? 'text-emerald-500' : 'text-neutral-700'}`} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{mode.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Language */}
-                <div>
-                  <label className="block text-sm font-medium mb-3 text-slate-300 flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-slate-400" />
-                    Language
-                  </label>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                    <option value="zh">Chinese</option>
-                    <option value="ar">Arabic</option>
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                      Language
+                    </label>
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all appearance-none"
+                    >
+                      <option value="en">English (Default)</option>
+                      <option value="es">Spanish (ES-1)</option>
+                      <option value="fr">French (FR-1)</option>
+                      <option value="de">German (DE-1)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                      Time zone
+                    </label>
+                    <select
+                      value={preferences.timeZone}
+                      className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all appearance-none"
+                    >
+                      <option value="UTC+05:00 Pakistan Standard Time">PKT (UTC+5)</option>
+                      <option value="UTC-08:00 Pacific Time">PST (UTC-8)</option>
+                      <option value="UTC-05:00 Eastern Time">EST (UTC-5)</option>
+                      <option value="UTC+00:00 GMT">GMT (UTC+0)</option>
+                    </select>
+                  </div>
                 </div>
 
-                {/* Time Zone */}
-                <div>
-                  <label className="block text-sm font-medium mb-3 text-slate-300 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    Time Zone
-                  </label>
-                  <select className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm">
-                    <option>UTC-08:00 Pacific Time</option>
-                    <option>UTC-05:00 Eastern Time</option>
-                    <option>UTC+00:00 GMT</option>
-                    <option>UTC+01:00 Central European Time</option>
-                    <option>UTC+05:00 Pakistan Standard Time</option>
-                  </select>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                      Date format
+                    </label>
+                    <select
+                      value={preferences.dateFormat}
+                      className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all appearance-none"
+                    >
+                      <option value="MM/DD/YYYY">MM / DD / YYYY</option>
+                      <option value="DD/MM/YYYY">DD / MM / YYYY</option>
+                      <option value="YYYY-MM-DD">YYYY - MM - DD</option>
+                    </select>
+                  </div>
 
-                {/* Date Format */}
-                <div>
-                  <label className="block text-sm font-medium mb-3 text-slate-300 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    Date Format
-                  </label>
-                  <select className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm">
-                    <option>MM/DD/YYYY</option>
-                    <option>DD/MM/YYYY</option>
-                    <option>YYYY-MM-DD</option>
-                  </select>
-                </div>
-
-                {/* Default View */}
-                <div>
-                  <label className="block text-sm font-medium mb-3 text-slate-300">
-                    Default Dashboard View
-                  </label>
-                  <select className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm">
-                    <option>Grid View</option>
-                    <option>List View</option>
-                    <option>Compact View</option>
-                  </select>
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                      Default dashboard view
+                    </label>
+                    <select
+                      value={preferences.defaultView}
+                      className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all appearance-none"
+                    >
+                      <option value="Grid View">Grid view</option>
+                      <option value="List View">List view</option>
+                      <option value="Compact View">Compact view</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Accessibility Tab */}
             {activeTab === 'accessibility' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Eye className="w-5 h-5 text-slate-400" />
-                    Accessibility
-                  </h3>
-                </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-12">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                  <Activity className="w-4 h-4 text-emerald-500" />
+                  Accessibility
+                </h3>
 
-                {/* Text Size */}
-                <div>
-                  <label className="block text-sm font-medium mb-4 text-slate-300">
-                    Text Size
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Text size
                   </label>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs text-slate-400">A</span>
+                  <div className="flex items-center gap-6 p-6 bg-neutral-950 border border-neutral-800 rounded">
+                    <span className="text-[10px] font-bold text-neutral-600">MIN</span>
                     <input
                       type="range"
                       min="12"
                       max="20"
                       value={16}
-                      className="flex-1 accent-cyan-500"
+                      className="flex-1 accent-emerald-500 bg-neutral-800 h-1 rounded"
                     />
-                    <span className="text-xl text-slate-400">A</span>
+                    <span className="text-lg font-bold text-white">MAX</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">Adjust the size of text across the platform</p>
+                  <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">Adjust overall interface text scaling</p>
                 </div>
 
-                {/* High Contrast Mode */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                  <div className="flex-1">
-                    <h4 className="font-semibold mb-1">High Contrast Mode</h4>
-                    <p className="text-sm text-slate-400">Increase contrast for better visibility</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                  </label>
-                </div>
-
-                {/* Reduce Motion */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                  <div className="flex-1">
-                    <h4 className="font-semibold mb-1">Reduce Motion</h4>
-                    <p className="text-sm text-slate-400">Minimize animations and transitions</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                  </label>
-                </div>
-
-                {/* Screen Reader */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                  <div className="flex-1">
-                    <h4 className="font-semibold mb-1">Screen Reader Optimization</h4>
-                    <p className="text-sm text-slate-400">Enhanced compatibility with screen readers</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                  </label>
-                </div>
-
-                {/* Keyboard Navigation */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                  <div className="flex-1">
-                    <h4 className="font-semibold mb-1">Enhanced Keyboard Navigation</h4>
-                    <p className="text-sm text-slate-400">Show keyboard shortcuts and focus indicators</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                  </label>
-                </div>
-
-                {/* Captions */}
-                <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                  <div className="flex-1">
-                    <h4 className="font-semibold mb-1">Auto-Enable Captions</h4>
-                    <p className="text-sm text-slate-400">Show captions for video content by default</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                  </label>
+                <div className="space-y-4">
+                  {[
+                    { label: 'High contrast mode', desc: 'Increase contrast for better visibility' },
+                    { label: 'Reduce motion', desc: 'Disable animations and transitions' },
+                    { label: 'Screen reader compatibility', desc: 'Optimize content for screen readers' },
+                    { label: 'Keyboard Navigation', desc: 'Show highlights for keyboard focus' },
+                    { label: 'Subtitles & Captions', desc: 'Automatically show captions for videos' }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-6 bg-neutral-950 border border-neutral-800 rounded group hover:border-neutral-700 transition-all">
+                      <div className="space-y-1">
+                        <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">{item.label}</h4>
+                        <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-tight">{item.desc}</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-9 h-5 bg-neutral-800 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                      </label>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Notifications Tab */}
             {activeTab === 'notifications' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Bell className="w-5 h-5 text-slate-400" />
-                    Notifications
-                  </h3>
-                </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-12">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                  <Bell className="w-4 h-4 text-emerald-500" />
+                  Notifications
+                </h3>
 
-                {/* Email Notifications */}
-                <div>
-                  <h4 className="font-semibold mb-4 text-lg">Email Notifications</h4>
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Email notifications
+                  </label>
                   <div className="space-y-4">
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                      <div className="flex-1">
-                        <h5 className="font-medium mb-1">Student Progress Updates</h5>
-                        <p className="text-sm text-slate-400">Get notified about student progress and performance</p>
+                    {[
+                      { key: 'studentProgress', label: 'Student progress', desc: 'Alert when students achieve module proficiency' },
+                      { key: 'classUpdates', label: 'Class updates', desc: 'Notifications regarding assignment updates' },
+                      { key: 'quizSubmissions', label: 'Quiz submissions', desc: 'Real-time alerts for student quiz completions' },
+                      { key: 'systemAnnouncements', label: 'System announcements', desc: 'General alerts regarding platform updates' }
+                    ].map((notif) => (
+                      <div key={notif.key} className="flex items-center justify-between p-6 bg-neutral-950 border border-neutral-800 rounded group hover:border-neutral-700 transition-all">
+                        <div className="space-y-1">
+                          <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">{notif.label}</h4>
+                          <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-tight">{notif.desc}</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(notifications[notif.key as keyof typeof notifications])}
+                            onChange={(e) => setNotifications({...notifications, [notif.key]: e.target.checked})}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-neutral-800 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                        </label>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifications.studentProgress}
-                          onChange={(e) => setNotifications({...notifications, studentProgress: e.target.checked})}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                      <div className="flex-1">
-                        <h5 className="font-medium mb-1">Class Updates</h5>
-                        <p className="text-sm text-slate-400">Notifications about class assignments and changes</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifications.classUpdates}
-                          onChange={(e) => setNotifications({...notifications, classUpdates: e.target.checked})}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                      <div className="flex-1">
-                        <h5 className="font-medium mb-1">Quiz Submissions</h5>
-                        <p className="text-sm text-slate-400">Get notified when students submit quizzes</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifications.quizSubmissions}
-                          onChange={(e) => setNotifications({...notifications, quizSubmissions: e.target.checked})}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-start justify-between p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                      <div className="flex-1">
-                        <h5 className="font-medium mb-1">System Announcements</h5>
-                        <p className="text-sm text-slate-400">Updates about new features and system maintenance</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifications.systemAnnouncements}
-                          onChange={(e) => setNotifications({...notifications, systemAnnouncements: e.target.checked})}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-600"></div>
-                      </label>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Email Digest Frequency */}
-                <div>
-                  <label className="block text-sm font-medium mb-3 text-slate-300">
-                    Email Digest Frequency
+                <div className="space-y-4">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Digest recurrence
                   </label>
                   <select
                     value={notifications.emailDigest}
                     onChange={(e) => setNotifications({...notifications, emailDigest: e.target.value})}
-                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
+                    className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all appearance-none"
                   >
-                    <option value="realtime">Real-time (as they happen)</option>
-                    <option value="daily">Daily digest</option>
-                    <option value="weekly">Weekly digest</option>
+                    <option value="realtime">Real-time</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
                     <option value="never">Never</option>
                   </select>
                 </div>
 
-                {/* Push Notifications */}
-                <div>
-                  <h4 className="font-semibold mb-4 text-lg flex items-center gap-2">
-                    <Smartphone className="w-5 h-5 text-cyan-400" />
-                    Push Notifications
-                  </h4>
-                  <div className="p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                    <p className="text-sm text-slate-400 mb-4">Enable browser notifications to get instant updates</p>
-                    <button className="px-6 py-3 bg-slate-600 hover:bg-slate-500 rounded-lg font-medium transition-colors transition-all">
-                      Enable Push Notifications
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-3">
+                    <Smartphone className="w-4 h-4 text-neutral-600" />
+                    Push notifications
+                  </label>
+                  <div className="p-8 bg-neutral-950 border border-neutral-800 rounded flex items-center justify-between">
+                    <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">Enable push notifications on this device</p>
+                    <button type="button" className="px-6 py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-white transition-all">
+                      Enable push notifications
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Security Tab */}
             {activeTab === 'security' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Shield className="w-5 h-5 text-slate-400" />
-                    Security
-                  </h3>
-                </div>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-12">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                  <Shield className="w-4 h-4 text-emerald-500" />
+                  Security
+                </h3>
 
-                {/* Change Password */}
-                <div className="p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                  <h4 className="font-semibold mb-4 flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-cyan-400" />
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
                     Change Password
-                  </h4>
+                  </label>
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="Enter current password"
-                        className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-slate-300">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="Enter new password"
-                        className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Confirm New Password
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="Confirm new password"
-                        className="w-full px-3 py-2.5 bg-slate-800/60 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:border-slate-500 text-sm"
-                      />
-                    </div>
-                    <button className="w-full py-3 bg-slate-600 hover:bg-slate-500 rounded-lg font-medium transition-colors transition-all">
+                    {[
+                      { label: 'Current password', type: 'password', placeholder: 'Enter current password' },
+                      { label: 'New password', type: 'password', placeholder: 'Enter new password' },
+                      { label: 'Verify password', type: 'password', placeholder: 'Confirm new password' }
+                    ].map((field, idx) => (
+                      <div key={idx} className="space-y-3">
+                        <label className="block text-[10px] font-bold text-neutral-600 uppercase tracking-tight italic">
+                          {field.label}
+                        </label>
+                        <input
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-neutral-800"
+                        />
+                      </div>
+                    ))}
+                    <button className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 text-[10px] font-bold uppercase tracking-[0.2em] rounded transition-all mt-4">
                       Update Password
                     </button>
                   </div>
                 </div>
 
-                {/* Two-Factor Authentication */}
-                <div className="p-6 bg-slate-800/30 rounded-lg border border-white/5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <Key className="w-5 h-5 text-cyan-400" />
-                        Two-Factor Authentication
-                      </h4>
-                      <p className="text-sm text-slate-400">Add an extra layer of security to your account</p>
-                    </div>
-                    <span className="px-3 py-1 bg-slate-700 text-slate-400 text-xs rounded-full">Disabled</span>
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center justify-between">
+                    Two-factor authentication
+                    <span className="text-neutral-700">STATUS: DISABLED</span>
+                  </label>
+                  <div className="p-8 bg-neutral-950 border border-neutral-800 rounded flex items-center justify-between">
+                    <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest max-w-md">Enable 2fa for an extra layer of security</p>
+                    <button className="px-6 py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-white transition-all">
+                      Configure 2FA
+                    </button>
                   </div>
-                  <button className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition-colors">
-                    Enable Two-Factor Authentication
-                  </button>
                 </div>
 
-                {/* Active Sessions */}
-                <div>
-                  <h4 className="font-semibold mb-4 text-lg">Active Sessions</h4>
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Active sessions
+                  </label>
                   <div className="space-y-3">
-                    <div className="p-4 bg-slate-800/30 rounded-lg border border-white/5 flex items-start justify-between">
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 flex items-center justify-center">
-                          <Monitor className="w-6 h-6 text-cyan-400" />
+                    {[
+                      { device: 'Desktop Chrome / Windows 11', location: 'Islamabad, PK', active: 'Current', icon: Monitor },
+                      { device: 'Safari / iPhone 14 Pro', location: 'Rawalpindi, PK', active: '48h ago', icon: Smartphone }
+                    ].map((session, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-6 bg-neutral-950 border border-neutral-800 rounded">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-neutral-900 border border-neutral-800 flex items-center justify-center rounded">
+                            <session.icon className="w-4 h-4 text-emerald-500" />
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">{session.device}</h4>
+                            <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-tight">{session.location} • {session.active}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h5 className="font-medium flex items-center gap-2">
-                            Chrome on Windows
-                            <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">Current</span>
-                          </h5>
-                          <p className="text-sm text-slate-400">Islamabad, Pakistan • Last active: Now</p>
-                        </div>
+                        {session.active !== 'Current' && (
+                          <button className="text-[10px] font-bold text-red-500/70 hover:text-red-500 uppercase tracking-widest transition-all">LOGOUT</button>
+                        )}
                       </div>
-                    </div>
-
-                    <div className="p-4 bg-slate-800/30 rounded-lg border border-white/5 flex items-start justify-between">
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
-                          <Smartphone className="w-6 h-6 text-purple-400" />
-                        </div>
-                        <div>
-                          <h5 className="font-medium">Safari on iPhone</h5>
-                          <p className="text-sm text-slate-400">Rawalpindi, Pakistan • 2 days ago</p>
-                        </div>
-                      </div>
-                      <button className="text-red-400 hover:text-red-300 text-sm font-medium">
-                        Revoke
-                      </button>
-                    </div>
-
-                    <div className="p-4 bg-slate-800/30 rounded-lg border border-white/5 flex items-start justify-between">
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 flex items-center justify-center">
-                          <Monitor className="w-6 h-6 text-orange-400" />
-                        </div>
-                        <div>
-                          <h5 className="font-medium">Firefox on Mac</h5>
-                          <p className="text-sm text-slate-400">Islamabad, Pakistan • 5 days ago</p>
-                        </div>
-                      </div>
-                      <button className="text-red-400 hover:text-red-300 text-sm font-medium">
-                        Revoke
-                      </button>
-                    </div>
+                    ))}
                   </div>
-
-                  <button className="mt-4 w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg font-medium transition-colors">
-                    Log Out All Other Sessions
-                  </button>
                 </div>
 
-                {/* Account Activity */}
-                <div>
-                  <h4 className="font-semibold mb-4 text-lg">Recent Account Activity</h4>
-                  <div className="space-y-2">
-                    <div className="p-4 bg-slate-800/30 rounded-lg border border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                        <div>
-                          <p className="text-sm font-medium">Password changed successfully</p>
-                          <p className="text-xs text-slate-400">October 15, 2025 at 2:30 PM</p>
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Activity logs
+                  </label>
+                  <div className="space-y-1">
+                    {[
+                      { action: 'Password Updated', time: 'OCT 15, 2025 / 14:30', status: 'COMPLETE' },
+                      { action: 'New Login Session', time: 'OCT 12, 2025 / 09:15', status: 'VERIFIED' }
+                    ].map((log, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4 bg-neutral-950/50 border-l-2 border-emerald-500">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-white uppercase tracking-widest">{log.action}</p>
+                          <p className="text-[10px] text-neutral-700 font-bold uppercase">{log.time}</p>
                         </div>
+                        <span className="text-[10px] font-bold text-emerald-500/50">{log.status}</span>
                       </div>
-                      <AlertCircle className="w-5 h-5 text-slate-500" />
-                    </div>
-
-                    <div className="p-4 bg-slate-800/30 rounded-lg border border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-                        <div>
-                          <p className="text-sm font-medium">Login from new device</p>
-                          <p className="text-xs text-slate-400">October 12, 2025 at 9:15 AM</p>
-                        </div>
-                      </div>
-                      <AlertCircle className="w-5 h-5 text-slate-500" />
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Save Button */}
-            <div className="mt-8 flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between pt-8 border-t border-neutral-800">
+              <div className="flex flex-col gap-1">
                 {error && (
-                  <div className="flex items-center gap-2 text-red-400 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    {error}
+                  <div className="flex items-center gap-2 text-red-500 text-[10px] font-bold uppercase tracking-widest">
+                    <Shield className="w-3 h-3" />
+                    Error: {error}
                   </div>
                 )}
                 {saved && (
-                  <div className="flex items-center gap-2 text-green-400 text-sm">
-                    <Check className="w-4 h-4" />
-                    Settings saved successfully!
+                  <div className="flex items-center gap-2 text-emerald-500 text-[10px] font-bold uppercase tracking-widest">
+                    <Check className="w-3 h-3" />
+                    Settings saved successfully
                   </div>
                 )}
               </div>
-              <button
-                onClick={handleSave}
-                disabled={loading}
-                className="px-4 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save Changes
-                  </>
-                )}
-              </button>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="px-8 py-3 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-500 hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={loading}
+                  className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-800 text-neutral-950 disabled:text-neutral-500 text-[10px] font-bold uppercase tracking-[0.2em] rounded transition-all flex items-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-neutral-950/30 border-t-neutral-950 rounded-full animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3 h-3" />
+                      Save changes
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-    </PageLayout>
-  );
-}
+      </PageLayout>
+    );
+  }
 

@@ -22,6 +22,14 @@ interface ModulePerformance {
   status: string;
 }
 
+interface RecentSubmission {
+  student: string;
+  module: string;
+  score: number;
+  time: string;
+  status: string;
+}
+
 interface AtRiskStudent {
   name: string;
   avatar: string;
@@ -60,6 +68,7 @@ export default function InstructorDashboard() {
     atRiskStudents: 0
   });
   const [modulePerformance, setModulePerformance] = useState<ModulePerformance[]>([]);
+  const [recentSubmissions, setRecentSubmissions] = useState<RecentSubmission[]>([]);
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([]);
@@ -100,12 +109,14 @@ export default function InstructorDashboard() {
       const [
         statsResponse,
         modulePerfResponse,
+        submissionsResponse,
         atRiskResponse,
         topPerformersResponse,
         deadlinesResponse
       ] = await Promise.all([
         axios.get(`${API_BASE_URL}/instructor/class-stats`, { withCredentials: true }),
         axios.get(`${API_BASE_URL}/instructor/module-performance`, { withCredentials: true }),
+        axios.get(`${API_BASE_URL}/instructor/recent-submissions`, { withCredentials: true }),
         axios.get(`${API_BASE_URL}/instructor/at-risk-students`, { withCredentials: true }),
         axios.get(`${API_BASE_URL}/instructor/top-performers`, { withCredentials: true }),
         axios.get(`${API_BASE_URL}/instructor/upcoming-deadlines`, { withCredentials: true })
@@ -118,6 +129,10 @@ export default function InstructorDashboard() {
       if (modulePerfResponse.data.success) {
         setModulePerformance(modulePerfResponse.data.data);
         setTotalStudents(modulePerfResponse.data.totalStudents || 156);
+      }
+
+      if (submissionsResponse.data.success) {
+        setRecentSubmissions(submissionsResponse.data.data);
       }
 
       if (atRiskResponse.data.success) {
@@ -148,40 +163,40 @@ export default function InstructorDashboard() {
       label: 'Total Students',
       value: classStats.totalStudents.toString(),
       icon: Users,
-      color: 'from-cyan-500 to-teal-500',
+      color: 'text-neutral-400',
       change: null
     },
     {
       label: 'Average Performance',
       value: `${classStats.averagePerformance}%`,
       icon: Target,
-      color: 'from-purple-500 to-indigo-500',
+      color: 'text-emerald-500',
       change: null
     },
     {
       label: 'Modules Assigned',
       value: `${classStats.modulesAssigned}/${classStats.totalModules}`,
       icon: BookOpen,
-      color: 'from-emerald-500 to-green-500',
+      color: 'text-emerald-400',
       change: null
     },
     {
       label: 'At-Risk Students',
       value: classStats.atRiskStudents.toString(),
       icon: AlertCircle,
-      color: 'from-red-500 to-orange-500',
+      color: 'text-amber-500',
       change: null
     }
   ];
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'excellent': 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
-      'good': 'text-cyan-400 bg-cyan-500/20 border-cyan-500/30',
-      'average': 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30',
-      'needs-attention': 'text-orange-400 bg-orange-500/20 border-orange-500/30',
-      'poor': 'text-red-400 bg-red-500/20 border-red-500/30',
-      'needs-review': 'text-orange-400 bg-orange-500/20 border-orange-500/30'
+      'excellent': 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+      'good': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+      'average': 'text-neutral-400 bg-neutral-500/10 border-neutral-500/20',
+      'needs-attention': 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+      'poor': 'text-rose-500 bg-rose-500/10 border-rose-500/20',
+      'needs-review': 'text-amber-500 bg-amber-500/10 border-amber-500/20'
     };
     return colors[status] || colors['average'];
   };
@@ -208,7 +223,7 @@ export default function InstructorDashboard() {
       <select
         value={selectedClass}
         onChange={(e) => setSelectedClass(e.target.value)}
-        className="px-3 py-2 bg-slate-800/60 border border-white/10 rounded-md text-sm text-slate-200 focus:outline-none focus:border-slate-600"
+        className="px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-md text-sm text-neutral-200 focus:outline-none focus:border-neutral-700"
       >
         <option>Medical Batch 2024</option>
         <option>Medical Batch 2023</option>
@@ -228,10 +243,10 @@ export default function InstructorDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-slate-400 mx-auto mb-4" />
-          <p className="text-sm text-slate-400">Loading dashboard...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+          <p className="text-sm text-neutral-500 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -239,12 +254,13 @@ export default function InstructorDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2 text-slate-200">{error}</h3>
-          <button onClick={fetchDashboardData} className="mt-4 px-5 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors">
-            Try again
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-6" />
+          <h3 className="text-xl font-bold text-white mb-2 tracking-tight">{error}</h3>
+          <p className="text-neutral-500 text-sm mb-8">Failed to load data. Please check your connection.</p>
+          <button onClick={fetchDashboardData} className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-sm font-bold text-white transition-all">
+            Try Again
           </button>
         </div>
       </div>
@@ -261,74 +277,51 @@ export default function InstructorDashboard() {
       navItems={instructorNav}
       headerRight={headerRight}
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div className="flex gap-3">
-          <button className="px-4 py-2 bg-slate-600 hover:bg-slate-500 border border-white/10 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-sm font-bold text-neutral-200 transition-colors flex items-center gap-2">
             <Download className="w-4 h-4" />
             Export report
           </button>
-          <button className="px-4 py-2 bg-slate-600 hover:bg-slate-500 border border-white/10 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 rounded-md text-sm font-bold text-neutral-200 transition-colors flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Assign module
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {displayClassStats.map((stat, idx) => (
-          <div key={idx} className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2.5 rounded-lg bg-slate-700/80">
-                <stat.icon className="w-5 h-5 text-slate-300" />
-              </div>
-              {stat.change && (
-                <span className="text-xs font-medium flex items-center gap-1 text-slate-400">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {stat.change}
-                </span>
-              )}
-            </div>
-            <div className="text-xl font-semibold text-slate-100">{stat.value}</div>
-            <div className="text-slate-500 text-sm">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-slate-400" />
-                Module performance
+          <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/50">
+              <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
+                <BarChart3 className="w-3.5 h-3.5" />
+                Module Performance
               </h3>
-              <button className="text-slate-400 hover:text-white text-sm flex items-center gap-1 transition-colors">
-                View analytics <ChevronRight className="w-4 h-4" />
+              <button className="text-[10px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-widest flex items-center gap-1 transition-colors">
+                Analytics <ChevronRight className="w-3 h-3" />
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="divide-y divide-neutral-800">
               {modulePerformance.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-sm">No module performance data yet.</div>
+                <div className="px-6 py-8 text-center text-neutral-600 text-[10px] font-bold uppercase tracking-widest">No data available</div>
               ) : (
                 modulePerformance.map((module, idx) => (
-                  <div key={idx} className="bg-slate-800/60 border border-white/10 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-slate-100">{module.module}</h4>
-                        <div className="flex items-center gap-4 text-sm text-slate-500">
-                          <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" />{module.completed}/{totalStudents} completed</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Avg: {module.timeSpent}</span>
+                  <div key={idx} className="px-6 py-4 flex items-center hover:bg-neutral-950/50 transition-colors group">
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-neutral-200 group-hover:text-emerald-500 transition-colors uppercase tracking-tight">{module.module}</h4>
+                      <div className="flex items-center gap-4 mt-1">
+                        <div className="flex-1 h-1 bg-neutral-950 rounded-full overflow-hidden max-w-[120px]">
+                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${totalStudents > 0 ? (module.completed / totalStudents) * 100 : 0}%` }} />
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-semibold text-slate-100">{module.avgScore}%</div>
-                        <span className={`text-xs px-2 py-0.5 rounded border ${getStatusColor(module.status)}`}>
-                          {module.status.replace('-', ' ')}
-                        </span>
+                        <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-tight">{module.completed}/{totalStudents} COMPLETED</span>
                       </div>
                     </div>
-                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${totalStudents > 0 ? (module.completed / totalStudents) * 100 : 0}%` }} />
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-white tracking-tighter">{module.avgScore}%</div>
+                      <div className={`text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded-sm border ${getStatusColor(module.status)}`}>
+                        {module.status.replace('-', ' ')}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -336,109 +329,93 @@ export default function InstructorDashboard() {
             </div>
           </div>
 
-
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate('/instructor/create-quiz')}
-              className="bg-slate-800/50 border border-white/10 rounded-lg p-5 text-left hover:border-slate-600 transition-colors"
-            >
-              <Plus className="w-6 h-6 text-slate-400 mb-2" />
-              <h4 className="font-medium text-slate-100 mb-0.5">Create quiz</h4>
-              <p className="text-sm text-slate-500">New assessment</p>
-            </button>
-            <button className="bg-slate-800/50 border border-white/10 rounded-lg p-5 text-left hover:border-slate-600 transition-colors">
-              <Send className="w-6 h-6 text-slate-400 mb-2" />
-              <h4 className="font-medium text-slate-100 mb-0.5">Send message</h4>
-              <p className="text-sm text-slate-500">Contact students</p>
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <h4 className="font-medium text-slate-100 mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
-              At-risk students
-            </h4>
-            <div className="space-y-3">
-              {atRiskStudents.length === 0 ? (
-                <p className="text-sm text-slate-500">No at-risk students identified.</p>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/50">
+              <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="w-3.5 h-3.5" />
+                Recent Activity
+              </h3>
+              <button className="text-[10px] font-bold text-neutral-500 hover:text-emerald-500 uppercase tracking-widest transition-colors">View activity</button>
+            </div>
+            <div className="divide-y divide-neutral-800">
+              {recentSubmissions.length === 0 ? (
+                <div className="px-6 py-8 text-center text-neutral-600 text-[10px] font-bold uppercase tracking-widest">No recent activity</div>
               ) : (
-                atRiskStudents.map((student, idx) => (
-                  <div key={idx} className={`p-3 rounded-lg border ${getRiskColor(student.risk)}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-xs font-medium text-slate-200">
-                        {student.avatar}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-100">{student.name}</p>
-                        <p className="text-xs text-slate-500">Avg: {student.avgScore}%</p>
-                      </div>
+                recentSubmissions.map((submission, idx) => (
+                  <div key={idx} className="px-6 py-3 flex items-center gap-4 hover:bg-neutral-950/50 transition-colors group">
+                    <div className="w-7 h-7 rounded bg-neutral-950 border border-neutral-800 flex items-center justify-center text-[9px] font-bold text-neutral-500 group-hover:border-emerald-500/30 transition-colors">
+                      {submission.student.split(' ').map(n => n[0]).join('')}
                     </div>
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>{student.missedDeadlines} missed deadlines</span>
-                      <span>{student.lastActive}</span>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[11px] font-bold text-neutral-200 group-hover:text-white truncate tracking-tight uppercase">{submission.student}</h4>
+                      <p className="text-[9px] text-neutral-600 font-medium uppercase tracking-widest">{submission.module}</p>
                     </div>
-                    <button className="mt-2 w-full py-1.5 px-3 bg-slate-600 hover:bg-slate-500 rounded text-xs font-medium transition-colors">
-                      Send reminder
+                    <div className="text-right">
+                      <div className={`text-[11px] font-bold tracking-tighter ${submission.score >= 80 ? 'text-emerald-500' : submission.score >= 60 ? 'text-amber-400' : 'text-rose-500'}`}>
+                        {submission.score}%
+                      </div>
+                      <p className="text-[8px] text-neutral-600 font-bold uppercase tracking-tighter">{submission.time}</p>
+                    </div>
+                    <div className="w-px h-6 bg-neutral-800 mx-1"></div>
+                    <button className="p-1.5 hover:bg-neutral-800 rounded transition-colors text-neutral-600 hover:text-emerald-500">
+                      <Eye className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))
               )}
             </div>
-            <button className="mt-3 w-full py-2 px-3 bg-slate-600 hover:bg-slate-500 rounded-md text-sm font-medium transition-colors">
-              View all at-risk
-            </button>
           </div>
+        </div>
 
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <h4 className="font-medium text-slate-100 mb-3 flex items-center gap-2">
-              <Award className="w-4 h-4 text-slate-400" />
-              Top performers
+        <aside className="space-y-6">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
+            <h4 className="text-[10px] font-bold text-neutral-500 mb-6 tracking-widest flex items-center gap-2 uppercase">
+              <Award className="w-3.5 h-3.5 text-emerald-500" />
+              Top Performers
             </h4>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {topPerformers.length === 0 ? (
-                <p className="text-sm text-slate-500">No top performers data yet.</p>
+                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">No data available</p>
               ) : (
-                topPerformers.map((student, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-lg">
-                    <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center">
-                      <Award className="w-4 h-4 text-amber-500" />
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-xs font-medium text-slate-200">
+                topPerformers.slice(0, 3).map((student, idx) => (
+                  <div key={idx} className="flex items-center gap-4 group">
+                    <div className="w-8 h-8 rounded-lg bg-neutral-950 border border-neutral-800 flex items-center justify-center text-[10px] font-bold text-neutral-500 group-hover:text-emerald-500 transition-all uppercase">
                       {student.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-100">{student.name}</p>
-                      <p className="text-xs text-slate-500">{student.modules} modules</p>
+                      <p className="text-[11px] font-bold text-neutral-200 truncate uppercase tracking-tight">{student.name}</p>
+                      <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest">{student.modules} modules</p>
                     </div>
-                    <p className="text-sm font-semibold text-emerald-400">{student.avgScore}%</p>
+                    <p className="text-sm font-bold text-emerald-500 tracking-tighter">{student.avgScore}%</p>
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <h4 className="font-medium text-slate-100 mb-3 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-slate-500" />
-              Upcoming deadlines
+          <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
+            <h4 className="text-[10px] font-bold text-neutral-500 mb-6 tracking-widest flex items-center gap-2 uppercase">
+              <Calendar className="w-3.5 h-3.5" />
+              Upcoming Deadlines
             </h4>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {upcomingDeadlines.length === 0 ? (
-                <p className="text-sm text-slate-500">No upcoming deadlines.</p>
+                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">No deadlines</p>
               ) : (
-                upcomingDeadlines.map((deadline, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <p className="text-sm font-medium text-slate-200">{deadline.assignment}</p>
-                    <p className="text-xs text-slate-500">Due: {deadline.dueDate}</p>
-                    <div className="flex justify-between text-xs text-slate-500 mb-1">
-                      <span>Completion</span>
-                      <span>{deadline.studentsCompleted}/{deadline.totalStudents}</span>
+                upcomingDeadlines.slice(0, 2).map((deadline, idx) => (
+                  <div key={idx} className="space-y-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-neutral-200 leading-tight mb-1 uppercase tracking-tight">{deadline.assignment}</p>
+                      <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest">Due: {deadline.dueDate}</p>
                     </div>
-                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${(deadline.studentsCompleted / deadline.totalStudents) * 100}%` }} />
+                    <div>
+                      <div className="flex justify-between text-[8px] font-bold text-neutral-700 mb-1.5 uppercase tracking-widest">
+                        <span>COMPLETION</span>
+                        <span>{deadline.studentsCompleted}/{deadline.totalStudents}</span>
+                      </div>
+                      <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${(deadline.studentsCompleted / deadline.totalStudents) * 100}%` }} />
+                      </div>
                     </div>
                   </div>
                 ))
@@ -446,17 +423,22 @@ export default function InstructorDashboard() {
             </div>
           </div>
 
-          <div className="bg-slate-800/50 border border-white/10 rounded-lg p-5">
-            <h4 className="font-medium text-slate-100 mb-3 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-slate-500" />
-              AI insights
-            </h4>
-            <p className="text-sm text-slate-500 mb-3">AI insights will appear here once available.</p>
-            <button className="w-full py-2 px-3 bg-slate-600 hover:bg-slate-500 rounded-md text-sm font-medium transition-colors">
-              View all insights
+          <div className="grid grid-cols-1 gap-4">
+            <button
+              onClick={() => navigate('/instructor/create-quiz')}
+              className="bg-neutral-900 border border-neutral-800 rounded-lg p-5 text-left hover:border-emerald-500/30 transition-all group"
+            >
+              <Plus className="w-4 h-4 text-neutral-600 mb-3 group-hover:text-emerald-500 transition-colors" />
+              <h4 className="font-bold text-neutral-200 mb-1 text-[10px] uppercase tracking-widest">Create quiz</h4>
+              <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest">Add new assessment</p>
+            </button>
+            <button className="bg-neutral-900 border border-neutral-800 rounded-lg p-5 text-left hover:border-emerald-500/30 transition-all group">
+              <Send className="w-4 h-4 text-neutral-600 mb-3 group-hover:text-emerald-500 transition-colors" />
+              <h4 className="font-bold text-neutral-200 mb-1 text-[10px] uppercase tracking-widest">Send message</h4>
+              <p className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest">Contact students</p>
             </button>
           </div>
-        </div>
+        </aside>
       </div>
     </PageLayout>
   );

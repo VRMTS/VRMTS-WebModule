@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Search, Grid3x3, List, Clock, Trophy, Lock, Play,
-  CheckCircle2, BookOpen, AlertTriangle
+  CheckCircle2, BookOpen, AlertTriangle, Loader2, ChevronRight
 } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 
@@ -63,7 +63,7 @@ export default function ModulesPage() {
       const response = await axios.get(`${API_BASE_URL}/modules`, {
         withCredentials: true
       });
-      
+
       if (response.data.success) {
         const modulesData = response.data.data.map((module: any) => ({
           ...module,
@@ -94,7 +94,7 @@ export default function ModulesPage() {
         navigate('/lab1explore');
       }
       // Check if this is LAB 2 module
-      else if (moduleName && (moduleName.toUpperCase().includes('LAB 2') || moduleName.toUpperCase().includes('LAB2'))) {
+      else if (moduleId === 2 || (moduleName && (moduleName.toUpperCase().includes('LAB 2') || moduleName.toUpperCase().includes('LAB2')))) {
         navigate('/lab2explore');
       } else {
         navigate(`/module/${moduleId}`);
@@ -127,12 +127,12 @@ export default function ModulesPage() {
   const filteredModules = modules.filter(module => {
     const matchesStatus = filterStatus === 'all' || module.status === filterStatus;
     const matchesSearch = module.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         module.description.toLowerCase().includes(searchQuery.toLowerCase());
+      module.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
   const sortedModules = [...filteredModules].sort((a, b) => {
-    switch(sortBy) {
+    switch (sortBy) {
       case 'name':
         return a.name.localeCompare(b.name);
       case 'progress':
@@ -150,10 +150,10 @@ export default function ModulesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p className="text-xl text-slate-300">Loading modules...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+          <p className="text-sm text-neutral-500 font-medium tracking-tight">Syncing modules...</p>
         </div>
       </div>
     );
@@ -161,15 +161,16 @@ export default function ModulesPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2 text-slate-200">{error}</h3>
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-6" />
+          <h2 className="text-xl font-bold mb-2 text-white tracking-tight">System Access Restricted</h2>
+          <p className="text-neutral-500 text-sm mb-8">{error}</p>
           <button
             onClick={fetchModules}
-            className="mt-4 px-5 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors"
+            className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-sm font-bold text-white transition-all"
           >
-            Try again
+            Retry authentication
           </button>
         </div>
       </div>
@@ -184,82 +185,81 @@ export default function ModulesPage() {
       activeNav="modules"
       userType="student"
     >
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search modules"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-800/60 border border-white/10 rounded-md pl-9 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-slate-600"
-              />
-            </div>
-            <div className="flex items-center gap-1 rounded-md border border-white/10 overflow-hidden">
-              {statuses.map(status => (
-                <button
-                  key={status.id}
-                  onClick={() => setFilterStatus(status.id)}
-                  className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
-                    filterStatus === status.id
-                      ? 'bg-slate-600 text-white'
-                      : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {status.name} ({status.count})
-                </button>
-              ))}
-            </div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-slate-800/60 border border-white/10 rounded-md px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-slate-600"
-            >
-              <option value="recommended">Sort: Recommended</option>
-              <option value="name">Sort: Name</option>
-              <option value="progress">Sort: Progress</option>
-              <option value="difficulty">Sort: Difficulty</option>
-            </select>
-            <div className="flex border border-white/10 rounded-md overflow-hidden">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 ${viewMode === 'grid' ? 'bg-slate-600 text-white' : 'bg-slate-800/60 text-slate-500 hover:text-slate-300'}`}
-                aria-label="Grid view"
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 ${viewMode === 'list' ? 'bg-slate-600 text-white' : 'bg-slate-800/60 text-slate-500 hover:text-slate-300'}`}
-                aria-label="List view"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+      <div className="flex flex-wrap items-center gap-4 mb-8">
+        <div className="relative w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-600" />
+          <input
+            type="text"
+            placeholder="Search learning modules"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-md pl-9 pr-3 py-2 text-xs text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-neutral-700 transition-all"
+          />
         </div>
+        <div className="flex items-center p-1 bg-neutral-900 border border-neutral-800 rounded-md">
+          {statuses.map(status => (
+            <button
+              key={status.id}
+              onClick={() => setFilterStatus(status.id)}
+              className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all rounded ${filterStatus === status.id
+                ? 'bg-neutral-800 text-white'
+                : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+            >
+              {status.name} <span className="text-[8px] opacity-40">({status.count})</span>
+            </button>
+          ))}
+        </div>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="bg-neutral-900 border border-neutral-800 rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-400 focus:outline-none focus:border-neutral-700"
+        >
+          <option value="recommended">Sort: recommended</option>
+          <option value="name">Sort: name</option>
+          <option value="progress">Sort: progress</option>
+          <option value="difficulty">Sort: difficulty</option>
+        </select>
+        <div className="flex p-1 bg-neutral-900 border border-neutral-800 rounded-md">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-neutral-800 text-white' : 'text-neutral-600 hover:text-neutral-400'}`}
+            aria-label="Grid view"
+          >
+            <Grid3x3 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-1.5 rounded transition-all ${viewMode === 'list' ? 'bg-neutral-800 text-white' : 'text-neutral-600 hover:text-neutral-400'}`}
+            aria-label="List view"
+          >
+            <List className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
 
-        {/* Modules Grid/List */}
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedModules.map(module => (
-              <ModuleCard key={module.moduleId} module={module} onStart={handleStartModule} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {sortedModules.map(module => (
-              <ModuleListItem key={module.moduleId} module={module} onStart={handleStartModule} />
-            ))}
-          </div>
-        )}
+      {/* Modules Grid/List */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sortedModules.map(module => (
+            <ModuleCard key={module.moduleId} module={module} onStart={handleStartModule} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {sortedModules.map(module => (
+            <ModuleListItem key={module.moduleId} module={module} onStart={handleStartModule} />
+          ))}
+        </div>
+      )}
 
-        {filteredModules.length === 0 && (
-          <div className="text-center py-16 text-slate-400">
-            <Search className="w-12 h-12 mx-auto mb-4 text-slate-500" />
-            <h3 className="text-lg font-medium text-slate-300 mb-1">No modules found</h3>
-            <p className="text-sm">Adjust search or filters</p>
-          </div>
-        )}
+      {filteredModules.length === 0 && (
+        <div className="text-center py-24 border-2 border-dashed border-neutral-900 rounded-lg">
+          <Search className="w-10 h-10 mx-auto mb-4 text-neutral-800" />
+          <h3 className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">No segments found</h3>
+          <p className="text-xs text-neutral-700 font-medium">Verify system parameters or search criteria</p>
+        </div>
+      )}
     </PageLayout>
   );
 }
@@ -267,70 +267,69 @@ export default function ModulesPage() {
 function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number, name?: string) => void }) {
   const IconComponent = getStatusIcon(module.status);
   const getDifficultyColor = (d: string) =>
-    d === 'beginner' ? 'text-emerald-500' : d === 'intermediate' ? 'text-amber-500' : d === 'advanced' ? 'text-rose-500' : 'text-slate-400';
+    d === 'beginner' ? 'text-emerald-500' : d === 'intermediate' ? 'text-amber-500' : d === 'advanced' ? 'text-rose-500' : 'text-neutral-500';
 
-  const statusLabel = module.status === 'in_progress' ? 'In progress' : module.status === 'completed' ? 'Completed' : module.status === 'locked' ? 'Locked' : 'Not started';
-  const statusClass = module.status === 'in_progress' ? 'bg-cyan-500/20 text-cyan-400' : module.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : module.status === 'locked' ? 'bg-slate-600/50 text-slate-400' : 'bg-slate-600/50 text-slate-400';
+  const statusLabel = module.status === 'in_progress' ? 'In progress' : module.status === 'completed' ? 'Success' : module.status === 'locked' ? 'Locked' : 'Available';
+  const statusClass = module.status === 'in_progress' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : module.status === 'completed' ? 'bg-emerald-500/20 text-emerald-600' : 'bg-neutral-950 text-neutral-600 border border-neutral-800';
 
   return (
     <div
-      className={`relative border rounded-lg p-5 transition-colors ${
-        module.status === 'locked'
-          ? 'bg-slate-800/40 border-slate-700/50 opacity-80'
-          : 'bg-slate-800/50 border-white/10 hover:border-slate-600 cursor-pointer'
-      }`}
+      className={`relative border rounded-lg p-6 transition-all ${module.status === 'locked'
+        ? 'bg-neutral-900 border-neutral-800 opacity-40 grayscale'
+        : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700 cursor-pointer shadow-sm hover:shadow-md'
+        }`}
       onClick={() => module.status !== 'locked' && onStart(module.moduleId, module.name)}
     >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-700/80 flex items-center justify-center text-slate-400">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex-shrink-0 w-10 h-10 rounded bg-neutral-950 border border-neutral-800 flex items-center justify-center text-neutral-500">
             <IconComponent className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-medium text-slate-100 truncate">{module.name}</h3>
-            <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${statusClass}`}>{statusLabel}</span>
+            <h3 className="text-sm font-bold text-white truncate tracking-tight uppercase">{module.name}</h3>
+            <span className={`inline-block mt-1.5 text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${statusClass}`}>{statusLabel}</span>
           </div>
         </div>
       </div>
 
-      <p className="text-slate-500 text-sm mb-4 line-clamp-2">{module.description}</p>
+      <p className="text-neutral-500 text-xs font-medium mb-6 line-clamp-2 leading-relaxed">{module.description}</p>
 
-      <div className="flex items-center gap-4 mb-3 text-xs text-slate-400">
-        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{module.duration ?? '—'}</span>
+      <div className="flex items-center gap-5 mb-6 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+        <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" />{module.duration ?? '—'}</span>
         <span className={getDifficultyColor(module.difficulty)}>{module.difficulty}</span>
-        <span>{module.completedParts}/{module.parts} parts</span>
+        <span>{module.completedParts}/{module.parts} UNIT</span>
       </div>
 
       {module.status !== 'locked' && (
-        <>
-          <div className="mb-3">
-            <div className="flex justify-between text-xs text-slate-500 mb-1">
-              <span>Progress</span>
+        <div className="space-y-6">
+          <div>
+            <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-neutral-700 mb-2">
+              <span>Sync status</span>
               <span>{module.progress}%</span>
             </div>
-            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full ${
-                  module.status === 'completed' ? 'bg-emerald-500' : 'bg-cyan-500'
-                }`}
+                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                 style={{ width: `${module.progress}%` }}
               />
             </div>
           </div>
-          {module.quizScore !== null && (
-            <div className="flex items-center gap-1.5 mb-3 text-xs text-slate-400">
-              <Trophy className="w-3.5 h-3.5 text-amber-500" />
-              <span>Best: {module.quizScore}%</span>
-            </div>
-          )}
-          <button
-            className="w-full py-2 px-3 bg-slate-600 hover:bg-slate-500 rounded-md text-sm font-medium text-slate-100 transition-colors flex items-center justify-center gap-2"
-            onClick={(e) => { e.stopPropagation(); module.status !== 'locked' && onStart(module.moduleId, module.name); }}
-          >
-            {module.status === 'completed' ? 'Review' : module.status === 'in_progress' ? 'Continue' : 'Start'}
-            <Play className="w-3.5 h-3.5" />
-          </button>
-        </>
+          <div className="flex items-center justify-between">
+            {module.quizScore !== null ? (
+              <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-500">
+                <Trophy className="w-3 h-3 text-amber-500" />
+                <span>Peak: {module.quizScore}%</span>
+              </div>
+            ) : <div />}
+            <button
+              className="px-6 py-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[9px] font-bold uppercase tracking-widest text-white transition-all flex items-center gap-2 group/btn"
+              onClick={(e) => { e.stopPropagation(); module.status !== 'locked' && onStart(module.moduleId, module.name); }}
+            >
+              {module.status === 'completed' ? 'Review' : module.status === 'in_progress' ? 'Resume' : 'Initialize'}
+              <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -339,67 +338,66 @@ function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number,
 function ModuleListItem({ module, onStart }: { module: Module; onStart: (id: number, name?: string) => void }) {
   const IconComponent = getStatusIcon(module.status);
   const getDifficultyColor = (d: string) =>
-    d === 'beginner' ? 'text-emerald-500' : d === 'intermediate' ? 'text-amber-500' : d === 'advanced' ? 'text-rose-500' : 'text-slate-400';
+    d === 'beginner' ? 'text-emerald-500' : d === 'intermediate' ? 'text-amber-500' : d === 'advanced' ? 'text-rose-500' : 'text-neutral-500';
 
-  const statusLabel = module.status === 'in_progress' ? 'In progress' : module.status === 'completed' ? 'Completed' : module.status === 'locked' ? 'Locked' : 'Not started';
-  const statusClass = module.status === 'in_progress' ? 'bg-cyan-500/20 text-cyan-400' : module.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-600/50 text-slate-400';
+  const statusLabel = module.status === 'in_progress' ? 'Active' : module.status === 'completed' ? 'Success' : module.status === 'locked' ? 'Locked' : 'Available';
+  const statusClass = module.status === 'in_progress' ? 'bg-emerald-500/10 text-emerald-500' : module.status === 'completed' ? 'bg-emerald-500/20 text-emerald-600' : 'text-neutral-600';
 
   return (
     <div
-      className={`flex items-center gap-6 border rounded-lg p-4 transition-colors ${
-        module.status === 'locked'
-          ? 'bg-slate-800/40 border-slate-700/50 opacity-80'
-          : 'bg-slate-800/50 border-white/10 hover:border-slate-600 cursor-pointer'
-      }`}
+      className={`flex items-center gap-8 border rounded-lg p-5 transition-all ${module.status === 'locked'
+        ? 'bg-neutral-900 border-neutral-800 opacity-40 grayscale'
+        : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700 cursor-pointer shadow-sm'
+        }`}
       onClick={() => module.status !== 'locked' && onStart(module.moduleId, module.name)}
     >
-      <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-slate-700/80 flex items-center justify-center text-slate-400">
+      <div className="flex-shrink-0 w-11 h-11 rounded bg-neutral-950 border border-neutral-800 flex items-center justify-center text-neutral-500">
         <IconComponent className="w-5 h-5" />
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h3 className="font-medium text-slate-100">{module.name}</h3>
-          <span className={`text-xs px-2 py-0.5 rounded ${statusClass}`}>{statusLabel}</span>
+        <div className="flex items-center gap-4 flex-wrap">
+          <h3 className="text-sm font-bold text-white tracking-tight uppercase">{module.name}</h3>
+          <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-current opacity-60 ${statusClass}`}>{statusLabel}</span>
         </div>
-        <p className="text-slate-500 text-sm mt-0.5 line-clamp-1">{module.description}</p>
-        <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
-          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{module.duration ?? '—'}</span>
-          <span className={getDifficultyColor(module.difficulty)}>{module.difficulty}</span>
-          <span>{module.completedParts}/{module.parts} parts</span>
-          {module.quizScore !== null && (
-            <span className="flex items-center gap-1"><Trophy className="w-3.5 h-3.5 text-amber-500" />{module.quizScore}%</span>
-          )}
-        </div>
+        <p className="text-neutral-500 text-xs font-medium mt-1.5 line-clamp-1">{module.description}</p>
       </div>
 
-      {module.status !== 'locked' && (
-        <>
-          <div className="hidden sm:block w-32 flex-shrink-0">
-            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full ${module.status === 'completed' ? 'bg-emerald-500' : 'bg-cyan-500'}`}
-                style={{ width: `${module.progress}%` }}
-              />
-            </div>
-          </div>
-          <span className="hidden sm:block text-sm text-slate-400 w-10">{module.progress}%</span>
-          <button
-            className="flex-shrink-0 px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-md text-sm font-medium text-slate-100 transition-colors flex items-center gap-2"
-            onClick={(e) => { e.stopPropagation(); module.status !== 'locked' && onStart(module.moduleId, module.name); }}
-          >
-            {module.status === 'completed' ? 'Review' : module.status === 'in_progress' ? 'Continue' : 'Start'}
-            <Play className="w-3.5 h-3.5" />
-          </button>
-        </>
-      )}
-
-      {module.status === 'locked' && (
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Lock className="w-4 h-4" />
-          <span>Complete prerequisites</span>
+      <div className="flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-neutral-600 min-w-48">
+          <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" />{module.duration ?? '—'}</span>
+          <span className={getDifficultyColor(module.difficulty)}>{module.difficulty}</span>
+          <span>{module.completedParts}/{module.parts} UNIT</span>
         </div>
-      )}
+
+        {module.status !== 'locked' && (
+          <div className="flex items-center gap-8">
+            <div className="hidden sm:block w-32 flex-shrink-0">
+              <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                  style={{ width: `${module.progress}%` }}
+                />
+              </div>
+            </div>
+            <span className="hidden sm:block text-[10px] font-mono font-bold text-neutral-500 w-8">{module.progress}%</span>
+            <button
+              className="flex-shrink-0 px-6 py-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[9px] font-bold uppercase tracking-widest text-white transition-all flex items-center gap-2 group/btn"
+              onClick={(e) => { e.stopPropagation(); module.status !== 'locked' && onStart(module.moduleId, module.name); }}
+            >
+              {module.status === 'completed' ? 'Review' : module.status === 'in_progress' ? 'Resume' : 'Initialize'}
+              <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        )}
+
+        {module.status === 'locked' && (
+          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-neutral-700">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Prerequisites</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

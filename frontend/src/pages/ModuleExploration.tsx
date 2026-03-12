@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Home, ChevronRight, Maximize2, Eye, EyeOff,
   Layers, BookOpen, MessageSquare, Bookmark, Share2, Flag, Info,
@@ -37,9 +37,10 @@ let scriptLoadingPromise: Promise<void> | null = null;
 
 export default function ModuleExploration() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const containerRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
-  
+
   // UI State
   const [selectedLayer, setSelectedLayer] = useState<string>('all');
   const [showLabels, setShowLabels] = useState<boolean>(true);
@@ -47,13 +48,20 @@ export default function ModuleExploration() {
   const [showNotes, setShowNotes] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<number>(0);
   const [anatomyParts, setAnatomyParts] = useState<AnatomyPart[]>([]);
-  
+
   // 3D Viewer State
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hoveredPartName, setHoveredPartName] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [groupList, setGroupList] = useState<any[]>([]);
+  const [zoomLevel, setZoomLevel] = useState(300);
+  const [skinOpacity, setSkinOpacity] = useState(0.5);
+  const [activePlanes, setActivePlanes] = useState({ sagittal: false, coronal: false, transverse: false });
+  const [explosionAmount, setExplosionAmount] = useState(0);
+
+  const sceneRef = useRef<any>(null);
 
   const layers: Layer[] = [
     { id: 'all', name: 'All Layers', icon: Layers, color: 'from-cyan-500 to-teal-500' },
@@ -79,7 +87,7 @@ export default function ModuleExploration() {
 
   const handlePartClick = (partName: string) => {
     let part = anatomyParts.find(p => p.name === partName);
-    
+
     if (!part) {
       part = {
         id: anatomyParts.length + 1,
@@ -89,7 +97,7 @@ export default function ModuleExploration() {
       };
       setAnatomyParts([...anatomyParts, part]);
     }
-    
+
     setSelectedPart(part);
   };
 
@@ -99,7 +107,7 @@ export default function ModuleExploration() {
 
     const container = containerRef.current;
     let isMounted = true;
-    
+
     const loadScript = (src: string): Promise<void> => {
       return new Promise((resolve, reject) => {
         const existing = document.querySelector(`script[src="${src}"]`);
@@ -107,7 +115,7 @@ export default function ModuleExploration() {
           resolve();
           return;
         }
-        
+
         const script = document.createElement('script');
         script.src = src;
         script.onload = () => resolve();
@@ -118,45 +126,39 @@ export default function ModuleExploration() {
 
     const loadScriptsOnce = async () => {
       if (scriptsLoaded) return;
-      
-      if (scriptLoadingPromise) {
-        return scriptLoadingPromise;
-      }
-      
+      if (scriptLoadingPromise) return scriptLoadingPromise;
+
       scriptLoadingPromise = (async () => {
         await loadScript('https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.js');
         await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
         await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js');
         scriptsLoaded = true;
       })();
-      
+
       return scriptLoadingPromise;
     };
 
     const initScene = async () => {
       try {
         await loadScriptsOnce();
-        
+
         if (!isMounted) return;
 
         const THREE = (window as any).THREE;
-        
         const width = container.clientWidth;
         const height = container.clientHeight;
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0f172a);
-        
+
         const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 2000);
         camera.position.set(0, 100, 300);
         camera.lookAt(0, 0, 0);
 
-        const renderer = new THREE.WebGLRenderer({ 
-          antialias: true,
-          preserveDrawingBuffer: false
-        });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.localClippingEnabled = true;
         container.appendChild(renderer.domElement);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -174,23 +176,45 @@ export default function ModuleExploration() {
         directionalLight3.position.set(0, -50, 0);
         scene.add(directionalLight3);
 
-        const gridHelper = new THREE.GridHelper(500, 50, 0x334155, 0x1e293b);
-        scene.add(gridHelper);
-
         const loader = new (THREE as any).FBXLoader();
         let loadedModel: any = null;
         let originalMaterials = new Map();
 
+        const clippingPlanes: any[] = [];
+        const updateClippingPlanes = () => {
+          clippingPlanes.length = 0;
+          const THREE = (window as any).THREE;
+          if (activePlanes.sagittal) clippingPlanes.push(new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0));
+          if (activePlanes.coronal) clippingPlanes.push(new THREE.Plane(new THREE.Vector3(0, 0, -1), 0));
+          if (activePlanes.transverse) clippingPlanes.push(new THREE.Plane(new THREE.Vector3(0, -1, 0), 85));
+
+          if (loadedModel) {
+            loadedModel.traverse((child: any) => {
+              if (child.isMesh && child.name.toLowerCase().includes('muscle')) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                materials.forEach((m: any) => {
+                  if (m) {
+                    m.clippingPlanes = clippingPlanes;
+                    m.clipShadows = true;
+                    m.needsUpdate = true;
+                  }
+                });
+              }
+            });
+          }
+        };
+
+        const modelPath = id === '1' ? '/models/AnatomyModel_Mesh.fbx' : '/models/SkeletalSystem100.fbx';
+
         loader.load(
-          '/models/SkeletalSystem100.fbx',
+          modelPath,
           (fbx: any) => {
             if (!isMounted) return;
-            
+
             const box = new THREE.Box3().setFromObject(fbx);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
-
-            fbx.position.sub(center);
+            fbx.position.set(-center.x, -center.y, -center.z);
 
             const maxDim = Math.max(size.x, size.y, size.z);
             if (maxDim > 200) {
@@ -205,17 +229,74 @@ export default function ModuleExploration() {
                   if (mat) {
                     originalMaterials.set(child.uuid, mat.clone());
                     mat.side = THREE.DoubleSide;
+                    mat.transparent = true;
                     if (mat.type === 'MeshPhongMaterial') {
                       mat.shininess = 30;
                       mat.needsUpdate = true;
                     }
                   }
                 });
+                if (child.name.toLowerCase().includes('high_poly') || child.name.toLowerCase().includes('skin')) {
+                  const mats = Array.isArray(child.material) ? child.material : [child.material];
+                  mats.forEach((m: any) => { if (m) m.opacity = skinOpacity; });
+                }
               }
+            });
+
+            fbx.children.forEach((child: any) => {
+              child.visible = true;
+              child.traverse((sub: any) => { sub.visible = true; });
             });
 
             scene.add(fbx);
             loadedModel = fbx;
+
+            const groups: any[] = [];
+            fbx.children.forEach((child: any) => {
+              let meshCount = 0;
+              let totalVerts = 0;
+              child.traverse((subChild: any) => {
+                if (subChild.isMesh) {
+                  meshCount++;
+                  totalVerts += subChild.geometry?.attributes?.position?.count || 0;
+                }
+              });
+              groups.push({
+                uuid: child.uuid,
+                name: child.name || 'Unnamed Group',
+                visible: true,
+                meshCount,
+                totalVertices: totalVerts
+              });
+            });
+
+            setGroupList(groups);
+
+            sceneRef.current = {
+              model: fbx,
+              originalMaterials,
+              camera,
+              renderer,
+              scene,
+              updatePlanes: updateClippingPlanes,
+              defaultCameraPos: new THREE.Vector3(0, 100, 300),
+              defaultCameraTarget: new THREE.Vector3(0, 0, 0),
+              originalPositions: new Map(),
+              boundingCenters: new Map()
+            };
+
+            const storePositions = (obj: any, parentUuid: string = '') => {
+              const key = parentUuid ? `${parentUuid}_${obj.uuid}` : obj.uuid;
+              sceneRef.current.originalPositions.set(key, obj.position.clone());
+              if (obj.isMesh || obj.isGroup) {
+                const objBox = new THREE.Box3().setFromObject(obj);
+                sceneRef.current.boundingCenters.set(key, objBox.getCenter(new THREE.Vector3()));
+              }
+              if (obj.children) obj.children.forEach((c: any) => storePositions(c, obj.uuid));
+            };
+            fbx.children.forEach((child: any) => storePositions(child));
+
+            updateClippingPlanes();
             setIsLoading(false);
           },
           (xhr: any) => {
@@ -233,7 +314,7 @@ export default function ModuleExploration() {
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         let rotation = { x: 0, y: 0 };
-        
+
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let selectedMesh: any = null;
@@ -245,9 +326,9 @@ export default function ModuleExploration() {
 
         const onMouseMove = (e: MouseEvent) => {
           if (!isMounted) return;
-          
+
           setMousePos({ x: e.clientX, y: e.clientY });
-          
+
           if (isDragging) {
             const deltaX = e.clientX - previousMousePosition.x;
             const deltaY = e.clientY - previousMousePosition.y;
@@ -260,14 +341,10 @@ export default function ModuleExploration() {
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-            
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(loadedModel.children, true);
-            
             if (intersects.length > 0) {
-              const hoveredMesh = intersects[0].object;
-              const partName = hoveredMesh.name || 'Unnamed Part';
-              setHoveredPartName(partName);
+              setHoveredPartName(intersects[0].object.name || 'Unnamed Part');
               renderer.domElement.style.cursor = 'pointer';
             } else {
               setHoveredPartName(null);
@@ -276,69 +353,46 @@ export default function ModuleExploration() {
           }
         };
 
-        const onMouseUp = () => {
-          isDragging = false;
-        };
-        
         const onClick = (e: MouseEvent) => {
           if (!loadedModel || !isMounted) return;
-          
           const rect = renderer.domElement.getBoundingClientRect();
           mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
           mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-          
           raycaster.setFromCamera(mouse, camera);
           const intersects = raycaster.intersectObjects(loadedModel.children, true);
-          
           if (intersects.length > 0) {
             const clickedMesh = intersects[0].object;
             const partName = clickedMesh.name || 'Unnamed Part';
-            
             if (selectedMesh && selectedMesh !== clickedMesh) {
               const originalMat = originalMaterials.get(selectedMesh.uuid);
-              if (originalMat) {
-                selectedMesh.material = originalMat.clone();
-              }
+              if (originalMat) selectedMesh.material = originalMat.clone();
             }
-            
             if (selectedMesh !== clickedMesh) {
               selectedMesh = clickedMesh;
               handlePartClick(partName);
-              
-              const highlightMat = new THREE.MeshPhongMaterial({
-                color: 0x06b6d4,
-                emissive: 0x0891b2,
-                shininess: 100,
-                side: THREE.DoubleSide
-              });
-              clickedMesh.material = highlightMat;
+              clickedMesh.material = new THREE.MeshPhongMaterial({ color: 0x06b6d4, emissive: 0x0891b2, shininess: 100, side: THREE.DoubleSide });
             } else {
               const originalMat = originalMaterials.get(selectedMesh.uuid);
-              if (originalMat) {
-                selectedMesh.material = originalMat.clone();
-              }
+              if (originalMat) selectedMesh.material = originalMat.clone();
               selectedMesh = null;
             }
-          } else {
-            if (selectedMesh) {
-              const originalMat = originalMaterials.get(selectedMesh.uuid);
-              if (originalMat) {
-                selectedMesh.material = originalMat.clone();
-              }
-              selectedMesh = null;
-            }
+          } else if (selectedMesh) {
+            const originalMat = originalMaterials.get(selectedMesh.uuid);
+            if (originalMat) selectedMesh.material = originalMat.clone();
+            selectedMesh = null;
           }
         };
 
         const onWheel = (e: WheelEvent) => {
           e.preventDefault();
-          camera.position.z += e.deltaY * 0.1;
-          camera.position.z = Math.max(50, Math.min(800, camera.position.z));
+          const newZoom = Math.max(50, Math.min(800, camera.position.z + e.deltaY * 0.1));
+          camera.position.z = newZoom;
+          setZoomLevel(newZoom);
         };
 
         renderer.domElement.addEventListener('mousedown', onMouseDown);
         renderer.domElement.addEventListener('mousemove', onMouseMove);
-        renderer.domElement.addEventListener('mouseup', onMouseUp);
+        renderer.domElement.addEventListener('mouseup', () => { isDragging = false; });
         renderer.domElement.addEventListener('click', onClick);
         renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
 
@@ -352,73 +406,24 @@ export default function ModuleExploration() {
         };
         animate();
 
+        cleanupRef.current = () => {
+          isMounted = false;
+          if (animationId) cancelAnimationFrame(animationId);
+          window.removeEventListener('resize', handleResize);
+          if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+          renderer.dispose();
+        };
+
         const handleResize = () => {
           if (!isMounted) return;
-          const width = container.clientWidth;
-          const height = container.clientHeight;
-          camera.aspect = width / height;
+          const w = container.clientWidth;
+          const h = container.clientHeight;
+          camera.aspect = w / h;
           camera.updateProjectionMatrix();
-          renderer.setSize(width, height);
+          renderer.setSize(w, h);
         };
         window.addEventListener('resize', handleResize);
 
-        cleanupRef.current = () => {
-          isMounted = false;
-          
-          if (animationId) {
-            cancelAnimationFrame(animationId);
-          }
-          
-          renderer.domElement.removeEventListener('mousedown', onMouseDown);
-          renderer.domElement.removeEventListener('mousemove', onMouseMove);
-          renderer.domElement.removeEventListener('mouseup', onMouseUp);
-          renderer.domElement.removeEventListener('click', onClick);
-          renderer.domElement.removeEventListener('wheel', onWheel);
-          window.removeEventListener('resize', handleResize);
-          
-          originalMaterials.forEach((mat) => {
-            if (mat.dispose) mat.dispose();
-          });
-          originalMaterials.clear();
-          
-          if (loadedModel) {
-            loadedModel.traverse((child: any) => {
-              if (child.isMesh) {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) {
-                  if (Array.isArray(child.material)) {
-                    child.material.forEach((mat: any) => mat.dispose());
-                  } else {
-                    child.material.dispose();
-                  }
-                }
-              }
-            });
-            scene.remove(loadedModel);
-          }
-          
-          scene.traverse((object: any) => {
-            if (object.geometry) object.geometry.dispose();
-            if (object.material) {
-              if (Array.isArray(object.material)) {
-                object.material.forEach((mat: any) => mat.dispose());
-              } else {
-                object.material.dispose();
-              }
-            }
-          });
-          
-          if (container.contains(renderer.domElement)) {
-            container.removeChild(renderer.domElement);
-          }
-          
-          renderer.dispose();
-          renderer.forceContextLoss();
-          
-          loadedModel = null;
-          selectedMesh = null;
-        };
-        
       } catch (err) {
         if (!isMounted) return;
         setError(`Failed to initialize 3D scene: ${err}`);
@@ -428,13 +433,95 @@ export default function ModuleExploration() {
 
     initScene();
 
-    return () => {
-      isMounted = false;
-      if (cleanupRef.current) {
-        cleanupRef.current();
+  }, [id]);
+
+  // Handle Clipping Planes Updates
+  useEffect(() => {
+    if (sceneRef.current?.updatePlanes) {
+      sceneRef.current.updatePlanes();
+    }
+  }, [activePlanes]);
+
+  // Handle Skin Opacity Updates
+  useEffect(() => {
+    if (!sceneRef.current?.model) return;
+    sceneRef.current.model.traverse((child: any) => {
+      if (child.isMesh && (child.name.toLowerCase().includes('high_poly') || child.name.toLowerCase().includes('skin'))) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((m: any) => { if (m) m.opacity = skinOpacity; });
       }
-    };
-  }, []);
+    });
+  }, [skinOpacity]);
+
+  const handleZoomChange = (value: number) => {
+    if (!sceneRef.current?.camera) return;
+    setZoomLevel(value);
+    sceneRef.current.camera.position.z = value;
+  };
+
+  const togglePlane = (plane: 'sagittal' | 'coronal' | 'transverse') => {
+    setActivePlanes(prev => ({ ...prev, [plane]: !prev[plane] }));
+  };
+
+  const toggleVisibility = (uuid: string) => {
+    if (!sceneRef.current?.model) return;
+    const model = sceneRef.current.model;
+    const targetChild = model.children.find((child: any) => child.uuid === uuid);
+    if (targetChild) {
+      const newVisibility = !targetChild.visible;
+      targetChild.visible = newVisibility;
+      targetChild.traverse((child: any) => {
+        child.visible = newVisibility;
+      });
+      setGroupList(prev => prev.map(g => g.uuid === uuid ? { ...g, visible: newVisibility } : g));
+    }
+  };
+
+  const isolatePart = (uuid: string) => {
+    if (!sceneRef.current?.model) return;
+    const model = sceneRef.current.model;
+    model.children.forEach((child: any) => {
+      const isTarget = child.uuid === uuid;
+      child.visible = isTarget;
+      child.traverse((sub: any) => {
+        sub.visible = isTarget;
+      });
+    });
+    setGroupList(prev => prev.map(g => ({ ...g, visible: g.uuid === uuid })));
+  };
+
+  const showAllParts = () => {
+    if (!sceneRef.current?.model) return;
+    sceneRef.current.model.children.forEach((child: any) => {
+      child.visible = true;
+      child.traverse((sub: any) => {
+        sub.visible = true;
+      });
+    });
+    setGroupList(prev => prev.map(g => ({ ...g, visible: true })));
+  };
+
+  const handleExplosion = (value: number) => {
+    if (!sceneRef.current?.model) return;
+    const THREE = (window as any).THREE;
+    setExplosionAmount(value);
+
+    const model = sceneRef.current.model;
+    const modelCenter = new THREE.Vector3(0, 85, 0); // Approx hub
+
+    model.children.forEach((child: any) => {
+      const originalPos = sceneRef.current.originalPositions.get(child.uuid);
+      const boundingCenter = sceneRef.current.boundingCenters.get(child.uuid);
+
+      if (!originalPos || !boundingCenter) return;
+
+      const direction = new THREE.Vector3().subVectors(boundingCenter, modelCenter).normalize();
+      if (direction.lengthSq() < 0.0001) direction.set(0, 1, 0);
+
+      const offset = direction.multiplyScalar(value * 0.5);
+      child.position.copy(originalPos).add(offset);
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
@@ -460,7 +547,7 @@ export default function ModuleExploration() {
                 <span className="text-cyan-400">Skeletal System</span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="bg-slate-800/50 rounded-lg px-4 py-2 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
@@ -499,43 +586,102 @@ export default function ModuleExploration() {
       <main className="max-w-[1800px] mx-auto px-6 py-6">
         <div className="grid grid-cols-12 gap-6">
           {/* Left Sidebar */}
-          <div className="col-span-2 space-y-4">
+          <div className="col-span-3 space-y-4">
             <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
               <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-cyan-400" />
-                Sections
+                <Layers className="w-4 h-4 text-cyan-400" />
+                Anatomical Tools
               </h3>
-              <div className="space-y-1">
-                {sections.map((section, idx) => (
+
+              {/* Orientation Planes */}
+              <div className="space-y-2 mb-4">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Reference Planes</p>
+                <div className="grid grid-cols-3 gap-2">
                   <button
-                    key={section.id}
-                    onClick={() => setActiveSection(idx)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                      activeSection === idx
-                        ? 'bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 text-cyan-400'
-                        : 'hover:bg-white/5 text-slate-300'
-                    }`}
+                    onClick={() => togglePlane('sagittal')}
+                    className={`text-[10px] py-2 rounded-lg border transition-all ${activePlanes.sagittal ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-slate-800/50 border-white/5 text-slate-400'}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>{section.name}</span>
-                      <span className="text-xs text-slate-500">{section.parts}</span>
-                    </div>
+                    SAGITTAL
                   </button>
-                ))}
+                  <button
+                    onClick={() => togglePlane('coronal')}
+                    className={`text-[10px] py-2 rounded-lg border transition-all ${activePlanes.coronal ? 'bg-teal-500/20 border-teal-500 text-teal-400' : 'bg-slate-800/50 border-white/5 text-slate-400'}`}
+                  >
+                    CORONAL
+                  </button>
+                  <button
+                    onClick={() => togglePlane('transverse')}
+                    className={`text-[10px] py-2 rounded-lg border transition-all ${activePlanes.transverse ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-slate-800/50 border-white/5 text-slate-400'}`}
+                  >
+                    TRANSVERSE
+                  </button>
+                </div>
+              </div>
+
+              {/* Skin Transparency */}
+              {id !== '2' && (
+                <div className="mb-4 bg-slate-800/30 p-3 rounded-lg border border-white/5">
+                  <label className="block text-[10px] font-bold mb-2 text-cyan-400 uppercase tracking-wider">
+                    Skin Transparency
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={skinOpacity}
+                    onChange={(e) => setSkinOpacity(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  />
+                  <div className="flex justify-between text-[8px] text-slate-500 mt-1">
+                    <span>MUSCLE</span>
+                    <span>SKIN</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Explosion */}
+              {id !== '1' && (
+                <div className="mb-4 bg-slate-800/30 p-3 rounded-lg border border-white/5">
+                  <label className="block text-[10px] font-bold mb-2 text-amber-400 uppercase tracking-wider">
+                    Exploded View
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={explosionAmount}
+                    onChange={(e) => handleExplosion(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  />
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-white/5">
+                <button
+                  onClick={showAllParts}
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] py-2 rounded-lg transition-all"
+                >
+                  RESET VISIBILITY
+                </button>
               </div>
             </div>
 
-            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 text-sm">Saved Views</h3>
-              <div className="space-y-2">
-                {bookmarks.map((bookmark: BookmarkItem, idx: number) => (
-                  <button
-                    key={idx}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/5 transition-all flex items-center gap-2"
-                  >
-                    <Bookmark className="w-3 h-3 text-cyan-400" />
-                    {bookmark.name}
-                  </button>
+            <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4 overflow-hidden flex flex-col max-h-[400px]">
+              <h3 className="font-semibold mb-3 text-sm">Model Hierarchy</h3>
+              <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar">
+                {groupList.map(group => (
+                  <div key={group.uuid} className="bg-slate-800/40 p-2 rounded border border-white/5 group">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-medium truncate max-w-[120px]">{group.name}</span>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => isolatePart(group.uuid)} className="p-1 hover:bg-purple-500/20 rounded text-purple-400"><Maximize2 size={16} /></button>
+                        <button onClick={() => toggleVisibility(group.uuid)} className={`p-1 rounded ${group.visible ? 'text-cyan-400 hover:bg-cyan-500/20' : 'text-red-400 hover:bg-red-500/20'}`}>
+                          {group.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -547,7 +693,7 @@ export default function ModuleExploration() {
               <div className="relative aspect-[16/10] bg-gradient-to-br from-slate-900 to-slate-950">
                 {/* Hover Tooltip */}
                 {hoveredPartName && (
-                  <div 
+                  <div
                     className="absolute bg-slate-900/95 backdrop-blur-sm border border-cyan-400/50 text-white text-sm font-semibold px-3 py-1.5 rounded pointer-events-none z-30"
                     style={{
                       left: `${mousePos.x + 15}px`,
@@ -566,7 +712,7 @@ export default function ModuleExploration() {
                       <p className="text-lg font-bold mb-2">Loading 3D Model</p>
                       <p className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">{loadingProgress}%</p>
                       <div className="w-64 h-2 bg-slate-800 rounded-full mt-4 overflow-hidden mx-auto">
-                        <div 
+                        <div
                           className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 transition-all duration-300"
                           style={{ width: `${loadingProgress}%` }}
                         ></div>
@@ -596,28 +742,34 @@ export default function ModuleExploration() {
               {/* Control Panel */}
               <div className="border-t border-white/10 p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Info className="w-4 h-4 text-cyan-400" />
+                  <div className="flex items-center gap-4 text-sm text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <Maximize2 size={12} className="text-cyan-400" />
+                      <input
+                        type="range" min="50" max="800" value={zoomLevel}
+                        onChange={(e) => handleZoomChange(Number(e.target.value))}
+                        className="w-32 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                      />
+                    </div>
                     <span>Drag to rotate • Scroll to zoom • Click to select</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
                       onClick={() => setShowLabels(!showLabels)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        showLabels ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-white/5'
-                      }`}
+                      className={`p-2 rounded-lg transition-colors ${showLabels ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-white/5'
+                        }`}
                       title="Toggle Labels"
                     >
                       {showLabels ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                     </button>
-                    <button 
+                    <button
                       className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                       title="Fullscreen"
                     >
                       <Maximize2 className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setShowNotes(!showNotes)}
                       className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                       title="Notes"
@@ -631,19 +783,18 @@ export default function ModuleExploration() {
 
             {/* Layer Selection */}
             <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-400 font-medium">Layers:</span>
+              <span className="text-sm text-slate-400 font-medium whitespace-nowrap">View Presets:</span>
               {layers.map((layer) => (
                 <button
                   key={layer.id}
                   onClick={() => setSelectedLayer(layer.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                    selectedLayer === layer.id
-                      ? `bg-gradient-to-r ${layer.color} text-white shadow-lg`
-                      : 'bg-slate-800/50 hover:bg-slate-800 text-slate-300'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${selectedLayer === layer.id
+                    ? `bg-gradient-to-r ${layer.color} text-white shadow-lg`
+                    : 'bg-slate-800/50 hover:bg-slate-800 text-slate-300'
+                    }`}
                 >
                   <layer.icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{layer.name}</span>
+                  <span className="text-sm font-medium whitespace-nowrap">{layer.name}</span>
                 </button>
               ))}
             </div>
@@ -662,7 +813,7 @@ export default function ModuleExploration() {
                   <p className="text-xs text-slate-400">Ask me anything</p>
                 </div>
               </div>
-              <input 
+              <input
                 type="text"
                 placeholder="What is the function of the femur?"
                 className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:border-cyan-400/50"
@@ -681,9 +832,9 @@ export default function ModuleExploration() {
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                
+
                 <p className="text-sm text-slate-300 mb-4">{selectedPart.description}</p>
-                
+
                 {selectedPart.related.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-xs font-semibold text-slate-400 mb-2">Related Structures</h4>
@@ -708,8 +859,8 @@ export default function ModuleExploration() {
                   Information
                 </h3>
                 <p className="text-sm text-slate-400">
-                  {hoveredPartName 
-                    ? `Hovering over: ${hoveredPartName}` 
+                  {hoveredPartName
+                    ? `Hovering over: ${hoveredPartName}`
                     : 'Click on any part of the model to learn more about it.'}
                 </p>
               </div>
@@ -724,11 +875,10 @@ export default function ModuleExploration() {
                     <button
                       key={part.id}
                       onClick={() => setSelectedPart(part)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                        selectedPart?.id === part.id
-                          ? 'bg-cyan-500/20 border border-cyan-500/30 text-cyan-400'
-                          : 'hover:bg-white/5 text-slate-300'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${selectedPart?.id === part.id
+                        ? 'bg-cyan-500/20 border border-cyan-500/30 text-cyan-400'
+                        : 'hover:bg-white/5 text-slate-300'
+                        }`}
                     >
                       {part.name}
                     </button>
@@ -761,7 +911,7 @@ export default function ModuleExploration() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <textarea 
+            <textarea
               className="w-full h-64 bg-slate-950 border border-white/10 rounded-xl p-4 text-sm resize-none focus:outline-none focus:border-cyan-400/50"
               placeholder="Take notes about this module..."
             />

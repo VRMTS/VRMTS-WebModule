@@ -156,10 +156,10 @@ export default function QuizResults() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-slate-400 mx-auto mb-4" />
-          <p className="text-sm text-slate-400">Loading results...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+          <p className="text-sm text-neutral-500 font-medium tracking-tight">Loading results...</p>
         </div>
       </div>
     );
@@ -167,16 +167,16 @@ export default function QuizResults() {
 
   if (error || !resultsData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2 text-slate-200">Error loading results</h2>
-          <p className="text-slate-400 mb-4">{error || 'Quiz results not available'}</p>
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <div className="text-center px-6 max-w-md">
+          <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-6" />
+          <h2 className="text-xl font-bold mb-2 text-white tracking-tight">Access Error</h2>
+          <p className="text-neutral-500 text-sm mb-8">{error || 'Quiz results not available'}</p>
           <button
             onClick={() => navigate('/quizselection')}
-            className="px-5 py-2.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-sm font-medium transition-colors"
+            className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-sm font-bold text-white transition-all"
           >
-            Back to Quiz Selection
+            Back to Dashboard
           </button>
         </div>
       </div>
@@ -185,13 +185,13 @@ export default function QuizResults() {
 
   const headerRight = (
     <div className="flex items-center gap-3">
-      <button className="h-10 px-4 bg-slate-800 hover:bg-slate-700 border border-white/5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-black/20">
-        <Share2 className="w-4 h-4 text-cyan-400" />
-        <span className="hidden sm:inline">Share Report</span>
+      <button className="h-9 px-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[10px] font-bold text-neutral-400 hover:text-white uppercase tracking-widest transition-all flex items-center gap-2">
+        <Share2 className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">Share report</span>
       </button>
-      <button className="h-10 px-4 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-cyan-900/20">
-        <Download className="w-4 h-4" />
-        <span className="hidden sm:inline">Export PDF</span>
+      <button className="h-9 px-4 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+        <Download className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">Export pdf</span>
       </button>
     </div>
   );
@@ -209,69 +209,66 @@ export default function QuizResults() {
         {/* Top Section: Score & Stats + Comparison */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Score & Stats Card */}
-          <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-8 relative overflow-hidden group">
-            {/* Background Accent */}
-            <div className={`absolute -top-24 -right-24 w-64 h-64 rounded-full blur-[100px] opacity-20 transition-colors duration-1000 ${resultsData.passed ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+          <div className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-lg p-8 relative overflow-hidden group">
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
               {/* Circular Score Gauge */}
-              <div className="relative w-48 h-48 flex items-center justify-center">
+              <div className="relative w-44 h-44 flex items-center justify-center">
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                   <circle
-                    cx="50" cy="50" r="45"
+                    cx="50" cy="50" r="46"
                     fill="transparent"
                     stroke="currentColor"
-                    strokeWidth="8"
-                    className="text-slate-800/50"
+                    strokeWidth="4"
+                    className="text-neutral-950"
                   />
                   <circle
-                    cx="50" cy="50" r="45"
+                    cx="50" cy="50" r="46"
                     fill="transparent"
                     stroke="currentColor"
-                    strokeWidth="8"
-                    strokeDasharray={`${283 * (resultsData.score / 100)} 283`}
+                    strokeWidth="4"
+                    strokeDasharray={`${289 * (resultsData.score / 100)} 289`}
                     strokeLinecap="round"
                     className={`transition-all duration-1000 ease-out ${resultsData.passed ? 'text-emerald-500' : 'text-rose-500'}`}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-transparent">
-                  <span className="text-5xl font-black tracking-tighter text-white">{resultsData.score}%</span>
-                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Total Score</span>
+                  <span className="text-4xl font-bold tracking-tight text-white">{resultsData.score}%</span>
+                  <span className="text-[9px] uppercase tracking-widest text-neutral-600 font-bold mt-1">Score</span>
                 </div>
               </div>
 
               {/* Performance Summary */}
               <div className="flex-1 text-center md:text-left">
-                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[10px] font-bold uppercase tracking-wider ${resultsData.passed
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded mb-4 text-[9px] font-bold uppercase tracking-widest ${resultsData.passed
+                  ? 'bg-neutral-950 text-emerald-500 border border-emerald-500/20'
+                  : 'bg-neutral-950 text-rose-500 border border-rose-500/20'
                   }`}>
-                  {resultsData.passed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                  {resultsData.passed ? 'Assessment Passed' : 'Minimum Score Not Met'}
+                  {resultsData.passed ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                  {resultsData.passed ? 'Status: Passed' : 'Status: Failed'}
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-2 leading-tight">
-                  {resultsData.passed ? 'Excellent performance!' : 'Keep pushing forward!'}
+                <h2 className="text-2xl font-bold text-white mb-3 tracking-tight">
+                  {resultsData.passed ? 'Quiz passed successfully' : 'Quiz failed'}
                 </h2>
-                <p className="text-slate-400 text-sm max-w-md mb-6 leading-relaxed font-medium">
+                <p className="text-neutral-500 text-sm font-medium leading-relaxed mb-8 max-w-md">
                   {resultsData.passed
-                    ? `You've successfully demonstrated mastery of ${resultsData.quizTitle}. Your results show solid understanding of the core concepts.`
-                    : `You didn't reach the passing score of ${resultsData.passingScore}% this time. Review the recommendations below to strengthen your weak areas.`}
+                    ? `You have successfully passed the ${resultsData.quizTitle} quiz. Great job!`
+                    : `You did not reach the passing score of ${resultsData.passingScore}%. Please review the material and try again.`}
                 </p>
 
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-slate-800/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm group-hover:border-white/10 transition-colors">
-                    <div className="text-xl font-black text-emerald-400">{resultsData.correctAnswers}</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 font-black">Correct</div>
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <div className="text-lg font-bold text-white tracking-tight">{resultsData.correctAnswers}</div>
+                    <div className="text-[9px] uppercase tracking-widest text-neutral-600 font-bold">Correct</div>
                   </div>
-                  <div className="bg-slate-800/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm group-hover:border-white/10 transition-colors">
-                    <div className="text-xl font-black text-rose-400">{resultsData.incorrectAnswers}</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 font-black">Incorrect</div>
+                  <div>
+                    <div className="text-lg font-bold text-white tracking-tight">{resultsData.incorrectAnswers}</div>
+                    <div className="text-[9px] uppercase tracking-widest text-neutral-600 font-bold">Incorrect</div>
                   </div>
-                  <div className="bg-slate-800/40 p-4 rounded-xl border border-white/5 backdrop-blur-sm group-hover:border-white/10 transition-colors">
-                    <div className="text-xl font-black text-cyan-400">{resultsData.timeSpent}</div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500 font-black">Time</div>
+                  <div>
+                    <div className="text-lg font-bold text-white tracking-tight">{resultsData.timeSpent}</div>
+                    <div className="text-[9px] uppercase tracking-widest text-neutral-600 font-bold">Duration</div>
                   </div>
                 </div>
               </div>
@@ -279,60 +276,48 @@ export default function QuizResults() {
           </div>
 
           {/* Benchmarking & Global Stats */}
-          <div className="bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-cyan-400" />
-              Performance Benchmarks
+          <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 flex flex-col">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-8 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              Benchmarks
             </h3>
 
-            <div className="space-y-6 flex-1">
+            <div className="space-y-8 flex-1">
               {/* Your Performance vs Target */}
-              <div className="space-y-2.5">
-                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-slate-400">Your Current Score</span>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                  <span className="text-neutral-500">Your Score</span>
                   <span className="text-white">{resultsData.score}%</span>
                 </div>
-                <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/5">
-                  <div className={`h-full rounded-full transition-all duration-1000 ${resultsData.passed ? 'bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]'}`} style={{ width: `${resultsData.score}%` }} />
+                <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all duration-1000 ${resultsData.passed ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]' : 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.3)]'}`} style={{ width: `${resultsData.score}%` }} />
                 </div>
               </div>
 
-              <div className="space-y-2.5">
-                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-slate-400">Passing Threshold</span>
-                  <span className="text-slate-500">{resultsData.passingScore}%</span>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                  <span className="text-neutral-500">Passing Score</span>
+                  <span className="text-neutral-700">{resultsData.passingScore}%</span>
                 </div>
-                <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/5">
-                  <div className="h-full bg-slate-700/50 rounded-full" style={{ width: `${resultsData.passingScore}%` }} />
+                <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
+                  <div className="h-full bg-neutral-800 rounded-full" style={{ width: `${resultsData.passingScore}%` }} />
                 </div>
               </div>
-
-              {resultsData.classAverage > 0 && (
-                <div className="space-y-2.5">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                    <span className="text-slate-400">Section Average</span>
-                    <span className="text-slate-500">{resultsData.classAverage}%</span>
-                  </div>
-                  <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/5">
-                    <div className="h-full bg-cyan-500/40 rounded-full" style={{ width: `${resultsData.classAverage}%` }} />
-                  </div>
-                </div>
-              )}
 
               {/* Action Buttons */}
-              <div className="mt-auto pt-6 grid grid-cols-2 gap-3">
+              <div className="mt-auto pt-8 grid grid-cols-2 gap-3">
                 <button
                   onClick={() => navigate('/quizselection')}
-                  className="group/btn relative flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-750 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 border border-white/5"
+                  className="flex items-center justify-center gap-2 py-3 bg-neutral-950 hover:bg-neutral-800 text-neutral-400 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
-                  <RotateCcw className="w-4 h-4 group-hover/btn:rotate-180 transition-transform duration-500" />
+                  <RotateCcw className="w-3.5 h-3.5" />
                   Retake
                 </button>
                 <button
                   onClick={() => navigate('/studentdashboard')}
-                  className="flex items-center justify-center gap-2 py-3 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-cyan-500/5"
+                  className="flex items-center justify-center gap-2 py-3 bg-neutral-950 hover:bg-neutral-800 text-emerald-500 border border-neutral-800 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(16,185,129,0.05)]"
                 >
-                  <Home className="w-4 h-4" /> Exit
+                  <Home className="w-3.5 h-3.5" /> Close
                 </button>
               </div>
             </div>
@@ -340,100 +325,89 @@ export default function QuizResults() {
         </div>
 
         {/* AI Insights Bar */}
-        <div className="bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-transparent border border-purple-500/20 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 group hover:border-purple-500/30 transition-all">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-purple-500/20 flex-shrink-0 relative">
-            <Brain className="w-8 h-8 text-white relative z-10" />
-            <div className="absolute inset-0 bg-white/20 rounded-2xl animate-pulse blur-md" />
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 flex flex-col md:flex-row items-center gap-6 group hover:border-neutral-700 transition-all">
+          <div className="w-12 h-12 rounded-lg bg-neutral-950 border border-neutral-800 flex items-center justify-center shadow-lg flex-shrink-0">
+            <Brain className="w-6 h-6 text-emerald-500" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-lg font-black text-purple-200 mb-1 flex items-center justify-center md:justify-start gap-2">
-              Deep-Learning Insights
-              <span className="px-2 py-0.5 bg-purple-500/20 text-[8px] uppercase tracking-tighter text-purple-400 border border-purple-500/30 rounded">Beta</span>
+            <h3 className="text-sm font-bold text-white mb-1 flex items-center justify-center md:justify-start gap-2 tracking-tight">
+              Performance Analysis
             </h3>
-            <p className="text-slate-400 text-sm font-medium leading-relaxed">
+            <p className="text-neutral-500 text-sm font-medium leading-relaxed">
               {resultsData.recommendations.length > 0
                 ? resultsData.recommendations[0]
-                : "Based on your performance patterns, focus on anatomical spatial relationships in the next module."}
+                : "Performance patterns suggest further focus on anatomical spatial relationships in the next module."}
             </p>
           </div>
-          <button className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-900/40 flex items-center gap-2 transform active:scale-95 transition-all">
-            <BookOpen className="w-4 h-4" /> Study Roadmap
+          <button className="px-6 py-2.5 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-white rounded-md text-[10px] font-bold uppercase tracking-widest transition-all">
+            Open roadmap
           </button>
         </div>
 
         {/* Detailed Question Review */}
-        <div className="bg-slate-900/20 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
             <div>
-              <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Question Analysis</h3>
-              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">In-depth performance breakdown</p>
+              <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Question Review</h3>
+              <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest">Detailed results</p>
             </div>
-            <div className="flex items-center gap-4 bg-slate-900/40 p-2 rounded-xl border border-white/5">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{resultsData.correctAnswers} Correct</span>
+            <div className="flex items-center gap-2 p-1.5 bg-neutral-950 border border-neutral-800 rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-900 border border-emerald-500/20 rounded-md">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-500">{resultsData.correctAnswers} Correct</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg">
-                <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
-                <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{resultsData.incorrectAnswers} Incorrect</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-900 border border-rose-500/20 rounded-md">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-rose-500">{resultsData.incorrectAnswers} Incorrect</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-2">
             {resultsData.detailedQuestions.map((q, idx) => (
               <div key={q.id ?? idx} className="group">
-                <div
-                  className={`p-1 rounded-2xl transition-all duration-300 ${expandedQuestion === (q.id ?? idx)
-                    ? 'bg-gradient-to-r from-slate-800 to-slate-800/50 shadow-xl'
-                    : 'bg-transparent'
-                    }`}
-                >
+                <div className="p-0.5 rounded-lg transition-all">
                   <button
                     onClick={() => toggleQuestion(q.id ?? idx)}
-                    className={`w-full text-left p-6 rounded-xl border transition-all flex items-center gap-6 ${q.isCorrect
-                      ? 'border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/10 shadow-sm'
-                      : 'border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/10 shadow-sm'
+                    className={`w-full text-left p-6 rounded-md border transition-all flex items-center gap-8 ${q.isCorrect
+                      ? 'border-neutral-800 bg-neutral-950 hover:bg-neutral-900'
+                      : 'border-rose-500/10 bg-neutral-950 hover:bg-neutral-900'
                       }`}
                   >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border-2 transition-transform duration-300 group-hover:scale-105 ${q.isCorrect ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5' : 'border-rose-500/20 text-rose-400 bg-rose-500/5'
-                      }`}>
-                      {q.isCorrect ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+                    <div className={`w-10 h-10 rounded flex items-center justify-center flex-shrink-0 border transition-all ${q.isCorrect ? 'border-emerald-500/20 text-emerald-500 bg-neutral-900' : 'border-rose-500/20 text-rose-500 bg-neutral-900'}`}>
+                      {q.isCorrect ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Node {String(idx + 1).padStart(2, '0')}</span>
-                        <span className="px-2 py-0.5 bg-slate-800/60 text-[8px] font-black text-slate-400 rounded border border-white/5 uppercase tracking-tighter">{q.type}</span>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-600">ID: {String(idx + 1).padStart(2, '0')}</span>
+                        <span className="px-2 py-0.5 bg-neutral-900 text-[9px] font-bold text-neutral-500 rounded border border-neutral-800 uppercase tracking-tighter">{q.type}</span>
                       </div>
-                      <p className="text-sm font-bold text-slate-200 leading-snug">{q.question}</p>
+                      <p className="text-sm font-bold text-neutral-200 leading-snug tracking-tight">{q.question}</p>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className={`text-[10px] font-bold uppercase transition-opacity ${expandedQuestion === (q.id ?? idx) ? 'opacity-0' : 'opacity-100'} text-slate-600 hidden md:block`}>
-                        View Details
-                      </div>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800/40 border border-white/5 transition-transform duration-300 ${expandedQuestion === (q.id ?? idx) ? 'rotate-180' : ''}`}>
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-6">
+                      <div className={`w-8 h-8 rounded flex items-center justify-center bg-neutral-900 border border-neutral-800 transition-transform duration-300 ${expandedQuestion === (q.id ?? idx) ? 'rotate-180' : ''}`}>
+                        <ChevronDown className="w-4 h-4 text-neutral-600" />
                       </div>
                     </div>
                   </button>
 
                   {expandedQuestion === (q.id ?? idx) && (
-                    <div className="px-8 py-8 animate-in fade-in slide-in-from-top-4 duration-500">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div className="space-y-6">
+                    <div className="px-10 py-10 bg-neutral-900/50 rounded-b-md border-x border-b border-neutral-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div className="space-y-8">
                           <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-3">Response Validation</span>
-                            <div className="space-y-3">
-                              <div className={`p-4 rounded-xl border-l-4 ${q.isCorrect ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-rose-500/5 border-rose-500/30'} backdrop-blur-sm`}>
-                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Your Submission</div>
-                                <div className={`font-bold text-sm ${q.isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>{q.yourAnswer}</div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 block mb-4">Your Answer</span>
+                            <div className="space-y-4">
+                              <div className="p-4 bg-neutral-950 border border-neutral-800 rounded-md">
+                                <div className="text-[9px] font-bold uppercase tracking-widest text-neutral-700 mb-2">Your response</div>
+                                <div className={`font-bold text-sm ${q.isCorrect ? 'text-emerald-500' : 'text-rose-500'}`}>{q.yourAnswer}</div>
                               </div>
                               {!q.isCorrect && (
-                                <div className="p-4 rounded-xl border-l-4 bg-emerald-500/5 border-emerald-500/30 backdrop-blur-sm">
-                                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Expected Root</div>
-                                  <div className="font-bold text-sm text-emerald-400">{q.correctAnswer}</div>
+                                <div className="p-4 bg-neutral-950 border border-emerald-500/20 rounded-md">
+                                  <div className="text-[9px] font-bold uppercase tracking-widest text-emerald-700 mb-2">Correct Answer</div>
+                                  <div className="font-bold text-sm text-emerald-500">{q.correctAnswer}</div>
                                 </div>
                               )}
                             </div>
@@ -441,10 +415,10 @@ export default function QuizResults() {
 
                           {q.relatedTopics && q.relatedTopics.length > 0 && (
                             <div>
-                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-3">Tag Association</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 block mb-4">Topics</span>
                               <div className="flex flex-wrap gap-2">
                                 {q.relatedTopics.map((topic, tIdx) => (
-                                  <span key={tIdx} className="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-default transition-all border border-white/5 hover:border-white/10">
+                                  <span key={tIdx} className="px-3 py-1.5 bg-neutral-950 text-neutral-400 rounded-md text-[9px] font-bold uppercase tracking-widest border border-neutral-800">
                                     {topic}
                                   </span>
                                 ))}
@@ -454,11 +428,10 @@ export default function QuizResults() {
                         </div>
 
                         <div className="relative">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 block mb-3">Synaptic Context</span>
-                          <div className="bg-slate-800/40 p-6 rounded-2xl border border-white/5 min-h-[140px] relative overflow-hidden group/card shadow-inner">
-                            <Brain className="absolute -bottom-6 -right-6 w-24 h-24 text-purple-500/5 rotate-12" />
-                            <p className="text-sm text-slate-300 leading-relaxed font-medium relative z-10 italic">
-                              "{q.explanation || 'Anatomical logic for this node is being processed. Review core module documentation for detailed structural relationships.'}"
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 block mb-4">Explanation</span>
+                          <div className="bg-neutral-950 p-6 rounded-lg border border-neutral-800 min-h-[140px] shadow-inner">
+                            <p className="text-sm text-neutral-400 leading-relaxed font-medium">
+                              {q.explanation || 'Detailed explanation for this question is currently unavailable.'}
                             </p>
                           </div>
                         </div>

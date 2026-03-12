@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { ChevronLeft, Shield, User, Bell, Monitor, Globe, Save, AlertCircle, Check, Server, Database, HardDrive, Activity } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Shield, Bell, Globe, Monitor, Sun, Moon, Eye, Lock, Key, Smartphone, Clock, Save, Camera, AlertCircle, Check, BookOpen, Users, Award, Activity, Server, Database, HardDrive, ChevronLeft } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import { useTheme } from '@/hooks/useTheme';
 
 const AdminSettings: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"account" | "preferences" | "notifications" | "system">("account");
+  const { theme, setTheme } = useTheme();
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
@@ -14,132 +16,102 @@ const AdminSettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-950/60 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-neutral-950 text-neutral-400 font-sans selection:bg-emerald-500/30 selection:text-emerald-500">
+      <header className="border-b border-neutral-900 bg-neutral-950 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-6">
             <button
               onClick={() => navigate("/admindashboard")}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+              className="p-2 hover:bg-neutral-900 border border-transparent hover:border-neutral-800 rounded transition-all group"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4 text-neutral-600 group-hover:text-emerald-500" />
             </button>
-            <h1 className="text-2xl font-bold">
-              <span className="text-white">VRMTS</span>
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-sm font-bold text-white uppercase tracking-tighter">
+              VRMTS ADMIN
+              </h1>
+              <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">System Administration</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
             {saved && (
-              <div className="hidden sm:flex items-center gap-2 text-emerald-400 text-xs font-medium">
-                <Check className="w-4 h-4" />
+              <div className="hidden sm:flex items-center gap-2 text-emerald-500 text-[10px] font-bold uppercase tracking-widest animate-pulse">
+                <Check className="w-3 h-3" />
                 Settings saved
               </div>
             )}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center">
-              <Shield className="w-5 h-5" />
+            <div className="w-10 h-10 rounded bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xs font-bold text-white shadow-inner">
+              <Shield className="w-4 h-4 text-emerald-500" />
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Admin Settings</h2>
-          <p className="text-slate-400 text-sm">
-            Manage your admin profile and core system preferences. This screen is UI‑only; backend connections can be added later.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <main className="max-w-7xl mx-auto px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
           {/* Sidebar */}
-          <aside className="space-y-2">
-            <button
-              onClick={() => setActiveTab("account")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
-                activeTab === "account"
-                  ? "bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/40 text-cyan-300"
-                  : "hover:bg-white/5 text-slate-300"
-              }`}
-            >
-              <User className="w-4 h-4" />
-              Admin profile
-            </button>
-            <button
-              onClick={() => setActiveTab("preferences")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
-                activeTab === "preferences"
-                  ? "bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/40 text-cyan-300"
-                  : "hover:bg-white/5 text-slate-300"
-              }`}
-            >
-              <Monitor className="w-4 h-4" />
-              Appearance & locale
-            </button>
-            <button
-              onClick={() => setActiveTab("notifications")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
-                activeTab === "notifications"
-                  ? "bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/40 text-cyan-300"
-                  : "hover:bg-white/5 text-slate-300"
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-              Notifications
-            </button>
-            <button
-              onClick={() => setActiveTab("system")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
-                activeTab === "system"
-                  ? "bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/40 text-cyan-300"
-                  : "hover:bg-white/5 text-slate-300"
-              }`}
-            >
-              <Server className="w-4 h-4" />
-              System controls
-            </button>
+          <aside className="space-y-1">
+            {[
+              { id: "account", label: "Admin Profile", icon: User },
+              { id: "preferences", label: "Interface Settings", icon: Monitor },
+              { id: "notifications", label: "Notifications", icon: Bell },
+              { id: "system", label: "System Settings", icon: Server }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded text-left transition-all group ${
+                  activeTab === tab.id
+                    ? "bg-neutral-900 border border-neutral-800 text-emerald-500"
+                    : "text-neutral-500 hover:text-neutral-300 border border-transparent hover:border-neutral-900"
+                }`}
+              >
+                <tab.icon className={`w-4 h-4 flex-shrink-0 ${activeTab === tab.id ? "text-emerald-500" : "text-neutral-600 group-hover:text-neutral-400"}`} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
+              </button>
+            ))}
           </aside>
 
           {/* Main content */}
-          <section className="lg:col-span-3 space-y-8">
+          <section className="lg:col-span-3 space-y-12">
             {activeTab === "account" && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <User className="w-5 h-5 text-cyan-400" />
-                  Admin profile
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-10">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3 mb-8">
+                  <User className="w-4 h-4 text-emerald-500" />
+                  Admin Profile
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-200">Full name</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Full Name</label>
                     <input
                       type="text"
                       placeholder="System Administrator"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-white/10 text-sm focus:border-cyan-400 focus:outline-none"
+                      className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-neutral-800"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-200">Email</label>
+                  <div className="space-y-3">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Email Address</label>
                     <input
                       type="email"
                       placeholder="admin@university.edu"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-white/10 text-sm focus:border-cyan-400 focus:outline-none"
+                      className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-medium focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-neutral-800"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-200">Institution</label>
+                  <div className="space-y-3">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Institution</label>
                     <input
                       type="text"
                       placeholder="Medical University"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-white/10 text-sm focus:border-cyan-400 focus:outline-none"
+                      className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-white text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-neutral-800"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-200">Role</label>
+                  <div className="space-y-3">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Role</label>
                     <input
                       type="text"
                       value="Platform Administrator"
                       readOnly
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/40 border border-white/10 text-sm text-slate-400"
+                      className="w-full px-4 py-3 bg-neutral-900 border border-neutral-800 rounded text-neutral-600 text-[10px] font-bold uppercase tracking-widest cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -147,133 +119,126 @@ const AdminSettings: React.FC = () => {
             )}
 
             {activeTab === "preferences" && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <Monitor className="w-5 h-5 text-cyan-400" />
-                  Appearance & locale
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-10">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                  <Monitor className="w-4 h-4 text-emerald-500" />
+                  Interface & Locale
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <button className="p-4 rounded-xl border border-white/10 bg-slate-900/60 hover:border-cyan-400/60 transition-all">
-                    <span className="block text-xs text-slate-400 mb-1">Theme</span>
-                    <span className="font-medium">Dark (default)</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <button 
+                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                    className="p-6 rounded border border-neutral-800 bg-neutral-950/20 hover:border-neutral-700 hover:bg-neutral-950/40 transition-all text-left group"
+                  >
+                    <span className="block text-[10px] font-bold text-neutral-600 mb-2 uppercase tracking-widest group-hover:text-neutral-500">Theme</span>
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest">{theme === "light" ? "Light" : "Dark (Default)"}</span>
                   </button>
-                  <button className="p-4 rounded-xl border border-white/10 bg-slate-900/60 hover:border-cyan-400/60 transition-all">
-                    <span className="block text-xs text-slate-400 mb-1">Language</span>
-                    <span className="font-medium">English (US)</span>
-                  </button>
-                  <button className="p-4 rounded-xl border border-white/10 bg-slate-900/60 hover:border-cyan-400/60 transition-all">
-                    <span className="block text-xs text-slate-400 mb-1">Time zone</span>
-                    <span className="font-medium">UTC+05:00</span>
-                  </button>
+                  {[
+                    { label: "Language", value: "English (US)" },
+                    { label: "Time Zone", value: "UTC+05:00" }
+                  ].map((pref, idx) => (
+                    <button key={idx} className="p-6 rounded border border-neutral-800 bg-neutral-950/20 hover:border-neutral-700 hover:bg-neutral-950/40 transition-all text-left group">
+                      <span className="block text-[10px] font-bold text-neutral-600 mb-2 uppercase tracking-widest group-hover:text-neutral-500">{pref.label}</span>
+                      <span className="text-[10px] font-bold text-white uppercase tracking-widest">{pref.value}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
 
             {activeTab === "notifications" && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-cyan-400" />
-                  Admin notifications
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-12">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                  <Bell className="w-4 h-4 text-emerald-500" />
+                  Notifications
                 </h3>
                 <div className="space-y-4">
-                  <div className="flex items-start justify-between p-4 rounded-xl bg-slate-900/50 border border-white/10">
-                    <div>
-                      <p className="font-medium text-sm">Critical system alerts</p>
-                      <p className="text-xs text-slate-400">
-                        Email and in‑app alerts for downtime, database errors and security events.
-                      </p>
+                  {[
+                    { label: "Critical system alerts", desc: "Downtime, database errors, and security events" },
+                    { label: "Usage analytics", desc: "Summary of platform activity and storage metrics" }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-6 bg-neutral-950 border border-neutral-800 rounded group hover:border-neutral-700 transition-all">
+                      <div className="space-y-1">
+                        <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">{item.label}</h4>
+                        <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-tight">{item.desc}</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" defaultChecked={idx === 0} />
+                        <div className="w-9 h-5 bg-neutral-800 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                      </label>
                     </div>
-                    <div className="w-11 h-6 rounded-full bg-slate-700 border border-white/10 relative">
-                      {/* purely visual toggle */}
-                      <div className="w-5 h-5 rounded-full bg-cyan-400 absolute top-0.5 left-0.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-start justify-between p-4 rounded-xl bg-slate-900/40 border border-white/5">
-                    <div>
-                      <p className="font-medium text-sm">Usage & analytics digests</p>
-                      <p className="text-xs text-slate-400">
-                        Periodic summary of activity, active users and storage usage.
-                      </p>
-                    </div>
-                    <div className="w-11 h-6 rounded-full bg-slate-700 border border-white/10 relative">
-                      <div className="w-5 h-5 rounded-full bg-slate-400 absolute top-0.5 right-0.5" />
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {activeTab === "system" && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <Server className="w-5 h-5 text-cyan-400" />
-                  System controls (UI only)
+              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-8 space-y-12">
+                <h3 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-3">
+                  <Server className="w-4 h-4 text-emerald-500" />
+                  System Controls
                 </h3>
-                <p className="text-xs text-slate-400">
-                  These switches are visual only at the moment. Hook them up to your backend when you are ready to control
-                  maintenance mode, backups and other operations.
+                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">
+                  Manage platform-wide settings and maintenance
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 flex items-start justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-emerald-400" />
-                        Maintenance mode
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        Temporarily prevent new logins while keeping current sessions alive.
-                      </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { label: "Maintenance mode", icon: Activity, desc: "Prevent new logins while keeping current sessions active", color: "text-emerald-500" },
+                    { label: "System backups", icon: Database, desc: "Configure automatic system snapshots and storage", color: "text-emerald-500" }
+                  ].map((control, idx) => (
+                    <div key={idx} className="p-6 bg-neutral-950 border border-neutral-800 rounded flex flex-col justify-between group hover:border-neutral-700 transition-all">
+                      <div className="space-y-4 mb-6">
+                        <div className="flex items-center gap-3">
+                          <control.icon className={`w-4 h-4 ${control.color}`} />
+                          <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">{control.label}</h4>
+                        </div>
+                        <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-tight leading-relaxed">{control.desc}</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer ml-auto">
+                        <input type="checkbox" className="sr-only peer" defaultChecked={idx === 1} />
+                        <div className="w-9 h-5 bg-neutral-800 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                      </label>
                     </div>
-                    <div className="w-11 h-6 rounded-full bg-slate-700 border border-white/10 relative">
-                      <div className="w-5 h-5 rounded-full bg-slate-400 absolute top-0.5 right-0.5" />
+                  ))}
+                  
+                  <div className="p-6 bg-neutral-950 border border-neutral-800 rounded flex flex-col justify-between group hover:border-neutral-700 transition-all md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <HardDrive className="w-4 h-4 text-emerald-500" />
+                          <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">Storage Alerts</h4>
+                        </div>
+                        <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-tight">Alert triggers for storage capacity limits</p>
+                      </div>
+                      <span className="px-3 py-1 bg-neutral-900 border border-neutral-800 text-emerald-500 text-[10px] font-bold uppercase tracking-widest rounded-full">
+                        80% Capacity
+                      </span>
                     </div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 flex items-start justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold flex items-center gap-2">
-                        <Database className="w-4 h-4 text-cyan-400" />
-                        Automatic backups
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        Configure when VRMTS should take full system snapshots.
-                      </p>
-                    </div>
-                    <div className="w-11 h-6 rounded-full bg-slate-700 border border-white/10 relative">
-                      <div className="w-5 h-5 rounded-full bg-cyan-400 absolute top-0.5 left-0.5" />
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 flex items-start justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold flex items-center gap-2">
-                        <HardDrive className="w-4 h-4 text-purple-400" />
-                        Storage alerts
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        Visual threshold only — wire up to backend monitoring when ready.
-                      </p>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[11px] border border-purple-500/40">
-                      80% threshold
-                    </span>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Save bar */}
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <AlertCircle className="w-4 h-4 text-slate-500" />
-                Changes here are only stored in the UI for now; connect to your API later.
+            <div className="flex items-center justify-between pt-8 border-t border-neutral-800">
+              <div className="flex items-center gap-3 text-neutral-600">
+                <AlertCircle className="w-3 h-3 text-emerald-500/50" />
+                <p className="text-[10px] font-bold uppercase tracking-widest leading-none">Settings are stored locally in the UI for demonstration</p>
               </div>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 text-sm font-semibold hover:from-cyan-400 hover:to-teal-400 transition-all"
-              >
-                <Save className="w-4 h-4" />
-                Save changes
-              </button>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="px-8 py-3 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-500 hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 text-[10px] font-bold uppercase tracking-[0.2em] rounded transition-all flex items-center gap-3"
+                >
+                  <Save className="w-3 h-3" />
+                  Save changes
+                </button>
+              </div>
             </div>
           </section>
         </div>

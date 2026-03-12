@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BookOpen, Users, Calendar, Clock, Target, ChevronRight, Plus, Save, Send, X, CheckCircle, Lock, Award, FileText, AlertCircle, Search, Filter, Edit, Trash2, Copy, Eye } from 'lucide-react';
+import { PageLayout } from '@/components/PageLayout';
 
 export default function VRMTSModuleAssignment() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -156,107 +157,69 @@ export default function VRMTSModuleAssignment() {
 
   const getDifficultyColor = (difficulty: string) => {
     const colors: { [key: string]: string } = {
-      'Beginner': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-      'Intermediate': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      'Advanced': 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+      'Beginner': 'bg-neutral-950 text-emerald-500 border-emerald-500/20',
+      'Intermediate': 'bg-neutral-950 text-cyan-400 border-cyan-500/20',
+      'Advanced': 'bg-neutral-950 text-purple-400 border-purple-500/20'
     };
     return colors[difficulty] || colors['Intermediate'];
   };
 
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
-      'active': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      'completed': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-      'overdue': 'bg-red-500/20 text-red-400 border-red-500/30'
+      'active': 'bg-neutral-950 text-cyan-400 border-cyan-500/20',
+      'completed': 'bg-neutral-950 text-emerald-500 border-emerald-500/20',
+      'overdue': 'bg-neutral-950 text-rose-500 border-rose-500/20'
     };
     return colors[status] || colors['active'];
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white">
-      <header className="border-b border-white/10 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-bold">
-              <span className="text-white">VRMTS</span>
-            </h1>
-            <nav className="hidden md:flex gap-6">
-              <button className="text-slate-400 hover:text-white transition-colors">Dashboard</button>
-              <button className="text-slate-400 hover:text-white transition-colors">Students</button>
-              <button className="text-cyan-400 font-medium">Modules</button>
-              <button className="text-slate-400 hover:text-white transition-colors">Analytics</button>
-            </nav>
-          </div>
-          
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-400 flex items-center justify-center font-bold">
-            DR
-          </div>
+    <PageLayout
+      title="Module Assignment"
+      subtitle="Assign learning modules to students and track progress"
+      breadcrumbLabel="Modules"
+      activeNav="modules"
+      userType="instructor"
+    >
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-3 text-white tracking-tight uppercase">
+            <BookOpen className="w-6 h-6 text-emerald-500" />
+            Module List
+          </h2>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-cyan-400" />
-              Module Assignment
-            </h2>
-            <p className="text-slate-400">Assign learning modules to students and track progress</p>
-          </div>
-          <button 
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center gap-2 shadow-lg shadow-cyan-500/25"
-          >
-            <Plus className="w-5 h-5" />
-            Create Assignment
-          </button>
-        </div>
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/10"
+        >
+          <Plus className="w-4 h-4" />
+          Create Assignment
+        </button>
+      </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-cyan-500/20">
-                <BookOpen className="w-5 h-5 text-cyan-400" />
+          {[
+            { label: 'Active Assignments', value: activeAssignments.filter(a => a.status === 'active').length, icon: BookOpen, color: 'text-cyan-500' },
+            { label: 'Completed', value: activeAssignments.filter(a => a.status === 'completed').length, icon: CheckCircle, color: 'text-emerald-500' },
+            { label: 'Students Enrolled', value: 156, icon: Users, color: 'text-purple-500' },
+            { label: 'Avg Completion', value: '73%', icon: Target, color: 'text-yellow-500' }
+          ].map((stat, i) => (
+            <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-lg p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <span className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest">{stat.label}</span>
               </div>
-              <span className="text-slate-400 text-sm">Active Assignments</span>
+              <div className="text-xl font-bold text-white">{stat.value}</div>
             </div>
-            <div className="text-2xl font-bold">{activeAssignments.filter(a => a.status === 'active').length}</div>
-          </div>
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-emerald-500/20">
-                <CheckCircle className="w-5 h-5 text-emerald-400" />
-              </div>
-              <span className="text-slate-400 text-sm">Completed</span>
-            </div>
-            <div className="text-2xl font-bold">{activeAssignments.filter(a => a.status === 'completed').length}</div>
-          </div>
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-purple-500/20">
-                <Users className="w-5 h-5 text-purple-400" />
-              </div>
-              <span className="text-slate-400 text-sm">Students Enrolled</span>
-            </div>
-            <div className="text-2xl font-bold">156</div>
-          </div>
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-yellow-500/20">
-                <Target className="w-5 h-5 text-yellow-400" />
-              </div>
-              <span className="text-slate-400 text-sm">Avg Completion</span>
-            </div>
-            <div className="text-2xl font-bold">73%</div>
-          </div>
+          ))}
         </div>
 
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold">Active Assignments</h3>
+            <h3 className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Active Assignments</h3>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-400/50 transition-all text-sm flex items-center gap-2">
-                <Filter className="w-4 h-4" />
+              <button className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-all flex items-center gap-2">
+                <Filter className="w-3 h-3" />
                 Filter
               </button>
             </div>
@@ -266,119 +229,119 @@ export default function VRMTSModuleAssignment() {
             {activeAssignments.map((assignment) => (
               <div 
                 key={assignment.id}
-                className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-cyan-400/50 transition-all"
+                className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 hover:border-neutral-700 transition-all group"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h4 className="text-lg font-semibold">{assignment.modules.join(' + ')}</h4>
-                      <span className={`px-3 py-1 rounded-full text-xs border ${getStatusColor(assignment.status)}`}>
+                      <h4 className="text-sm font-bold text-white tracking-tight">{assignment.modules.join(' + ')}</h4>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${getStatusColor(assignment.status)}`}>
                         {assignment.status}
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm mb-3">Assigned to: <span className="text-white font-medium">{assignment.assignedTo}</span></p>
+                    <p className="text-[10px] text-neutral-500 font-medium mb-3">Assigned to: <span className="text-neutral-300">{assignment.assignedTo}</span></p>
                     
-                    <div className="flex items-center gap-6 text-sm">
-                      <span className="flex items-center gap-2 text-slate-400">
-                        <Users className="w-4 h-4" />
+                    <div className="flex items-center gap-6 text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
+                      <span className="flex items-center gap-2">
+                        <Users className="w-3 h-3" />
                         {assignment.studentCount} students
                       </span>
-                      <span className="flex items-center gap-2 text-slate-400">
-                        <Calendar className="w-4 h-4" />
+                      <span className="flex items-center gap-2">
+                        <Calendar className="w-3 h-3" />
                         Due: {new Date(assignment.dueDate).toLocaleDateString()}
                       </span>
                       {assignment.requiresQuiz && (
-                        <span className="flex items-center gap-2 text-cyan-400">
-                          <Target className="w-4 h-4" />
+                        <span className="flex items-center gap-2 text-cyan-500">
+                          <Target className="w-3 h-3" />
                           Quiz Required ({assignment.passingScore}%)
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                      <Eye className="w-4 h-4 text-slate-400" />
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-2 hover:bg-neutral-800 rounded transition-colors text-neutral-600 hover:text-white">
+                      <Eye className="w-4 h-4" />
                     </button>
-                    <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                      <Edit className="w-4 h-4 text-slate-400" />
+                    <button className="p-2 hover:bg-neutral-800 rounded transition-colors text-neutral-600 hover:text-white">
+                      <Edit className="w-4 h-4" />
                     </button>
-                    <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                      <Copy className="w-4 h-4 text-slate-400" />
+                    <button className="p-2 hover:bg-neutral-800 rounded transition-colors text-neutral-600 hover:text-white">
+                      <Copy className="w-4 h-4" />
                     </button>
-                    <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                    <button className="p-2 hover:bg-neutral-800 rounded transition-colors text-rose-500/60 hover:text-rose-500">
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex justify-between text-sm text-slate-400 mb-2">
+                <div className="mt-4">
+                  <div className="flex justify-between text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-1.5">
                     <span>Completion Progress</span>
                     <span>{assignment.completed}/{assignment.studentCount} ({Math.round((assignment.completed / assignment.studentCount) * 100)}%)</span>
                   </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-cyan-500 to-teal-500"
+                      className="h-full bg-emerald-500"
                       style={{ width: `${(assignment.completed / assignment.studentCount) * 100}%` }}
                     />
                   </div>
                 </div>
               </div>
             ))}
-          </div>
         </div>
+      </div>
 
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-900 border border-white/10 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-slate-900 border-b border-white/10 p-6 flex items-center justify-between z-10">
+      {showCreateModal && (
+          <div className="fixed inset-0 bg-neutral-950/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto relative">
+              <div className="sticky top-0 bg-neutral-900 border-b border-neutral-800 p-6 flex items-center justify-between z-10">
                 <div>
-                  <h3 className="text-2xl font-bold">Create New Assignment</h3>
-                  <p className="text-slate-400 text-sm mt-1">Assign modules to students with custom settings</p>
+                  <h3 className="text-xl font-bold text-white tracking-tight uppercase">Create New Assignment</h3>
+                  <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest mt-1">Assign modules to students with custom settings</p>
                 </div>
                 <button 
                   onClick={() => setShowCreateModal(false)}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                  className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 text-neutral-500" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-8">
+              <div className="p-8 space-y-10">
                 <div>
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm font-bold">1</div>
+                  <h4 className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-4 flex items-center gap-3">
+                    <span className="w-6 h-6 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">01</span>
                     Select Recipients
                   </h4>
                   
                   <div className="flex gap-4 mb-4">
                     <button
                       onClick={() => setAssignmentType('class')}
-                      className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                      className={`flex-1 py-4 px-4 rounded border transition-all flex flex-col items-center gap-2 ${
                         assignmentType === 'class'
-                          ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
-                          : 'bg-slate-800/30 border-white/10 text-slate-400 hover:border-cyan-400/30'
+                          ? 'bg-neutral-950 border-emerald-500/50 text-emerald-500'
+                          : 'bg-neutral-950 border-neutral-800 text-neutral-600 hover:border-neutral-700'
                       }`}
                     >
-                      <Users className="w-5 h-5 mx-auto mb-1" />
-                      <div className="text-sm font-medium">Entire Class</div>
+                      <Users className="w-5 h-5" />
+                      <div className="text-[10px] font-bold uppercase tracking-widest">Entire Class</div>
                     </button>
                     <button
                       onClick={() => setAssignmentType('individual')}
-                      className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                      className={`flex-1 py-4 px-4 rounded border transition-all flex flex-col items-center gap-2 ${
                         assignmentType === 'individual'
-                          ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
-                          : 'bg-slate-800/30 border-white/10 text-slate-400 hover:border-cyan-400/30'
+                          ? 'bg-neutral-950 border-emerald-500/50 text-emerald-500'
+                          : 'bg-neutral-950 border-neutral-800 text-neutral-600 hover:border-neutral-700'
                       }`}
                     >
-                      <Target className="w-5 h-5 mx-auto mb-1" />
-                      <div className="text-sm font-medium">Individual Students</div>
+                      <Target className="w-5 h-5" />
+                      <div className="text-[10px] font-bold uppercase tracking-widest">Individual Students</div>
                     </button>
                   </div>
 
                   {assignmentType === 'class' ? (
-                    <select className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400/50">
+                    <select className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 focus:outline-none focus:border-neutral-700">
                       <option>Medical Batch 2024 (156 students)</option>
                       <option>Medical Batch 2023 (142 students)</option>
                       <option>Nursing Program A (89 students)</option>
@@ -386,33 +349,38 @@ export default function VRMTSModuleAssignment() {
                   ) : (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-slate-400">{selectedStudents.length} students selected</span>
+                        <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">{selectedStudents.length} students selected</span>
                         <button 
                           onClick={() => setSelectedStudents(students.map(s => s.id))}
-                          className="text-sm text-cyan-400 hover:text-cyan-300"
+                          className="text-[10px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-widest"
                         >
                           Select All
                         </button>
                       </div>
-                      <div className="max-h-64 overflow-y-auto space-y-2 bg-slate-800/30 rounded-lg p-3">
+                      <div className="max-h-64 overflow-y-auto space-y-2 bg-neutral-950 border border-neutral-800 rounded-lg p-3">
                         {students.map((student) => (
                           <label 
                             key={student.id}
-                            className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors"
+                            className={`flex items-center gap-3 p-3 rounded border transition-all cursor-pointer ${
+                              selectedStudents.includes(student.id) ? 'bg-neutral-900 border-neutral-700' : 'bg-neutral-950 border-transparent hover:bg-neutral-900'
+                            }`}
                           >
                             <input
                               type="checkbox"
                               checked={selectedStudents.includes(student.id)}
                               onChange={() => toggleStudentSelection(student.id)}
-                              className="w-4 h-4 rounded border-white/20 text-cyan-500"
+                              className="sr-only"
                             />
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-teal-400 flex items-center justify-center text-xs font-bold">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              selectedStudents.includes(student.id) ? 'bg-emerald-500 text-neutral-950' : 'bg-neutral-800 text-neutral-500'
+                            }`}>
                               {student.avatar}
                             </div>
                             <div className="flex-1">
-                              <div className="text-sm font-medium">{student.name}</div>
-                              <div className="text-xs text-slate-400">{student.email}</div>
+                              <div className="text-[10px] font-bold text-white uppercase tracking-widest">{student.name}</div>
+                              <div className="text-[9px] text-neutral-600 font-medium">{student.email}</div>
                             </div>
+                            {selectedStudents.includes(student.id) && <CheckCircle className="w-4 h-4 text-emerald-500" />}
                           </label>
                         ))}
                       </div>
@@ -421,8 +389,8 @@ export default function VRMTSModuleAssignment() {
                 </div>
 
                 <div>
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm font-bold">2</div>
+                  <h4 className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-4 flex items-center gap-3">
+                    <span className="w-6 h-6 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">02</span>
                     Select Modules
                   </h4>
 
@@ -431,7 +399,7 @@ export default function VRMTSModuleAssignment() {
                       <label
                         key={module.id}
                         className={`relative cursor-pointer transition-all ${
-                          selectedModules.includes(module.id) ? 'ring-2 ring-cyan-500' : ''
+                          selectedModules.includes(module.id) ? 'ring-1 ring-emerald-500 rounded-lg' : ''
                         }`}
                       >
                         <input
@@ -440,114 +408,101 @@ export default function VRMTSModuleAssignment() {
                           onChange={() => toggleModuleSelection(module.id)}
                           className="sr-only"
                         />
-                        <div className={`bg-slate-800/50 border rounded-xl p-4 hover:border-cyan-400/50 transition-all ${
-                          selectedModules.includes(module.id) ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10'
+                        <div className={`bg-neutral-950 border rounded-lg p-4 hover:border-neutral-700 transition-all ${
+                          selectedModules.includes(module.id) ? 'border-emerald-500/50 bg-neutral-900' : 'border-neutral-800'
                         }`}>
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="text-3xl">{module.thumbnail}</div>
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="text-3xl grayscale group-hover:grayscale-0 transition-all">{module.thumbnail}</div>
                             <div className="flex-1">
-                              <h5 className="font-semibold mb-1">{module.name}</h5>
-                              <p className="text-xs text-slate-400 line-clamp-2">{module.description}</p>
+                              <h5 className="text-[11px] font-bold text-white uppercase tracking-widest mb-1">{module.name}</h5>
+                              <p className="text-[10px] text-neutral-500 font-medium line-clamp-2">{module.description}</p>
                             </div>
                             {selectedModules.includes(module.id) && (
-                              <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center">
-                                <CheckCircle className="w-4 h-4 text-white" />
+                              <div className="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center">
+                                <CheckCircle className="w-3 h-3 text-neutral-950" />
                               </div>
                             )}
                           </div>
                           
-                          <div className="flex items-center gap-3 text-xs">
-                            <span className={`px-2 py-1 rounded-full border ${getDifficultyColor(module.difficulty)}`}>
+                          <div className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-tight">
+                            <span className={`px-2 py-0.5 rounded border ${getDifficultyColor(module.difficulty)}`}>
                               {module.difficulty}
                             </span>
-                            <span className="text-slate-400 flex items-center gap-1">
+                            <span className="text-neutral-600 flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {module.duration}
                             </span>
-                            <span className="text-slate-400">{module.topics} topics</span>
+                            <span className="text-neutral-600">{module.topics} topics</span>
                           </div>
-
-                          {module.prerequisites.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-white/5">
-                              <span className="text-xs text-orange-400 flex items-center gap-1">
-                                <Lock className="w-3 h-3" />
-                                Requires: {module.prerequisites.join(', ')}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </label>
                     ))}
                   </div>
-
-                  <div className="mt-4 text-sm text-slate-400">
-                    {selectedModules.length} module(s) selected
-                  </div>
                 </div>
 
                 <div>
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm font-bold">3</div>
-                    Set Parameters
+                  <h4 className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-6 flex items-center gap-3">
+                    <span className="w-6 h-6 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">03</span>
+                    Parameters
                   </h4>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Start Date</label>
+                      <label className="block text-[10px] font-bold text-white uppercase tracking-widest mb-3">Start Date</label>
                       <input
                         type="date"
-                        className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400/50"
+                        className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 focus:outline-none focus:border-neutral-700"
                         defaultValue={new Date().toISOString().split('T')[0]}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Due Date</label>
+                      <label className="block text-[10px] font-bold text-white uppercase tracking-widest mb-3">Due Date</label>
                       <input
                         type="date"
-                        className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400/50"
+                        className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 focus:outline-none focus:border-neutral-700"
                       />
                     </div>
                   </div>
 
-                  <div className="mt-6 space-y-4">
-                    <label className="flex items-center justify-between p-4 bg-slate-800/30 rounded-lg cursor-pointer hover:bg-slate-800/50 transition-colors">
+                  <div className="mt-10 space-y-3">
+                    <label className="flex items-center justify-between p-4 bg-neutral-950 border border-neutral-800 rounded hover:border-neutral-700 cursor-pointer transition-all group">
                       <div>
-                        <div className="font-medium">Lock Prerequisites</div>
-                        <div className="text-sm text-slate-400">Students must complete prerequisite modules first</div>
+                        <div className="text-[10px] font-bold text-white uppercase tracking-widest group-hover:text-emerald-500 transition-colors">Lock Prerequisites</div>
+                        <div className="text-[9px] text-neutral-600 font-medium">Students must complete prerequisite modules sequentially</div>
                       </div>
                       <input
                         type="checkbox"
                         checked={lockPrerequisites}
                         onChange={(e) => setLockPrerequisites(e.target.checked)}
-                        className="w-5 h-5 rounded border-white/20 text-cyan-500"
+                        className="w-4 h-4 rounded border-neutral-800 bg-neutral-900 text-emerald-500 focus:ring-emerald-500"
                       />
                     </label>
 
-                    <label className="flex items-center justify-between p-4 bg-slate-800/30 rounded-lg cursor-pointer hover:bg-slate-800/50 transition-colors">
+                    <label className="flex items-center justify-between p-4 bg-neutral-950 border border-neutral-800 rounded hover:border-neutral-700 cursor-pointer transition-all group">
                       <div>
-                        <div className="font-medium">Require Quiz Completion</div>
-                        <div className="text-sm text-slate-400">Students must pass the quiz to complete the module</div>
+                        <div className="text-[10px] font-bold text-white uppercase tracking-widest group-hover:text-emerald-500 transition-colors">Require Quiz Completion</div>
+                        <div className="text-[9px] text-neutral-600 font-medium">Validation assessment required to finalize module</div>
                       </div>
                       <input
                         type="checkbox"
                         checked={requireQuiz}
                         onChange={(e) => setRequireQuiz(e.target.checked)}
-                        className="w-5 h-5 rounded border-white/20 text-cyan-500"
+                        className="w-4 h-4 rounded border-neutral-800 bg-neutral-900 text-emerald-500 focus:ring-emerald-500"
                       />
                     </label>
 
                     {requireQuiz && (
-                      <div className="ml-4 p-4 bg-slate-800/30 rounded-lg">
-                        <label className="block text-sm font-medium mb-2">Passing Score Threshold</label>
-                        <div className="flex items-center gap-4">
+                      <div className="ml-6 p-6 bg-neutral-900 border-l border-emerald-500/20 rounded-r">
+                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-4">Passing Score Threshold</label>
+                        <div className="flex items-center gap-6">
                           <input
                             type="range"
                             min="50"
                             max="100"
                             defaultValue="70"
-                            className="flex-1"
+                            className="flex-1 accent-emerald-500 h-1.5 bg-neutral-950 rounded-full appearance-none cursor-pointer"
                           />
-                          <span className="text-lg font-bold text-cyan-400 min-w-16">70%</span>
+                          <span className="text-lg font-bold text-emerald-500 min-w-16">70%</span>
                         </div>
                       </div>
                     )}
@@ -555,46 +510,45 @@ export default function VRMTSModuleAssignment() {
                 </div>
 
                 <div>
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm font-bold">4</div>
-                    Add Instructions (Optional)
+                  <h4 className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-4 flex items-center gap-3">
+                    <span className="w-6 h-6 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">04</span>
+                    Instructions
                   </h4>
 
                   <textarea
-                    placeholder="Add custom instructions or guidelines for students..."
+                    placeholder="ENTER GUIDELINES OR CUSTOM INSTRUCTIONS..."
                     rows={4}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-lg focus:outline-none focus:border-cyan-400/50 resize-none"
+                    className="w-full px-4 py-4 bg-neutral-950 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 focus:outline-none focus:border-neutral-700 resize-none"
                   ></textarea>
 
-                  <button className="mt-3 text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-2">
+                  <button className="mt-4 text-[10px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-widest flex items-center gap-2">
                     <FileText className="w-4 h-4" />
-                    Attach Resources
+                    Attach Supplementary Resources
                   </button>
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-slate-900 border-t border-white/10 p-6 flex items-center justify-between">
+              <div className="sticky bottom-0 bg-neutral-950 border-t border-neutral-800 p-8 flex items-center justify-between">
                 <button 
                   onClick={() => setShowCreateModal(false)}
-                  className="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-lg hover:bg-slate-800 transition-all"
+                  className="px-8 py-3 bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-all"
                 >
                   Cancel
                 </button>
-                <div className="flex gap-3">
-                  <button className="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-400/50 transition-all flex items-center gap-2">
+                <div className="flex gap-4">
+                  <button className="px-8 py-3 bg-neutral-900 border border-neutral-800 rounded text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-all flex items-center gap-2">
                     <Save className="w-4 h-4" />
-                    Save as Draft
+                    Save Draft
                   </button>
-                  <button className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center gap-2 shadow-lg shadow-cyan-500/25">
+                  <button className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/10">
                     <Send className="w-4 h-4" />
-                    Assign Now
+                    Assign Module
                   </button>
                 </div>
               </div>
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </PageLayout>
   );
 }
