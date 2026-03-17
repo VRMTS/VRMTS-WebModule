@@ -35,6 +35,14 @@ export default function VRMTSStudentManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | Student['status']>('all');
 
+  const instructorNav = [
+    { key: 'dashboard' as const, label: 'Dashboard', path: '/instructordashboard' },
+    { key: 'students' as const, label: 'Students', path: '/instructor/students' },
+    { key: 'modules' as const, label: 'Modules', path: '/instructor/modules' },
+    { key: 'quiz' as const, label: 'Quiz', path: '/instructor/create-quiz' },
+    { key: 'analytics' as const, label: 'Analytics', path: '/studentanalytics' },
+  ];
+
   const students: Student[] = [
     {
       id: 1,
@@ -240,6 +248,7 @@ export default function VRMTSStudentManagement() {
       breadcrumbLabel="Students"
       activeNav="students"
       userType="instructor"
+      navItems={instructorNav}
     >
         {/* Page Header */}
         <div className="mb-12 flex items-end justify-between">

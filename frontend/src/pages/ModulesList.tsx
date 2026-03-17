@@ -321,13 +321,28 @@ function ModuleCard({ module, onStart }: { module: Module; onStart: (id: number,
                 <span>Peak: {module.quizScore}%</span>
               </div>
             ) : <div />}
+          <div className="flex items-center justify-between gap-3">
             <button
-              className="px-6 py-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[9px] font-bold uppercase tracking-widest text-white transition-all flex items-center gap-2 group/btn"
+              className="flex-1 py-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-md text-[9px] font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 group/btn"
               onClick={(e) => { e.stopPropagation(); module.status !== 'locked' && onStart(module.moduleId, module.name); }}
             >
-              {module.status === 'completed' ? 'Review' : module.status === 'in_progress' ? 'Resume' : 'Initialize'}
-              <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+              <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+              {module.status === 'completed' ? 'Review Lab' : module.status === 'in_progress' ? 'Resume Lab' : 'Explore Lab'}
             </button>
+            <div className="w-4 h-px bg-neutral-800" />
+            <button
+              className={`flex-1 py-2 rounded-md text-[9px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 group/btn ${
+                module.progress < 50 
+                  ? 'bg-neutral-950/50 text-neutral-600 border border-neutral-800/50 cursor-not-allowed' 
+                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
+              }`}
+              onClick={(e) => { e.stopPropagation(); module.progress >= 50 && handleTakeQuiz(module.moduleId); }}
+              title={module.progress < 50 ? "Explore at least 50% to unlock quiz" : "Take Module Quiz"}
+            >
+              <Trophy className={`w-3.5 h-3.5 ${module.progress < 50 ? 'text-neutral-700' : 'text-amber-500'}`} />
+              Take Quiz
+            </button>
+          </div>
           </div>
         </div>
       )}

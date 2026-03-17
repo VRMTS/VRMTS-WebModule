@@ -10,8 +10,8 @@ export default function Landing() {
         <header className="flex justify-between items-center px-6 md:px-12 py-5 bg-neutral-950 border-b border-neutral-900 sticky top-0 z-50">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight">
-              <span className="text-white">VR</span>
-              <span className="text-emerald-500">MTS</span>
+              <span className="text-emerald-500">VR</span>
+              <span className="text-white">MTS</span>
             </h1>
           </div>
           <nav className="hidden md:flex gap-8 text-sm items-center font-medium">
@@ -149,7 +149,7 @@ export default function Landing() {
         <footer className="border-t border-neutral-900 bg-neutral-950 text-neutral-500 text-sm py-12 mt-auto">
           <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex flex-col gap-2">
-              <span className="font-bold text-neutral-300">VRMTS</span>
+              <span className="font-bold"><span className="text-emerald-500">VR</span><span className="text-white">MTS</span></span>
               <span>© {new Date().getFullYear()} All rights reserved.</span>
             </div>
             

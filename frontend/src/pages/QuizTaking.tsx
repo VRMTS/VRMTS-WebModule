@@ -272,7 +272,7 @@ export default function QuizTaking() {
         <div className="max-w-[1200px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-6">
-              <h1 className="text-base font-bold text-white tracking-tight">VRMTS</h1>
+              <h1 className="text-base font-bold tracking-tight"><span className="text-emerald-500">VR</span><span className="text-white">MTS</span></h1>
               <div className="h-6 w-px bg-neutral-900"></div>
               <div>
                 <h2 className="text-sm font-bold text-white tracking-tight">{quizData.title}</h2>

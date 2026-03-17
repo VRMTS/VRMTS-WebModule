@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Home, ChevronRight, Maximize2, Eye, EyeOff,
   Layers, BookOpen, MessageSquare, Bookmark, Share2, Flag, Info,
-  X, ChevronLeft, Play, FileText, Activity, Brain
+  X, ChevronLeft, Play, FileText, Activity, Brain, Trophy
 } from 'lucide-react';
 
 interface AnatomyPart {
@@ -60,6 +60,9 @@ export default function ModuleExploration() {
   const [skinOpacity, setSkinOpacity] = useState(0.5);
   const [activePlanes, setActivePlanes] = useState({ sagittal: false, coronal: false, transverse: false });
   const [explosionAmount, setExplosionAmount] = useState(0);
+  const [learnedCount, setLearnedCount] = useState(0);
+  const [showQuizPrompt, setShowQuizPrompt] = useState(false);
+  const [alreadyLearned] = useState<Set<string>>(new Set());
 
   const sceneRef = useRef<any>(null);
 
@@ -96,6 +99,16 @@ export default function ModuleExploration() {
         related: []
       };
       setAnatomyParts([...anatomyParts, part]);
+    }
+
+    // Interaction tracking
+    if (!alreadyLearned.has(partName)) {
+      alreadyLearned.add(partName);
+      setLearnedCount(prev => {
+        const next = prev + 1;
+        if (next === 10) setShowQuizPrompt(true);
+        return next;
+      });
     }
 
     setSelectedPart(part);
@@ -537,7 +550,7 @@ export default function ModuleExploration() {
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <h1 className="text-2xl font-bold">
-                <span className="text-white">VRMTS</span>
+                <span><span className="text-emerald-500">VR</span><span className="text-white">MTS</span></span>
               </h1>
               <div className="flex items-center gap-2 text-sm text-slate-400">
                 <Home className="w-4 h-4 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => navigate('/studentdashboard')} />
@@ -549,15 +562,27 @@ export default function ModuleExploration() {
             </div>
 
             <div className="flex items-center gap-3">
+              <div className="hidden md:flex flex-col items-end mr-4">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Learning Progress</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-1 bg-slate-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 transition-all duration-500" 
+                      style={{ width: `${Math.min(100, (learnedCount / 10) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold text-cyan-400">{learnedCount}/10</span>
+                </div>
+              </div>
               <div className="bg-slate-800/50 rounded-lg px-4 py-2 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                <span className="text-sm">Progress: 0%</span>
+                <span className="text-sm">Status: Active</span>
               </div>
               <button
                 onClick={() => navigate('/quizselection')}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-medium text-sm hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:from-cyan-400 hover:to-teal-400 transition-all flex items-center gap-2 shadow-lg shadow-cyan-500/20"
               >
-                <Play className="w-4 h-4" />
+                <Trophy className="w-3.5 h-3.5" />
                 Take Quiz
               </button>
             </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Layers, MessageSquare, Info, Brain, Activity, Search, FileText, Maximize2, Eye, EyeOff, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Layers, MessageSquare, Info, Brain, Activity, Search, FileText, Maximize2, Eye, EyeOff, X, Trophy } from 'lucide-react';
 import { PageLayout } from '../components/PageLayout';
 
 export default function Lab1Explore() {
@@ -17,6 +18,10 @@ export default function Lab1Explore() {
   const [zoomLevel, setZoomLevel] = useState(300);
   const [activeModel, setActiveModel] = useState<'saggital' | 'traverse' | 'coronal'>('saggital');
   const [showManual, setShowManual] = useState(false);
+  const [learnedCount, setLearnedCount] = useState(0);
+  const [alreadyLearned] = useState<Set<string>>(new Set());
+  const [showQuizPrompt, setShowQuizPrompt] = useState(false);
+  const navigate = useNavigate();
   const sceneRef = useRef<any>(null);
   const initRef = useRef(false);
 
@@ -360,12 +365,24 @@ export default function Lab1Explore() {
               }
             }
 
-            if (selectedMesh !== clickedMesh) {
-              selectedMesh = clickedMesh;
-              sceneRef.current.selectedMesh = selectedMesh;
-              setSelectedPart(partName);
+              if (selectedMesh !== clickedMesh) {
+                selectedMesh = clickedMesh;
+                sceneRef.current.selectedMesh = selectedMesh;
+                setSelectedPart(partName);
 
-              const highlightMat = (clickedMesh.material as any).clone();
+                // Interaction tracking
+                if (!alreadyLearned.has(partName)) {
+                  alreadyLearned.add(partName);
+                  setLearnedCount(prev => {
+                    const next = prev + 1;
+                    if (next === 10) setShowQuizPrompt(true);
+                    return next;
+                  });
+                  // Mark lab as interacted for the guided checklist
+                  localStorage.setItem('vrmts_lab1_interacted', 'true');
+                }
+
+                const highlightMat = (clickedMesh.material as any).clone();
               highlightMat.emissive.setHex(0x14532d);
               highlightMat.color.setHex(0x22c55e);
               clickedMesh.material = highlightMat;

@@ -47,6 +47,14 @@ export default function InstructorSettings() {
     confirm: ''
   });
 
+  const instructorNav = [
+    { key: 'dashboard' as const, label: 'Dashboard', path: '/instructordashboard' },
+    { key: 'students' as const, label: 'Students', path: '/instructor/students' },
+    { key: 'modules' as const, label: 'Modules', path: '/instructor/modules' },
+    { key: 'quiz' as const, label: 'Quiz', path: '/instructor/create-quiz' },
+    { key: 'analytics' as const, label: 'Analytics', path: '/studentanalytics' },
+  ];
+
   // Load user settings on component mount
   useEffect(() => {
     fetchUserSettings();
@@ -166,6 +174,7 @@ export default function InstructorSettings() {
       subtitle="Manage your account settings and preferences"
       breadcrumbLabel="Settings"
       userType="instructor"
+      navItems={instructorNav}
       headerRight={
         <div className="w-10 h-10 rounded bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xs font-bold text-white shadow-inner">
           {userData.firstName[0]}{userData.lastName[0]}

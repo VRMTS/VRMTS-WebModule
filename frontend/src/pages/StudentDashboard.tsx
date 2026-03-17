@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BookOpen, Trophy, Clock, Zap, Target, MessageSquare, Settings, Bell, ChevronRight, Lock, Play, BarChart3, Calendar, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
+import { GuidedChecklist } from '@/components/GuidedChecklist';
 
 interface Module {
   moduleId: number;
@@ -69,6 +70,13 @@ export default function VRDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState('Student');
+  const [analyticsViewed, setAnalyticsViewed] = useState(false);
+  const [lab1Interacted, setLab1Interacted] = useState(false);
+
+  useEffect(() => {
+    setAnalyticsViewed(localStorage.getItem('vrmts_analytics_viewed') === 'true');
+    setLab1Interacted(localStorage.getItem('vrmts_lab1_interacted') === 'true');
+  }, []);
 
   const achievements = [
     { name: 'First Steps', Icon: Target, unlocked: true },
@@ -190,6 +198,37 @@ export default function VRDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-8">
+          {/* Guided Checklist for Students */}
+          <GuidedChecklist 
+            userName={userName}
+            items={[
+              { 
+                id: 'explore', 
+                title: 'Explore Lab 1', 
+                description: 'Enter the Orientation Lab and interact with anatomical structures.',
+                icon: BookOpen, 
+                done: lab1Interacted || modules.some(m => (m.moduleId === 1 || m.name.toLowerCase().includes('lab 1')) && m.progress > 0), 
+                action: () => navigate('/lab1explore') 
+              },
+              { 
+                id: 'quiz', 
+                title: 'Take First Quiz', 
+                description: 'Test your knowledge by completing your first knowledge assessment.',
+                icon: Trophy, 
+                done: stats.averageScore > 0, 
+                action: () => navigate('/quizselection') 
+              },
+              { 
+                id: 'analytics', 
+                title: 'View Progress Report', 
+                description: 'Check your performance metrics and learning trends.',
+                icon: BarChart3, 
+                done: analyticsViewed, 
+                action: () => navigate('/studentanalytics') 
+              }
+            ]}
+          />
+
           {/* Active Modules Section */}
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -201,6 +240,7 @@ export default function VRDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {modules.slice(0, 4).map((module) => {
                 const StatusIcon = getStatusIcon(module.status);
+                const isRecommended = module.status === 'not_started' && modules.filter(m => m.status === 'in_progress').length === 0;
                 return (
                   <div
                     key={module.moduleId}
@@ -218,8 +258,13 @@ export default function VRDashboard() {
                     className={`group relative flex flex-col p-5 rounded-lg border transition-all ${module.status === 'locked'
                       ? 'bg-neutral-950 border-neutral-900 opacity-60 cursor-not-allowed'
                       : 'bg-neutral-900 border-neutral-800 hover:border-emerald-500/30 cursor-pointer hover:shadow-sm'
-                      }`}
+                      } ${isRecommended ? 'border-emerald-500/40 ring-1 ring-emerald-500/20' : ''}`}
                   >
+                    {isRecommended && (
+                      <div className="absolute -top-2 -right-2 bg-emerald-500 text-neutral-950 text-[8px] font-bold px-2 py-0.5 rounded shadow-lg uppercase tracking-widest z-10">
+                        Recommend
+                      </div>
+                    )}
                     <div className="flex items-start gap-4 mb-5">
                       <div className="w-10 h-10 rounded-md bg-neutral-950 flex items-center justify-center text-neutral-400 border border-neutral-800 group-hover:bg-neutral-900 transition-colors">
                         <StatusIcon className="w-5 h-5 shadow-sm" />

@@ -11,7 +11,7 @@ const GuestLab: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="text-2xl font-bold">
-              <span className="text-white">VRMTS</span>
+              <span><span className="text-emerald-500">VR</span><span className="text-white">MTS</span></span>
             </Link>
             <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/40">
               Guest Mode

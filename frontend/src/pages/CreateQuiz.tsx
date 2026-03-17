@@ -67,7 +67,7 @@ export default function CreateQuiz() {
     const instructorNav = [
         { key: 'dashboard' as const, label: 'Dashboard', path: '/instructordashboard' },
         { key: 'students' as const, label: 'Students', path: '/instructor/students' },
-        { key: 'modules' as const, label: 'Modules', path: '/modules' },
+        { key: 'modules' as const, label: 'Modules', path: '/instructor/modules' },
         { key: 'quiz' as const, label: 'Quiz', path: '/instructor/create-quiz' },
         { key: 'analytics' as const, label: 'Analytics', path: '/studentanalytics' },
     ];

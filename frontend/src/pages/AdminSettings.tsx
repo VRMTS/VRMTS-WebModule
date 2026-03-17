@@ -27,8 +27,8 @@ const AdminSettings: React.FC = () => {
               <ChevronLeft className="w-4 h-4 text-neutral-600 group-hover:text-emerald-500" />
             </button>
             <div className="flex flex-col">
-              <h1 className="text-sm font-bold text-white uppercase tracking-tighter">
-              VRMTS ADMIN
+              <h1 className="text-sm font-bold uppercase tracking-tighter">
+              <span className="text-emerald-500">VR</span><span className="text-white">MTS</span> ADMIN
               </h1>
               <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">System Administration</p>
             </div>

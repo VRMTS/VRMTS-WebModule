@@ -71,8 +71,8 @@ export default function Login() {
       <div className="w-full max-w-md">
         <Link to="/" className="block text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            <span className="text-white">VR</span>
-            <span className="text-emerald-500">MTS</span>
+            <span className="text-emerald-500">VR</span>
+            <span className="text-white">MTS</span>
           </h1>
           <span className="text-neutral-500 text-sm hover:text-white transition-colors">← Back to home</span>
         </Link>

@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
-import { BookOpen, Users, Calendar, Clock, Target, ChevronRight, Plus, Save, Send, X, CheckCircle, Lock, Award, FileText, AlertCircle, Search, Filter, Edit, Trash2, Copy, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BookOpen, Users, Calendar, Clock, Target, ChevronRight, Plus, Save, Send, X, CheckCircle, Lock, Award, FileText, AlertCircle, Search, Filter, Edit, Trash2, Copy, Eye, Sparkles } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 
 export default function VRMTSModuleAssignment() {
+  const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [selectedModules, setSelectedModules] = useState<number[]>([]);
   const [assignmentType, setAssignmentType] = useState('class');
   const [requireQuiz, setRequireQuiz] = useState(true);
   const [lockPrerequisites, setLockPrerequisites] = useState(true);
+
+  const instructorNav = [
+    { key: 'dashboard' as const, label: 'Dashboard', path: '/instructordashboard' },
+    { key: 'students' as const, label: 'Students', path: '/instructor/students' },
+    { key: 'modules' as const, label: 'Modules', path: '/instructor/modules' },
+    { key: 'quiz' as const, label: 'Quiz', path: '/instructor/create-quiz' },
+    { key: 'analytics' as const, label: 'Analytics', path: '/studentanalytics' },
+  ];
 
   const modules = [
     {
@@ -180,6 +190,7 @@ export default function VRMTSModuleAssignment() {
       breadcrumbLabel="Modules"
       activeNav="modules"
       userType="instructor"
+      navItems={instructorNav}
     >
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -188,13 +199,22 @@ export default function VRMTSModuleAssignment() {
             Module List
           </h2>
         </div>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/10"
-        >
-          <Plus className="w-4 h-4" />
-          Create Assignment
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => navigate('/instructor/create-quiz')}
+            className="px-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-200 rounded text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-500" />
+            Create Quiz
+          </button>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/10"
+          >
+            <Plus className="w-4 h-4" />
+            Create Assignment
+          </button>
+        </div>
       </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
